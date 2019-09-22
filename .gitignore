@@ -3,3 +3,5 @@ install/*
 .idea/*
 .catkin_workspace
 bagfiles/*
+tags
+devel
