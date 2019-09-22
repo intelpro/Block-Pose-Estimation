@@ -122,13 +122,13 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 	Show_Results(pcd_object, image_RGB, "seg_image");
     imageCb(image_RGB, Total_mask);
     pose.Accumulate_PointCloud(pcd_object, Total_mask);
-    cv::imshow("RGB", image_RGB);
     /*
+    cv::imshow("RGB", image_RGB);
+    cv::imshow("yellow", Total_mask[1]);
     cv::imshow("red", Total_mask[0]);
     cv::imshow("yellow", Total_mask[1]);
     cv::imshow("blue", Total_mask[3]);
     cv::imshow("brown", Total_mask[4]);
-    cv::imshow("orange", Total_mask[5]);
     // cout << "consuming time: " << result << "(s)" << endl;
     */
 }
@@ -175,7 +175,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     // Threshold for orange color
     Mat orange;
-    inRange(hsv_image, Scalar(5, 100, 30), Scalar(10, 255,200), orange);
+    inRange(hsv_image, Scalar(3, 100, 30), Scalar(10, 255,200), orange);
 
     // Threshold for yellow color
     cv::Mat yellow = cv::Mat::zeros(640, 480, CV_8UC1);

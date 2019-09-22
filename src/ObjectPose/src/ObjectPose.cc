@@ -131,7 +131,32 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             }
         }
 
+        if(i==5) // orange
+        {
+            for(int y = 0; y < height ; y++)
+            {
+                for( int x = 0; x < width; x++ )
+                {
+                    if(Mask[i].at<uint8_t>(y,x) == 255)
+                    {
+                        pcl::PointXYZRGB point;
+                        point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
+                        point.y = pcd_outlier.at<cv::Vec3f>(y,x)[1];
+                        point.z = pcd_outlier.at<cv::Vec3f>(y,x)[2];
+                        point.r = 255;
+                        point.g = 165;
+                        point.b = 0; 
+                        if(point.x!=0)
+                        {
+                            orange_cloud.push_back(point);
+                        }
+                    }
+                }
+            }
+        }
+
     }
+
     Accum_idx++;
     if(Accum_idx >= Accum_iter)
     {
@@ -139,6 +164,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
         ProjectToDominantPlane(yellow_cloud, "yellow");
         ProjectToDominantPlane(green_cloud, "green");
         ProjectToDominantPlane(blue_cloud, "blue");
+        ProjectToDominantPlane(orange_cloud, "orange");
         Accum_idx = 0; 
     }
 }
@@ -187,7 +213,12 @@ void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_clo
             ProjectedPoint.g = 0; 
             ProjectedPoint.b = 255; 
         }
-
+        else if(color_string=="orange")
+        {
+            ProjectedPoint.r = 255; 
+            ProjectedPoint.g = 165;
+            ProjectedPoint.b = 0;
+        }
         float dist_prev = sqrt(pow(ProjectedPoint.x - prev_point.x,2) + pow(ProjectedPoint.y - prev_point.y,2) + pow(ProjectedPoint.z - prev_point.z, 2));
         if(dist_prev < 0.1 && first_index==0)
         {
@@ -232,8 +263,14 @@ void ObjectPose::ProjectedCloudToImagePlane(std::string color_string)
             projected_image.at<Vec3b>(x, y)[1] = 255;
         else if(color_string=="blue")
             projected_image.at<Vec3b>(x, y)[0] = 255;
+        else if(color_string=="orange")
+        {
+            projected_image.at<Vec3b>(x,y)[1] = 165; 
+            projected_image.at<Vec3b>(x,y)[2] = 255;
+        }
     }
     // cv::imwrite("projected_image.png", projected_image);
+    /*
     int size_vector = pos_vector.size();
     int x_temp1, y_temp1, x_temp2, y_temp2;
     float slope; 
@@ -270,11 +307,17 @@ void ObjectPose::ProjectedCloudToImagePlane(std::string color_string)
                         projected_image.at<Vec3b>(x, y)[1] = 255;
                         projected_image.at<Vec3b>(x, y)[2] = 255;
                     }
+                    else if(color_string=="orange")
+                    {
+                        projected_image.at<Vec3b>(x,y)[1] = 165; 
+                        projected_image.at<Vec3b>(x,y)[2] = 255;
+                    }
                 }
             }
         }
     }
     // cv::imshow("projected_image", projected_image);
+    */
     std::vector<Point> RectPoints = std::vector<Point> (4);
     fitRectangle(projected_image, RectPoints, color_string);
 }
@@ -327,8 +370,7 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<Point> RectPo
     } 
 
 	cv::imshow(color_string + "_drawing", projected_image);
-    // BackProjectToDominatPlane(Final_RectPoints);
-
+    BackProjectToDominatPlane(RectPoints, color_string);
 
     /*
     double prev_dist_rect_1 = sqrt(pow(prev_RectPoints[0].x - prev_RectPoints[1].x, 2) + pow(prev_RectPoints[0].y - prev_RectPoints[1].y, 2));
@@ -380,10 +422,9 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<Point> RectPo
         prev_RectPoints = RectPoints;
     }
     */
-
 }
 
-void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point2f> Rect_points)
+void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points, std::string color_string)
 {
     float a = best_plane.a; 
     float b = best_plane.b; 
@@ -391,7 +432,17 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point2f> Rect_points)
     float d = best_plane.d;
     float Z_deominator = std::numeric_limits<float>::max();
     // TODO: FIND max length between dominant plane and point cloud
-    float max_length = 0.053;
+    float max_length;
+    if(color_string=="red")
+        max_length = FindBlockHeight(red_cloud);
+    else if(color_string=="green")
+        max_length = FindBlockHeight(green_cloud);
+    else if(color_string=="blue")
+        max_length = FindBlockHeight(blue_cloud);
+    else if(color_string=="yellow")
+        max_length = FindBlockHeight(yellow_cloud);
+    else if(color_string=="orange")
+        max_length = FindBlockHeight(orange_cloud);
     std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector; 
     for (int i = 0; i < Rect_points.size(); i++)
     {
@@ -414,13 +465,53 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point2f> Rect_points)
         temp_cloud_upper.g = 255; 
         pos_vector.push_back(make_pair(temp_cloud,temp_cloud_upper));
     }
-    /*
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr merged_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::copyPointCloud(merged_cloud, *merged_cloud_ptr);
-    CloudView(merged_cloud_ptr, pos_vector);
-    */
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Cloud_for_viewer(new pcl::PointCloud<pcl::PointXYZRGB>);
+    if(color_string=="red")
+    {
+        pcl::copyPointCloud(red_cloud, *Cloud_for_viewer);
+    }
+    else if(color_string=="green")
+    {
+        pcl::copyPointCloud(green_cloud, *Cloud_for_viewer);
+    }
+    else if(color_string=="blue")
+    {
+        pcl::copyPointCloud(blue_cloud, *Cloud_for_viewer);
+        // CloudView(Cloud_for_viewer, pos_vector);
+    }
+    else if(color_string=="yellow")
+    {
+        cout << "yellow length: " << max_length << endl;
+        pcl::copyPointCloud(yellow_cloud, *Cloud_for_viewer);
+        CloudView(Cloud_for_viewer, pos_vector);
+    }
+    else if(color_string=="orange")
+    {
+        cout << "orange length: " << max_length << endl;
+        pcl::copyPointCloud(orange_cloud, *Cloud_for_viewer);
+    }
+
 }
 
+float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud)
+{
+    float max_height=0;
+    float dist_temp;
+    float a = best_plane.a; 
+    float b = best_plane.b;
+    float c = best_plane.c;
+    float d = best_plane.d;
+    float denom = std::sqrt(a*a + b*b + c*c);
+    for(int i=0; i<in_cloud.size(); i++)
+    {
+        pcl::PointXYZRGB temp_cloud = in_cloud[i];
+        dist_temp = std::abs(a*temp_cloud.x + b*temp_cloud.y + c*temp_cloud.z + d)/denom;
+        if(max_height<dist_temp)
+            max_height = dist_temp;
+    }
+    return max_height;
+}
 void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector) 
 {
 	// pcl::PointCloud<pcl::PointXYZRGB>::Ptr ptrCloud(in_cloud);
@@ -464,27 +555,6 @@ void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std:
     {
         viewer.spinOnce ();
     }
-    std::exit(-1);
+    exit(0);
 }
-void ObjectPose::XYZRGB2XYZnFiltering(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud)
-{
-    for (int i = 0; i < in_cloud->size(); i++)
-    {
-        pcl::PointXYZRGB temp_cloud; 
-        temp_cloud = in_cloud->points[i];
-        pcl::PointXYZ temp_cloud2; 
-        temp_cloud2.x = temp_cloud.x; 
-        temp_cloud2.y = temp_cloud.y; 
-        temp_cloud2.z = temp_cloud.z; 
-        out_cloud->points.push_back(temp_cloud2);
-    }
-    
-    pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
-    sor.setInputCloud(out_cloud);
-    sor.setMeanK(50);
-    sor.setStddevMulThresh (1.0);
-    sor.filter(*out_cloud);
 
-    std::cerr << "Cloud after filtering: " << std::endl;
-    std::cerr << *out_cloud << std::endl;
-}
