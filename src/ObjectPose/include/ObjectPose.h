@@ -25,13 +25,13 @@ using namespace cv;
 class ObjectPose{
     public:
         ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, float _cy, Plane::DominantPlane* plane);
-        void Accumulate_PointCloud(cv::Mat& pcd_outlier, cv::Mat& Mask);
+        void Accumulate_PointCloud(cv::Mat& pcd_outlier, std::vector<cv::Mat>& Mask);
         void CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector);
         void XYZRGB2XYZnFiltering(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr out_cloud);
-        void ProjectedCloudToImagePlane();
+        void ProjectedCloudToImagePlane(std::string color_string);
         void ProjectToImage();
-        void fitRectangle(cv::Mat image);
-        void ProjectToDominantPlane();
+        void fitRectangle(cv::Mat image, std::vector<cv::Point> RectPoints, std::string color_string);
+        void ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string color_string);
         void BackProjectToDominatPlane(std::vector<Point2f> Rect_points);
     
     protected:
@@ -46,7 +46,13 @@ class ObjectPose{
         float fy;
         float cx; 
         float cy;
-        pcl::PointCloud<pcl::PointXYZRGB> merged_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> red_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> yellow_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> green_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> blue_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> brown_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> orange_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> purple_cloud;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr projected_cloud;
         Plane::DominantPlane* plane_object;
         Plane::Plane_model best_plane; 

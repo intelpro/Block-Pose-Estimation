@@ -5,3 +5,5 @@ install/*
 bagfiles/*
 tags
 devel
+*.swp
+*.png

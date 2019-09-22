@@ -87,7 +87,7 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     float cx = 328.0010681152344;
     float cy = 241.31031799316406;
     float scale = 1000;
-    float Distance_theshold = 0.005;
+    float Distance_theshold = 0.010;
     int width = 640;
     int height = 480;
     int max_iter = 100;
@@ -103,9 +103,7 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 
     start = clock();
     cv::Mat pointCloud = plane.Depth2pcd(image_Depth);
-
     cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3); Plane::Plane_model best_plane = plane.RunRansac(pCloud_inlier);
-
     cv::Mat pCloud_outlier = cv::Mat::zeros(height, width, CV_32FC3);
 
     for (int y=0; y<height; y++)
@@ -123,15 +121,16 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     double result = (double)(end - start)/CLOCKS_PER_SEC;
 	Show_Results(pcd_object, image_RGB, "seg_image");
     imageCb(image_RGB, Total_mask);
-    // pose.Accumulate_PointCloud(pcd_object, Total_mask[0]);
-    pose.Accumulate_PointCloud(pcd_object, Total_mask[2]);
+    pose.Accumulate_PointCloud(pcd_object, Total_mask);
+    cv::imshow("RGB", image_RGB);
+    /*
     cv::imshow("red", Total_mask[0]);
     cv::imshow("yellow", Total_mask[1]);
-    cv::imshow("green", Total_mask[2]);
     cv::imshow("blue", Total_mask[3]);
     cv::imshow("brown", Total_mask[4]);
     cv::imshow("orange", Total_mask[5]);
     // cout << "consuming time: " << result << "(s)" << endl;
+    */
 }
 
 void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name)
@@ -161,6 +160,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     Mat hsv_image;
     cvtColor(RGB_image, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
+    imshow("HSV_image", hsv_image);
 
     Mat lower_red_hue;
     Mat upper_red_hue;
@@ -188,7 +188,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     // Threshold for blue color
     Mat blue;
-    inRange(hsv_image, Scalar(100, 100, 20), Scalar(130, 255, 70), blue);
+    inRange(hsv_image, Scalar(100, 100, 10), Scalar(130, 255, 90), blue);
     //inRange(hsv_image, Scalar(102, 70, 20), Scalar(130, 200, 60), blue);
 
     // Threshold for purple color. the hue for purple is the same as red. Only difference is value.
