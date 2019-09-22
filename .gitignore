@@ -1,0 +1,5 @@
+build/*
+install/*
+.idea/*
+.catkin_workspace
+bagfiles/*
