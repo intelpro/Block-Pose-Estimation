@@ -88,13 +88,15 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     float cy = 241.31031799316406;
     float scale = 1000;
     float Distance_theshold = 0.010;
+    float unit_length = 0.025; 
+    float Threshold_for_occgrid = unit_length/4;
     int width = 640;
     int height = 480;
     int max_iter = 100;
     int Depth_Accum_iter = 3; 
     std::vector<cv::Mat> Total_mask(7);
     static Plane::DominantPlane plane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
-    static ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, &plane);
+    static ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, &plane);
 
     clock_t start, end;
 
@@ -128,7 +130,7 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     cv::imshow("red", Total_mask[0]);
     cv::imshow("yellow", Total_mask[1]);
     cv::imshow("blue", Total_mask[3]);
-    cv::imshow("brown", Total_mask[4]);
+    cv::imshow("purple", Total_mask[6]);
     // cout << "consuming time: " << result << "(s)" << endl;
     */
 }
@@ -151,6 +153,7 @@ void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string w
     }
 
     cv::Mat red_image;
+    imshow("RGB_image_org", RGB_image_original);
     imshow("RGB_image_seg", RGB_image);
     waitKey(2);
 }
@@ -193,14 +196,14 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     // Threshold for purple color. the hue for purple is the same as red. Only difference is value.
     Mat purple;
-    inRange(hsv_image, Scalar(150, 50, 70), Scalar(179, 70, 100), purple);
+    inRange(hsv_image, Scalar(140, 40, 30), Scalar(179, 90, 110), purple);
 
     // Threshold for orange color
     // Threshold for brown color. the hue for brown is the same as red and orange. Only difference is value.
 
     Mat lower_brown, upper_brown, brown;
-    inRange(hsv_image, Scalar(1, 40, 10), Scalar(30, 120, 60), upper_brown);
-    inRange(hsv_image, Scalar(170, 40, 10), Scalar(179, 120, 60), lower_brown);
+    inRange(hsv_image, Scalar(1, 25, 65), Scalar(10, 60, 100), upper_brown);
+    inRange(hsv_image, Scalar(155, 25, 65), Scalar(179, 60, 100), lower_brown);
     addWeighted(lower_brown, 1.0, upper_brown, 1.0, 0.0, brown);
 
     // morphological opening (remove small objects from the foreground)
@@ -251,6 +254,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
     dilate(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
     erode(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
+    /*
     // morphological opening (remove small objects from the foreground)
     erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
     dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
@@ -258,6 +262,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
     // morphological closing (fill small holes in the foreground)
     dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
     erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+    */
 
     cv::Mat red_display = cv::Mat::zeros(480, 640, CV_8UC1);
     cv::Mat yellow_display = cv::Mat::zeros(480, 640, CV_8UC1);

@@ -24,7 +24,7 @@ using namespace cv;
 
 class ObjectPose{
     public:
-        ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, float _cy, Plane::DominantPlane* plane);
+        ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane* plane);
         void Accumulate_PointCloud(cv::Mat& pcd_outlier, std::vector<cv::Mat>& Mask);
         void CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector);
         void ProjectedCloudToImagePlane(std::string color_string);
@@ -32,7 +32,8 @@ class ObjectPose{
         void fitRectangle(cv::Mat image, std::vector<cv::Point> RectPoints, std::string color_string);
         void ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string color_string);
         void BackProjectToDominatPlane(std::vector<Point> Rect_points, std::string color_string);
-        float FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud);
+        float FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, float a, float b, float c, float d);
+        void MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height);
     
     protected:
         // cv::Mat Red_Mask;
@@ -46,6 +47,8 @@ class ObjectPose{
         float fy;
         float cx; 
         float cy;
+        float unit_length;
+        float dist_thresh;
         pcl::PointCloud<pcl::PointXYZRGB> red_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> yellow_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> green_cloud;
