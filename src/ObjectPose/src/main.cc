@@ -124,15 +124,17 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 	Show_Results(pcd_object, image_RGB, "seg_image");
     imageCb(image_RGB, Total_mask);
     pose.Accumulate_PointCloud(pcd_object, Total_mask);
+    //    Mask_vector[0] = red_display.clone();
     /*
     cv::imshow("RGB", image_RGB);
     cv::imshow("yellow", Total_mask[1]);
-    cv::imshow("red", Total_mask[0]);
-    cv::imshow("yellow", Total_mask[1]);
+    cv::imshow("green", Total_mask[2]);
     cv::imshow("blue", Total_mask[3]);
+    cv::imshow("brown", Total_mask[4]);
+    cv::imshow("orange", Total_mask[5]);
     cv::imshow("purple", Total_mask[6]);
-    // cout << "consuming time: " << result << "(s)" << endl;
     */
+    // cout << "consuming time: " << result << "(s)" << endl;
 }
 
 void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name)
@@ -202,8 +204,8 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
     // Threshold for brown color. the hue for brown is the same as red and orange. Only difference is value.
 
     Mat lower_brown, upper_brown, brown;
-    inRange(hsv_image, Scalar(1, 25, 65), Scalar(10, 60, 100), upper_brown);
-    inRange(hsv_image, Scalar(155, 25, 65), Scalar(179, 60, 100), lower_brown);
+    inRange(hsv_image, Scalar(0, 10, 50), Scalar(10, 50, 100), upper_brown);
+    inRange(hsv_image, Scalar(160, 10, 50), Scalar(179, 50, 100), lower_brown);
     addWeighted(lower_brown, 1.0, upper_brown, 1.0, 0.0, brown);
 
     // morphological opening (remove small objects from the foreground)
@@ -254,7 +256,6 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
     dilate(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
     erode(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
-    /*
     // morphological opening (remove small objects from the foreground)
     erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
     dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
@@ -262,7 +263,6 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
     // morphological closing (fill small holes in the foreground)
     dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
     erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
-    */
 
     cv::Mat red_display = cv::Mat::zeros(480, 640, CV_8UC1);
     cv::Mat yellow_display = cv::Mat::zeros(480, 640, CV_8UC1);
