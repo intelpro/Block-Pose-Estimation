@@ -89,7 +89,7 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     float scale = 1000;
     float Distance_theshold = 0.010;
     float unit_length = 0.025; 
-    float Threshold_for_occgrid = unit_length/4;
+    float Threshold_for_occgrid = unit_length/2;
     int width = 640;
     int height = 480;
     int max_iter = 100;

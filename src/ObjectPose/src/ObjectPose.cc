@@ -31,6 +31,13 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     dist_thresh = _dist_thresh;
     best_plane = plane->cur_best_plane;
     box_flag=0;
+    std::vector<int> red_Grid(3);
+    std::vector<int> yellow_Grid(3);
+    std::vector<int> green_Grid(3);
+    std::vector<int> blue_Grid(3);
+    std::vector<int> brown_Grid(3);
+    std::vector<int> orange_Grid(3);
+    std::vector<int> purple_Grid(3);
 }
 
 void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat> &Mask)
@@ -220,6 +227,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
         ProjectToDominantPlane(purple_cloud, "purple");
         Accum_idx = 0; 
     }
+
 }
 
 
@@ -540,7 +548,6 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points, s
         float Z = -d/Z_deominator;
         float X = (x-cx)/fx*Z;
         float Y = (y-cy)/fy*Z;
-        // cout << "X: " << X << "Y: " << Y << "Z: " << Z << endl;
         pcl::PointXYZRGB temp_cloud;
         temp_cloud.x = X; 
         temp_cloud.y = Y;
@@ -561,7 +568,8 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points, s
         pcl::copyPointCloud(red_cloud, *Cloud_for_viewer);
         // CloudView(Cloud_for_viewer, pos_vector);
         // MeasureOccupanyBB(pos_vector, max_length);
-        MeasureOccupanyBB(pos_vector, max_length);
+        MeasureOccupanyBB(pos_vector, max_length, color_string);
+        cout << color_string << " Grid" << red_Grid[0] << " " << red_Grid[1] << " " << red_Grid[2] << endl;
     }
     else if(color_string=="green")
     {
@@ -574,13 +582,15 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points, s
         cout << "blue height: " << max_length << endl;
         pcl::copyPointCloud(blue_cloud, *Cloud_for_viewer);
         // CloudView(Cloud_for_viewer, pos_vector);
-        // MeasureOccupanyBB(pos_vector, max_length);
+        MeasureOccupanyBB(pos_vector, max_length, color_string);
+        cout << color_string << " Grid" << blue_Grid[0] << " " << blue_Grid[1] << " " << blue_Grid[2] << endl;
     }
     else if(color_string=="brown")
     {
         cout << "brown height: " << max_length << endl;
         pcl::copyPointCloud(brown_cloud, *Cloud_for_viewer);
-        MeasureOccupanyBB(pos_vector, max_length);
+        MeasureOccupanyBB(pos_vector, max_length, color_string);
+        cout << color_string << " Grid" << brown_Grid[0] << " " << brown_Grid[1] << " " << brown_Grid[2] << endl;
         //CloudView(Cloud_for_viewer, pos_vector);
     }
 
@@ -589,18 +599,22 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points, s
         cout << "yellow height: " << max_length << endl;
         pcl::copyPointCloud(yellow_cloud, *Cloud_for_viewer);
         // CloudView(Cloud_for_viewer, pos_vector);
-        // MeasureOccupanyBB(pos_vector, max_length);
+        MeasureOccupanyBB(pos_vector, max_length, color_string);
+        cout << color_string << " Grid" << yellow_Grid[0] << " " << yellow_Grid[1] << " " << yellow_Grid[2] << endl;
     }
     else if(color_string=="orange")
     {
         cout << "orange height: " << max_length << endl;
         pcl::copyPointCloud(orange_cloud, *Cloud_for_viewer);
-        // MeasureOccupanyBB(pos_vector, max_length);
+        MeasureOccupanyBB(pos_vector, max_length, color_string);
+        cout << color_string << " Grid" << orange_Grid[0] << " " << orange_Grid[1] << " " << orange_Grid[2] << endl;
     }
     else if(color_string=="purple")
     {
         cout << "purple height: " << max_length << endl;
         pcl::copyPointCloud(purple_cloud, *Cloud_for_viewer);
+        MeasureOccupanyBB(pos_vector, max_length, color_string);
+        cout << color_string << " Grid" << purple_Grid[0] << " " << purple_Grid[1] << " " << purple_Grid[2] << endl;
         // CloudView(Cloud_for_viewer, pos_vector);
     }
 }
@@ -629,9 +643,8 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
     return max_height;
 }
 
-void ObjectPose::MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height)
+void ObjectPose::MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height, std::string color_string)
 {
-    dist_thresh = 0.006;
     std::vector<int> Grid_size(3);
     pcl::PointXYZRGB temp_cloud_1 = std::get<0>(pos_vector[0]);
     pcl::PointXYZRGB temp_cloud_2 = std::get<0>(pos_vector[1]);
@@ -639,28 +652,51 @@ void ObjectPose::MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::Point
     pcl::PointXYZRGB temp_cloud_4 = std::get<0>(pos_vector[3]);
     float dist1 = std::sqrt(std::pow(temp_cloud_1.x - temp_cloud_2.x, 2) + std::pow(temp_cloud_1.y - temp_cloud_2.y, 2) + std::pow(temp_cloud_1.z - temp_cloud_2.z,2));
     float dist2 = std::sqrt(std::pow(temp_cloud_1.x - temp_cloud_4.x, 2) + std::pow(temp_cloud_1.y - temp_cloud_4.y, 2) + std::pow(temp_cloud_1.z - temp_cloud_4.z,2));
+
+    cout << "dist1: " << dist1 << "dist2: " << dist2 << "height: " << max_height << endl;
     if(dist1 > unit_length-dist_thresh & dist1 < unit_length+dist_thresh)
         Grid_size[0] = 1;
     else if(dist1 > 2*unit_length-dist_thresh & dist1 < 2*unit_length+dist_thresh)
         Grid_size[0] = 2;
     else if(dist1 > 3*unit_length-dist_thresh & dist1 < 3*unit_length+dist_thresh)
         Grid_size[0] = 3;
+    else 
+        Grid_size[0] = -1; 
+
     if(dist2 > unit_length-dist_thresh & dist2 < unit_length+dist_thresh)
         Grid_size[1] = 1;
     else if(dist2 > 2*unit_length-dist_thresh & dist2 < 2*unit_length+dist_thresh)
         Grid_size[1] = 2;
     else if(dist2 > 3*unit_length-dist_thresh & dist2 < 3*unit_length+dist_thresh)
-        Grid_size[1] = 2;
+        Grid_size[1] = 3;
+    else 
+        Grid_size[1] = -1; 
+
     if(max_height > unit_length - dist_thresh & max_height < unit_length + dist_thresh)
         Grid_size[2] = 1;
     else if(max_height > 2*unit_length - dist_thresh & max_height < 2*unit_length + dist_thresh)
         Grid_size[2] = 2;
     else if(max_height > 3*unit_length - dist_thresh & max_height < 3*unit_length + dist_thresh)
         Grid_size[2] = 3;
-    cout << "dist1: " << dist1 << endl;
-    cout << "dist2: " << dist2 << endl;
-    cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
+    else 
+        Grid_size[2] = -1; 
+
+    if(color_string=="red")
+        red_Grid=Grid_size;
+    else if(color_string=="yellow")
+        yellow_Grid=Grid_size;
+    else if(color_string=="green")
+        green_Grid=Grid_size;
+    else if(color_string=="blue")
+        blue_Grid=Grid_size;
+    else if(color_string=="brown")
+        brown_Grid=Grid_size;
+    else if(color_string=="orange")
+        orange_Grid=Grid_size;
+    else if(color_string=="purple")
+        purple_Grid=Grid_size;
 }
+
 void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector) 
 {
 	// pcl::PointCloud<pcl::PointXYZRGB>::Ptr ptrCloud(in_cloud);
