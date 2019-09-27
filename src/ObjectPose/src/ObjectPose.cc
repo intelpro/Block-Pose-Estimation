@@ -570,6 +570,7 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points, s
         // MeasureOccupanyBB(pos_vector, max_length);
         MeasureOccupanyBB(pos_vector, max_length, color_string);
         cout << color_string << " Grid" << red_Grid[0] << " " << red_Grid[1] << " " << red_Grid[2] << endl;
+        red_cloud.clear();
     }
     else if(color_string=="green")
     {
@@ -654,8 +655,8 @@ void ObjectPose::MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::Point
     float dist1 = std::sqrt(std::pow(temp_cloud_1.x - temp_cloud_2.x, 2) + std::pow(temp_cloud_1.y - temp_cloud_2.y, 2) + std::pow(temp_cloud_1.z - temp_cloud_2.z,2));
     float dist2 = std::sqrt(std::pow(temp_cloud_1.x - temp_cloud_4.x, 2) + std::pow(temp_cloud_1.y - temp_cloud_4.y, 2) + std::pow(temp_cloud_1.z - temp_cloud_4.z,2));
 
-    cout << "dist1: " << dist1 << "dist2: " << dist2 << "height: " << max_height << endl;
-    cout << "a: " << best_plane.a <<  "b: " << best_plane.b << "c: " << best_plane.c << endl;
+    // cout << "dist1: " << dist1 << "dist2: " << dist2 << "height: " << max_height << endl;
+    // cout << "a: " << best_plane.a <<  "b: " << best_plane.b << "c: " << best_plane.c << endl;
     if(dist1 > unit_length-dist_thresh & dist1 < unit_length+dist_thresh)
         Grid_size[0] = 1;
     else if(dist1 > 2*unit_length-dist_thresh & dist1 < 2*unit_length+dist_thresh)
@@ -693,43 +694,62 @@ void ObjectPose::MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::Point
     cout << "J vector: " << Cuboid_J << endl;
     cout << "K vector: " << Cuboid_K << endl;
 
+    int cnt_tot = 0; 
+
     if(color_string=="red")
     {
         red_Grid=Grid_size;
+        // I vector of cuboid
+        cv::Vec3f Cuboid_I_temp = Cuboid_I/red_Grid[0];
+        // J vector of cuboid
+        cv::Vec3f Cuboid_J_temp = Cuboid_J/red_Grid[1];
+        // k vector of cuboid
+        cv::Vec3f Cuboid_K_temp = Cuboid_K/red_Grid[2];
+        float Cuboid_I_value = std::sqrt(std::pow(Cuboid_I_temp[0],2) + std::pow(Cuboid_I_temp[1],2) + std::pow(Cuboid_I_temp[2],2));
+        float Cuboid_J_value = std::sqrt(std::pow(Cuboid_J_temp[0],2) + std::pow(Cuboid_J_temp[1],2) + std::pow(Cuboid_J_temp[2],2));
+        float Cuboid_K_value = std::sqrt(std::pow(Cuboid_K_temp[0],2) + std::pow(Cuboid_K_temp[1],2) + std::pow(Cuboid_K_temp[2],2));
+        Cuboid_I_temp /= Cuboid_I_value;
+        Cuboid_J_temp /= Cuboid_J_value;
+        Cuboid_K_temp /= Cuboid_K_value;
+        cv::Vec3f temp_cloud_vec3f = cv::Vec3f(temp_cloud_1.x, temp_cloud_1.y, temp_cloud_1.z);
         for(int i=1; i <= red_Grid[0]; i++)
         {
             for(int j=1; j <= red_Grid[1]; j++)
             {
                 for(int k=1; k <= red_Grid[2]; k++)
                 {
-                    int cnt_x = 0; 
-                    int cnt_y = 0; 
-                    int cnt_z = 0; 
-                    // I vector of cuboid
-                    cv::Vec3f Cuboid_I_temp = i*Cuboid_I/red_Grid[0];
-                    // J vector of cuboid
-                    cv::Vec3f Cuboid_J_temp = j*Cuboid_J/red_Grid[1];
-                    // k vector of cuboid
-                    cv::Vec3f Cuboid_K_temp = k*Cuboid_K/red_Grid[2];
-                    float Cuboid_I_value = std::sqrt(std::pow(Cuboid_I_temp[0],2) + std::pow(Cuboid_I_temp[1],2) + std::pow(Cuboid_I_temp[2],2));
-                    float Cuboid_J_value = std::sqrt(std::pow(Cuboid_J_temp[0],2) + std::pow(Cuboid_J_temp[1],2) + std::pow(Cuboid_J_temp[2],2));
-                    float Cuboid_K_value = std::sqrt(std::pow(Cuboid_K_temp[0],2) + std::pow(Cuboid_K_temp[1],2) + std::pow(Cuboid_K_temp[2],2));
+                    /*
+                    cout << "before: " <<  temp_cloud_vec3f << endl;
+                    // cout << "after: " <<  temp_cloud_vec3f << endl;
+                    cout << "i: " << Cuboid_I_temp << endl;
+                    cout << "j: " << Cuboid_J_temp << endl;;
+                    cout << "k: " << Cuboid_K_temp << endl;;
+                    cout << "i value: " << Cuboid_I_value << endl;
+                    cout << "j value: " << Cuboid_J_value << endl;
+                    cout << "k value: " << Cuboid_K_value << endl;
+                    */
+
+                    temp_cloud_vec3f[0] -= (i-1)*Cuboid_I_value*Cuboid_I_temp[0];
+                    temp_cloud_vec3f[1] -= (i-1)*Cuboid_I_value*Cuboid_I_temp[1];
+                    temp_cloud_vec3f[2] -= (i-1)*Cuboid_I_value*Cuboid_I_temp[2];
+                    temp_cloud_vec3f[0] -= (j-1)*Cuboid_J_value*Cuboid_J_temp[0];
+                    temp_cloud_vec3f[1] -= (j-1)*Cuboid_J_value*Cuboid_J_temp[1];
+                    temp_cloud_vec3f[2] -= (j-1)*Cuboid_J_value*Cuboid_J_temp[2];
                     for(int l=0; l < red_cloud.size(); l++)
                     {
                         pcl::PointXYZRGB temp_cloud = red_cloud[l];
-                        cv::Vec3f temp_cloud_vec3f = cv::Vec3f(temp_cloud_1.x - temp_cloud.x, temp_cloud_1.y - temp_cloud.y, temp_cloud_2.z - temp_cloud.z);
-                        float dot_x = Cuboid_I_temp.dot(temp_cloud_vec3f);
-                        float dot_y = Cuboid_J_temp.dot(temp_cloud_vec3f);
-                        float dot_z = Cuboid_K_temp.dot(temp_cloud_vec3f);
-                        if(0 < dot_x & dot_x < Cuboid_I_value)
-                            cnt_x++;
-                        if(0 < dot_y & dot_y < Cuboid_J_value)
-                            cnt_y++;
-                        if(0 < dot_z & dot_z < Cuboid_K_value)
-                            cnt_z++;
+                        cv::Vec3f temp_cloud_vec3f2 = cv::Vec3f(temp_cloud_vec3f[0] - temp_cloud.x, temp_cloud_vec3f[1] - temp_cloud.y, temp_cloud_vec3f[2] - temp_cloud.z);
+                        float dot_x = Cuboid_I_temp.dot(temp_cloud_vec3f2);
+                        float dot_y = Cuboid_J_temp.dot(temp_cloud_vec3f2);
+                        float dot_z = Cuboid_K_temp.dot(temp_cloud_vec3f2);
+                        if(0 < dot_x & dot_x < Cuboid_I_value & 0 < dot_y & dot_y < Cuboid_J_value & 0 < dot_z & dot_z < Cuboid_K_value)
+                        {
+                            cnt_tot++;
+                        }
                     }
                     cout << "i: " << i << "j: " << j << "k: " << k << endl;
-                    cout << "cnt x: " <<  cnt_x << "cnt y: " << cnt_y << "cnt z: " << cnt_z << endl; 
+                    cout << "cnt : " <<  cnt_tot << endl;
+                    cnt_tot = 0; 
                 }
             }
         }
