@@ -219,12 +219,12 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
     if(Accum_idx >= Accum_iter)
     {
         ProjectToDominantPlane(red_cloud, "red");
-        ProjectToDominantPlane(yellow_cloud, "yellow");
-        ProjectToDominantPlane(green_cloud, "green");
-        ProjectToDominantPlane(blue_cloud, "blue");
-        ProjectToDominantPlane(brown_cloud, "brown");
-        ProjectToDominantPlane(orange_cloud, "orange");
-        ProjectToDominantPlane(purple_cloud, "purple");
+        // ProjectToDominantPlane(yellow_cloud, "yellow");
+        // ProjectToDominantPlane(green_cloud, "green");
+        // ProjectToDominantPlane(blue_cloud, "blue");
+        // ProjectToDominantPlane(brown_cloud, "brown");
+        // ProjectToDominantPlane(orange_cloud, "orange");
+        // ProjectToDominantPlane(purple_cloud, "purple");
         Accum_idx = 0; 
     }
 
@@ -650,10 +650,12 @@ void ObjectPose::MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::Point
     pcl::PointXYZRGB temp_cloud_2 = std::get<0>(pos_vector[1]);
     pcl::PointXYZRGB temp_cloud_3 = std::get<0>(pos_vector[2]);
     pcl::PointXYZRGB temp_cloud_4 = std::get<0>(pos_vector[3]);
+    pcl::PointXYZRGB temp_cloud_5 = std::get<1>(pos_vector[0]);
     float dist1 = std::sqrt(std::pow(temp_cloud_1.x - temp_cloud_2.x, 2) + std::pow(temp_cloud_1.y - temp_cloud_2.y, 2) + std::pow(temp_cloud_1.z - temp_cloud_2.z,2));
     float dist2 = std::sqrt(std::pow(temp_cloud_1.x - temp_cloud_4.x, 2) + std::pow(temp_cloud_1.y - temp_cloud_4.y, 2) + std::pow(temp_cloud_1.z - temp_cloud_4.z,2));
 
     cout << "dist1: " << dist1 << "dist2: " << dist2 << "height: " << max_height << endl;
+    cout << "a: " << best_plane.a <<  "b: " << best_plane.b << "c: " << best_plane.c << endl;
     if(dist1 > unit_length-dist_thresh & dist1 < unit_length+dist_thresh)
         Grid_size[0] = 1;
     else if(dist1 > 2*unit_length-dist_thresh & dist1 < 2*unit_length+dist_thresh)
@@ -681,8 +683,57 @@ void ObjectPose::MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::Point
     else 
         Grid_size[2] = -1; 
 
+    // i vector of cuboid
+    cv::Vec3f Cuboid_I(temp_cloud_1.x - temp_cloud_2.x, temp_cloud_1.y - temp_cloud_2.y, temp_cloud_1.z - temp_cloud_2.z);
+    // j vector of cuboid
+    cv::Vec3f Cuboid_J(temp_cloud_1.x - temp_cloud_4.x, temp_cloud_1.y - temp_cloud_4.y, temp_cloud_1.z - temp_cloud_4.z);
+    // k vector of cuboid
+    cv::Vec3f Cuboid_K(temp_cloud_1.x - temp_cloud_5.x, temp_cloud_1.y - temp_cloud_5.y, temp_cloud_1.z - temp_cloud_5.z);
+    cout << "I vector: " << Cuboid_I << endl;
+    cout << "J vector: " << Cuboid_J << endl;
+    cout << "K vector: " << Cuboid_K << endl;
+
     if(color_string=="red")
+    {
         red_Grid=Grid_size;
+        for(int i=1; i <= red_Grid[0]; i++)
+        {
+            for(int j=1; j <= red_Grid[1]; j++)
+            {
+                for(int k=1; k <= red_Grid[2]; k++)
+                {
+                    int cnt_x = 0; 
+                    int cnt_y = 0; 
+                    int cnt_z = 0; 
+                    // I vector of cuboid
+                    cv::Vec3f Cuboid_I_temp = i*Cuboid_I/red_Grid[0];
+                    // J vector of cuboid
+                    cv::Vec3f Cuboid_J_temp = j*Cuboid_J/red_Grid[1];
+                    // k vector of cuboid
+                    cv::Vec3f Cuboid_K_temp = k*Cuboid_K/red_Grid[2];
+                    float Cuboid_I_value = std::sqrt(std::pow(Cuboid_I_temp[0],2) + std::pow(Cuboid_I_temp[1],2) + std::pow(Cuboid_I_temp[2],2));
+                    float Cuboid_J_value = std::sqrt(std::pow(Cuboid_J_temp[0],2) + std::pow(Cuboid_J_temp[1],2) + std::pow(Cuboid_J_temp[2],2));
+                    float Cuboid_K_value = std::sqrt(std::pow(Cuboid_K_temp[0],2) + std::pow(Cuboid_K_temp[1],2) + std::pow(Cuboid_K_temp[2],2));
+                    for(int l=0; l < red_cloud.size(); l++)
+                    {
+                        pcl::PointXYZRGB temp_cloud = red_cloud[l];
+                        cv::Vec3f temp_cloud_vec3f = cv::Vec3f(temp_cloud_1.x - temp_cloud.x, temp_cloud_1.y - temp_cloud.y, temp_cloud_2.z - temp_cloud.z);
+                        float dot_x = Cuboid_I_temp.dot(temp_cloud_vec3f);
+                        float dot_y = Cuboid_J_temp.dot(temp_cloud_vec3f);
+                        float dot_z = Cuboid_K_temp.dot(temp_cloud_vec3f);
+                        if(0 < dot_x & dot_x < Cuboid_I_value)
+                            cnt_x++;
+                        if(0 < dot_y & dot_y < Cuboid_J_value)
+                            cnt_y++;
+                        if(0 < dot_z & dot_z < Cuboid_K_value)
+                            cnt_z++;
+                    }
+                    cout << "i: " << i << "j: " << j << "k: " << k << endl;
+                    cout << "cnt x: " <<  cnt_x << "cnt y: " << cnt_y << "cnt z: " << cnt_z << endl; 
+                }
+            }
+        }
+    }
     else if(color_string=="yellow")
         yellow_Grid=Grid_size;
     else if(color_string=="green")

@@ -93,7 +93,7 @@ Plane_model DominantPlane::RunRansac(cv::Mat &pcd_inlier) {
         pcd_temp_inlier.release();
         sampled_pcd.clear();
     }
-    float normalizer = std::sqrt(pow(best_plane.a,2) + pow(best_plane.b,2) + pow(best_plane.c,2) + pow(best_plane.d,2)); 
+    float normalizer = std::sqrt(pow(best_plane.a,2) + pow(best_plane.b,2) + pow(best_plane.c,2));
     best_plane.a = best_plane.a/normalizer;
     best_plane.b = best_plane.b/normalizer; 
     best_plane.c = best_plane.c/normalizer;
@@ -138,9 +138,7 @@ void DominantPlane::Object_Segmentation(cv::Mat& pcd_inlier, cv::Mat& pcd_object
                 if (sum < Threshold)
                 {
                     pcd_object.at<cv::Vec3f>(i, j) = Pointcloud.at<cv::Vec3f>(i, j);
-
                 }
-
             }
         }
     }
