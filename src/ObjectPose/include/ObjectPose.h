@@ -33,7 +33,8 @@ class ObjectPose{
         void ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string color_string);
         void BackProjectToDominatPlane(std::vector<Point> Rect_points, std::string color_string);
         float FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, float a, float b, float c, float d);
-        void MeasureOccupanyBB(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height, std::string color_string);
+        void FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height, std::string color_string);
+        void MeasureOccupany(pcl::PointXYZRGB BB_vertex1, pcl::PointXYZRGB BB_vertex2, pcl::PointXYZRGB BB_vertex4, pcl::PointXYZRGB BB_vertex5, std::vector<int> Grid_size, pcl::PointCloud<pcl::PointXYZRGB> ref_cloud);
     
     protected:
         // cv::Mat Red_Mask;
@@ -63,6 +64,12 @@ class ObjectPose{
         std::vector<int> brown_Grid;
         std::vector<int> orange_Grid;
         std::vector<int> purple_Grid;
+        std::vector<int> red_occ_Grid;
+        std::vector<int> yellow_occ_Grid;
+        std::vector<int> green_occ_Grid;
+        std::vector<int> blud_occ_Grid;
+        std::vector<int> orange_occ_Grid;
+        std::vector<int> purple_occ_Grid;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr projected_cloud;
         Plane::DominantPlane* plane_object;
         Plane::Plane_model best_plane; 

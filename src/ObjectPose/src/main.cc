@@ -87,7 +87,7 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     float cx = 328.0010681152344;
     float cy = 241.31031799316406;
     float scale = 1000;
-    float Distance_theshold = 0.010;
+    float Distance_theshold = 0.005;
     float unit_length = 0.025; 
     float Threshold_for_occgrid = unit_length/2;
     int width = 640;
@@ -121,13 +121,13 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 
     end = clock();
     double result = (double)(end - start)/CLOCKS_PER_SEC;
-	Show_Results(pcd_object, image_RGB, "seg_image");
+	Show_Results(pCloud_outlier, image_RGB, "seg_image");
     imageCb(image_RGB, Total_mask);
-    pose.Accumulate_PointCloud(pcd_object, Total_mask);
+    cv::imshow("yellow", Total_mask[1]);
+    pose.Accumulate_PointCloud(pCloud_outlier, Total_mask);
     //    Mask_vector[0] = red_display.clone();
     /*
     cv::imshow("RGB", image_RGB);
-    cv::imshow("yellow", Total_mask[1]);
     cv::imshow("green", Total_mask[2]);
     cv::imshow("blue", Total_mask[3]);
     cv::imshow("brown", Total_mask[4]);
