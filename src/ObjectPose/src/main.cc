@@ -123,7 +123,7 @@ void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     double result = (double)(end - start)/CLOCKS_PER_SEC;
 	Show_Results(pCloud_outlier, image_RGB, "seg_image");
     imageCb(image_RGB, Total_mask);
-    cv::imshow("yellow", Total_mask[1]);
+    cv::imshow("blue", Total_mask[3]);
     pose.Accumulate_PointCloud(pCloud_outlier, Total_mask);
     //    Mask_vector[0] = red_display.clone();
     /*
@@ -193,7 +193,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     // Threshold for blue color
     Mat blue;
-    inRange(hsv_image, Scalar(100, 100, 10), Scalar(130, 255, 90), blue);
+    inRange(hsv_image, Scalar(90, 100, 10), Scalar(130, 255, 100), blue);
     //inRange(hsv_image, Scalar(102, 70, 20), Scalar(130, 200, 60), blue);
 
     // Threshold for purple color. the hue for purple is the same as red. Only difference is value.
