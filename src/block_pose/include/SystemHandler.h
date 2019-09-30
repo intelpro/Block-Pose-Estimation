@@ -14,29 +14,20 @@
 #include <message_filters/time_synchronizer.h>
 #include <ctime>
 #include <chrono>
+#include <ObjectPose.h>
+#include <DominantPlane.h>
 namespace enc = sensor_msgs::image_encodings;
 static int Frame_count = 0;
 
 class SubscribeAndPublish
 {
 public:
-	SubscribeAndPublish()
+	SubscribeAndPublish(Plane::DominantPlane* _plane, ObjectPose* _pose)
 	{
-        fx = 615.6707153320312;
-        fy = 615.962158203125;
-        cx = 328.0010681152344;
-        cy = 241.31031799316406;
-        scale = 1000;
-        Distance_theshold = 0.005;
-        unit_length = 0.025; 
-        Threshold_for_occgrid = unit_length/2;
-        width = 640;
-        height = 480;
-        max_iter = 100;
-        Depth_Accum_iter = 3; 
 		//Topic you want to publish
 		// pub_ = n_.advertise<PUBLISHED_MESSAGE_TYPE>("/published_topic", 1);
-
+        pose_obj = _pose;
+        plane_obj = _plane;
 		//Topic you want to subscribe
 		sub_color = nh.subscribe("/camera/color/image_raw", 100, &SubscribeAndPublish::ImageCallback, this);
 		sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SubscribeAndPublish::DepthCallback, this);
@@ -91,16 +82,6 @@ private:
 	ros::Subscriber sub_depth;
     cv::Mat imRGB;
 	cv::Mat imDepth;
-    float fx;
-    float fy;
-    float cx;
-    float cy;
-    float scale;
-    float Distance_theshold;
-    float unit_length;
-    float Threshold_for_occgrid;
-    int width;
-    int height;
-    int max_iter;
-    int Depth_Accum_iter;
+    Plane::DominantPlane* plane_obj;
+    ObjectPose* pose_obj;
 };//End of class SubscribeAndPublish

@@ -7,8 +7,6 @@ using namespace cv;
 
 void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name);
 void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
-
-/*
 float fx = 615.6707153320312;
 float fy = 615.962158203125;
 float cx = 328.0010681152344;
@@ -21,32 +19,31 @@ int width = 640;
 int height = 480;
 int max_iter = 100;
 int Depth_Accum_iter = 3; 
-*/
+
 
 int main(int argc, char** argv)
 {
+    Plane::DominantPlane plane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
+    ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, &plane);
     ros::init(argc, argv,"block_pose");
-    SubscribeAndPublish SAPObject;
+    SubscribeAndPublish SAPObject(&plane, &pose);
     ros::spin();
     return 0;
 }
 
+
 void SubscribeAndPublish::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
     std::vector<cv::Mat> Total_mask(7);
-
     clock_t start, end;
-
-	static Plane::DominantPlane plane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
-	static ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, &plane);
 
     cv::Mat pCloud(height, width, CV_32FC3);
     cv::Mat pCloud_inlier(height, width, CV_32FC3);
 
     start = clock();
-    cv::Mat pointCloud = plane.Depth2pcd(image_Depth);
+    cv::Mat pointCloud = plane_obj->Depth2pcd(image_Depth);
     cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3);
-    Plane::Plane_model best_plane = plane.RunRansac(pCloud_inlier);
+    Plane::Plane_model best_plane = plane_obj->RunRansac(pCloud_inlier);
     cv::Mat pCloud_outlier = cv::Mat::zeros(height, width, CV_32FC3);
 
     for (int y=0; y<height; y++)
@@ -58,13 +55,13 @@ void SubscribeAndPublish::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     }
 
     cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
-    plane.ObjectSegmentation(best_plane, pcd_object);
+    plane_obj->ObjectSegmentation(best_plane, pcd_object);
 
     end = clock();
     double result = (double)(end - start)/CLOCKS_PER_SEC;
 	Show_Results(pCloud_outlier, image_RGB, "seg_image");
     imageCb(image_RGB, Total_mask);
-    pose.Accumulate_PointCloud(pCloud_outlier, Total_mask);
+    pose_obj->Accumulate_PointCloud(pCloud_outlier, Total_mask);
 
     // Mask_vector[0] = red_display.clone();
     /*
