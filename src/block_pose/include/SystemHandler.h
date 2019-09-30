@@ -19,18 +19,18 @@
 namespace enc = sensor_msgs::image_encodings;
 static int Frame_count = 0;
 
-class SubscribeAndPublish
+class SystemHandler 
 {
 public:
-	SubscribeAndPublish(Plane::DominantPlane* _plane, ObjectPose* _pose)
+	SystemHandler(Plane::DominantPlane* _plane, ObjectPose* _pose)
 	{
 		//Topic you want to publish
 		// pub_ = n_.advertise<PUBLISHED_MESSAGE_TYPE>("/published_topic", 1);
         pose_obj = _pose;
         plane_obj = _plane;
 		//Topic you want to subscribe
-		sub_color = nh.subscribe("/camera/color/image_raw", 100, &SubscribeAndPublish::ImageCallback, this);
-		sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SubscribeAndPublish::DepthCallback, this);
+		sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
+		sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
 	}
 
 	void ImageCallback(const sensor_msgs::ImageConstPtr& msg)

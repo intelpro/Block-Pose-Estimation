@@ -26,13 +26,13 @@ int main(int argc, char** argv)
     Plane::DominantPlane plane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
     ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, &plane);
     ros::init(argc, argv,"block_pose");
-    SubscribeAndPublish SAPObject(&plane, &pose);
+    SystemHandler System(&plane, &pose);
     ros::spin();
     return 0;
 }
 
 
-void SubscribeAndPublish::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
+void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
     std::vector<cv::Mat> Total_mask(7);
     clock_t start, end;
