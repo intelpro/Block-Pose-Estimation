@@ -7,22 +7,22 @@ using namespace cv;
 
 void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name);
 void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
-float fx = 615.6707153320312;
-float fy = 615.962158203125;
-float cx = 328.0010681152344;
-float cy = 241.31031799316406;
-float scale = 1000;
-float Distance_theshold = 0.005;
-float unit_length = 0.025; 
-float Threshold_for_occgrid = unit_length/2;
-int width = 640;
-int height = 480;
-int max_iter = 100;
-int Depth_Accum_iter = 3; 
 
 
 int main(int argc, char** argv)
 {
+    float fx = 615.6707153320312;
+    float fy = 615.962158203125;
+    float cx = 328.0010681152344;
+    float cy = 241.31031799316406;
+    float scale = 1000;
+    float Distance_theshold = 0.005;
+    float unit_length = 0.025; 
+    float Threshold_for_occgrid = unit_length/2;
+    int width = 640;
+    int height = 480;
+    int max_iter = 100;
+    int Depth_Accum_iter = 3; 
     Plane::DominantPlane plane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
     ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, &plane);
     ros::init(argc, argv,"block_pose");
