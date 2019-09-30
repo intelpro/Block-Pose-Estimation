@@ -226,6 +226,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
     Accum_idx++;
     if(Accum_idx >= Accum_iter)
     {
+        cout << "-------------------------" << endl;
         ProjectToDominantPlane(red_cloud, "red");
         ProjectToDominantPlane(yellow_cloud, "yellow");
         // ProjectToDominantPlane(green_cloud, "green");
@@ -647,7 +648,7 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
             max_height = dist_temp;
     }
 
-    cout << "max height: " << max_height << endl;
+    // cout << "max height: " << max_height << endl;
     // Discretize max height
     if(max_height > unit_length-dist_thresh & max_height < unit_length+dist_thresh)
         max_height = unit_length + 0.003;
@@ -675,7 +676,7 @@ float ObjectPose::FindBlockMeanHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud
     }
 
     dist_mean = dist_tot/in_cloud.size();
-    cout << "mean height: " << dist_mean << endl;
+    // cout << "mean height: " << dist_mean << endl;
     return dist_mean;
 }
 
@@ -830,11 +831,11 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
         }
     }
 
-    cout << "-------------------------" << endl;
+    // cout << "-------------------------" << endl;
     std::vector<int> occ_grid(Grid_tot_size);
     for(int i = 0; i<Grid_tot_size; i++)
     {
-        cout << "cnt : " <<  Grid_pcd_cnt[i] << endl;
+        // cout << "cnt : " <<  Grid_pcd_cnt[i] << endl;
         if(Grid_pcd_cnt[i] > ref_cloud.size()/(3*Grid_tot_size))
             occ_grid[i] = 1; 
         else 
@@ -847,7 +848,6 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
     // cout << "occ grid: " ;
     // for(int i=0; i<Grid_tot_size; i++)
     //    cout << occ_grid[i] << " " ;
-    cout << "-------------------------" << endl;
     CheckOccGridWithKnownShape(Grid_size, occ_grid);
 }
 
@@ -998,12 +998,12 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
            }
            else
            {
-               cout << "orange block mis detected" << "tot cnt occ: " << tot_occ_grid_cnt << endl;
+               cout << "orange block mis detected" << endl;
            }
        }
        else
        {
-           cout << "orange block mis detected     " << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
+           cout << "orange block mis detected" << endl;
        }
     }
 
