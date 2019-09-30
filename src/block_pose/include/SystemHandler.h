@@ -22,12 +22,27 @@ static int Frame_count = 0;
 class SystemHandler 
 {
 public:
-	SystemHandler(Plane::DominantPlane* _plane, ObjectPose* _pose)
+	SystemHandler(Plane::DominantPlane* _plane, ObjectPose* _pose, float _fx, float _fy,
+                  float _cx, float _cy, float _Distance_threshold,  float _unit_length, float _Threshold_for_occgrid,
+                  int _width, int _height, int _max_iter, int _Depth_Accum_iter)
 	{
 		//Topic you want to publish
 		// pub_ = n_.advertise<PUBLISHED_MESSAGE_TYPE>("/published_topic", 1);
+        // Object pointer 
         pose_obj = _pose;
         plane_obj = _plane;
+        // hyperparameter
+        fx = _fx; 
+        fy = _fy; 
+        cx = _cx; 
+        cy = _cy;
+        Distance_theshold = _Distance_threshold;
+        unit_length = _unit_length;
+        Threshold_for_occgrid = _Threshold_for_occgrid;
+        width = _width;
+        height = _height;
+        max_iter = _max_iter;
+        Depth_Accum_iter = _Depth_Accum_iter;
 		//Topic you want to subscribe
 		sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
 		sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
@@ -76,6 +91,19 @@ public:
 	void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
 
 private:
+    float fx;
+    float fy;
+    float cx;
+    float cy;
+    float scale;
+    float Distance_theshold;
+    float unit_length;
+    float Threshold_for_occgrid;
+    int width;
+    int height;
+    int max_iter;
+    int Depth_Accum_iter;
+
 	ros::NodeHandle nh;
 	ros::Publisher pub_;
 	ros::Subscriber sub_color;

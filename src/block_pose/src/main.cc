@@ -8,7 +8,6 @@ using namespace cv;
 void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name);
 void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
 
-
 int main(int argc, char** argv)
 {
     float fx = 615.6707153320312;
@@ -26,7 +25,9 @@ int main(int argc, char** argv)
     Plane::DominantPlane plane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
     ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, &plane);
     ros::init(argc, argv,"block_pose");
-    SystemHandler System(&plane, &pose);
+    SystemHandler System(&plane, &pose, fx, fy, cx, cy,
+                        Distance_theshold, unit_length, Threshold_for_occgrid,
+                        width, height, max_iter, Depth_Accum_iter);
     ros::spin();
     return 0;
 }
