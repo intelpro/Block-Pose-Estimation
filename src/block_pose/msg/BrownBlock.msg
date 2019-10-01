@@ -1,0 +1,12 @@
+int64 Frame_id
+int32 Object_id
+int32[] Grid_size
+int32[] Occupancy_Grid
+#geometry_msgs/Point[] BB_lower_point1
+#geometry_msgs/Point[] BB_lower_point2
+#geometry_msgs/Point[] BB_lower_point3
+#geometry_msgs/Point[] BB_lower_point4
+#geometry_msgs/Point[] BB_upper_point1
+#geometry_msgs/Point[] BB_upper_point2
+#geometry_msgs/Point[] BB_upper_point3
+#geometry_msgs/Point[] BB_upper_point4

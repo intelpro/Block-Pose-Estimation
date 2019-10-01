@@ -11,6 +11,7 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
 	roscpp
 	std_msgs
+    geometry_msgs
 	cv_bridge
 	image_transport
     message_generation
@@ -55,6 +56,12 @@ find_package(OpenCV 3.0)
  add_message_files(
    FILES
    RedBlock.msg
+   YellowBlock.msg
+   BlueBlock.msg
+   BrownBlock.msg
+   OrangeBlock.msg
+   PurpleBlock.msg
+   GreenBlock.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -75,6 +82,7 @@ find_package(OpenCV 3.0)
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 ################################################
@@ -109,7 +117,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES ObjectPose
-  CATKIN_DEPENDS roscpp std_msgs
+  CATKIN_DEPENDS roscpp std_msgs geometry_msgs
 #  DEPENDS system_lib
 )
 

@@ -36,6 +36,21 @@ class ObjectPose{
         void FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height);
         void MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, std::vector<int> Grid_size, pcl::PointCloud<pcl::PointXYZRGB> ref_cloud);
         void CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vector<int> occ_grid);
+        std::vector<int> red_Grid;
+        std::vector<int> yellow_Grid;
+        std::vector<int> green_Grid; 
+        std::vector<int> blue_Grid;
+        std::vector<int> brown_Grid;
+        std::vector<int> orange_Grid;
+        std::vector<int> purple_Grid;
+        std::vector<int> red_occ_Grid;
+        std::vector<int> yellow_occ_Grid;
+        std::vector<int> green_occ_Grid;
+        std::vector<int> blue_occ_Grid;
+        std::vector<int> brown_occ_Grid;
+        std::vector<int> orange_occ_Grid;
+        std::vector<int> purple_occ_Grid;
+
     protected:
         // cv::Mat Red_Mask;
         int Accum_iter; 
@@ -58,20 +73,6 @@ class ObjectPose{
         pcl::PointCloud<pcl::PointXYZRGB> brown_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> orange_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> purple_cloud;
-        std::vector<int> red_Grid;
-        std::vector<int> yellow_Grid;
-        std::vector<int> green_Grid; 
-        std::vector<int> blue_Grid;
-        std::vector<int> brown_Grid;
-        std::vector<int> orange_Grid;
-        std::vector<int> purple_Grid;
-        std::vector<int> red_occ_Grid;
-        std::vector<int> yellow_occ_Grid;
-        std::vector<int> green_occ_Grid;
-        std::vector<int> blue_occ_Grid;
-        std::vector<int> brown_occ_Grid;
-        std::vector<int> orange_occ_Grid;
-        std::vector<int> purple_occ_Grid;
         std::vector<Point> _RectPoints = std::vector<Point> (4);
         cv::Mat _Projected_image;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr projected_cloud;

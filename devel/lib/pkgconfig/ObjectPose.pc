@@ -1,8 +1,0 @@
-prefix=/home/intelpro/catkin_ws/devel
-
-Name: ObjectPose
-Description: Description of ObjectPose
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/intelpro/catkin_ws/devel/lib 
-Requires: 

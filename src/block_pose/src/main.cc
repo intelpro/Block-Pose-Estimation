@@ -1,31 +1,32 @@
 #include <DominantPlane.h>
 #include <ObjectPose.h>
 #include <SystemHandler.h>
-
+#include <block_pose/RedBlock.h>
 using namespace std;
 using namespace cv;
+
+static float fx = 615.6707153320312;
+static float fy = 615.962158203125;
+static float cx = 328.0010681152344;
+static float cy = 241.31031799316406;
+static float scale = 1000;
+static float Distance_theshold = 0.005;
+static float unit_length = 0.025; 
+static float Threshold_for_occgrid = unit_length/2;
+static int width = 640;
+static int height = 480;
+static int max_iter = 100;
+static int Depth_Accum_iter = 3; 
 
 void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name);
 void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
 
 int main(int argc, char** argv)
 {
-    float fx = 615.6707153320312;
-    float fy = 615.962158203125;
-    float cx = 328.0010681152344;
-    float cy = 241.31031799316406;
-    float scale = 1000;
-    float Distance_theshold = 0.005;
-    float unit_length = 0.025; 
-    float Threshold_for_occgrid = unit_length/2;
-    int width = 640;
-    int height = 480;
-    int max_iter = 100;
-    int Depth_Accum_iter = 3; 
     Plane::DominantPlane plane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
     ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, &plane);
     ros::init(argc, argv,"block_pose");
-    SystemHandler System(&plane, &pose, fx, fy, cx, cy,
+    SystemHandler System(plane, pose, fx, fy, cx, cy,
                         Distance_theshold, unit_length, Threshold_for_occgrid,
                         width, height, max_iter, Depth_Accum_iter);
     ros::spin();
@@ -54,7 +55,6 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
             pCloud_outlier.at<cv::Vec3f>(y,x) = pointCloud.at<cv::Vec3f>(y,x) - pCloud_inlier.at<cv::Vec3f>(y,x);
         }
     }
-
     cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
     plane_obj->ObjectSegmentation(best_plane, pcd_object);
 
@@ -63,19 +63,67 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 	Show_Results(pCloud_outlier, image_RGB, "seg_image");
     imageCb(image_RGB, Total_mask);
     pose_obj->Accumulate_PointCloud(pCloud_outlier, Total_mask);
-
-    // Mask_vector[0] = red_display.clone();
-    /*
-    cv::imshow("purple", Total_mask[6]);
-    cv::imshow("brown", Total_mask[4]);
-    cv::imshow("RGB", image_RGB);
-    cv::imshow("green", Total_mask[2]);
-    cv::imshow("blue", Total_mask[3]);
-    cv::imshow("orange", Total_mask[5]);
-    cv::imshow("purple", Total_mask[6]);
-    */
-    // cout << "consuming time: " << result << "(s)" << endl;
 }
+
+void SystemHandler::Publish_Message()
+{
+    std::vector<int> occ_grid_temp;
+    std::vector<int> Grid_temp; 
+    // red block 
+    Grid_temp = pose_obj->red_Grid;
+    occ_grid_temp = pose_obj->red_occ_Grid;
+    Red_msg.Frame_id = Frame_count;
+    Red_msg.Object_id = 0; 
+    for(int i = 0; i < Grid_temp.size(); i++)
+        Red_msg.Grid_size.push_back(Grid_temp[i]);
+    for(int i = 0; i < occ_grid_temp.size(); i++)
+        Red_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    // object grid, occupancy grid
+    pub_red.publish(Red_msg);
+    // yellow block 
+    Grid_temp = pose_obj->yellow_Grid;
+    occ_grid_temp = pose_obj->yellow_occ_Grid;
+    Yellow_msg.Frame_id = Frame_count;
+    Yellow_msg.Object_id = 1;
+    for(int i = 0; i < Grid_temp.size(); i++)
+        Yellow_msg.Grid_size.push_back(Grid_temp[i]);
+    for(int i = 0; i < occ_grid_temp.size(); i++)
+        Yellow_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    pub_yellow.publish(Yellow_msg);
+    // Green block 
+    /*
+     * Temporally deactivate
+     */
+    // blue block
+    Grid_temp = pose_obj->blue_Grid;
+    occ_grid_temp = pose_obj->blue_occ_Grid;
+    Blue_msg.Frame_id = Frame_count;
+    Blue_msg.Object_id = 2;
+    for(int i = 0; i < Grid_temp.size(); i++)
+        Blue_msg.Grid_size.push_back(Grid_temp[i]);
+    for(int i = 0; i < occ_grid_temp.size(); i++)
+        Blue_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    pub_blue.publish(Blue_msg);
+    // clear all object
+    Red_msg.Grid_size.clear();
+    Red_msg.Occupancy_Grid.clear();
+    Yellow_msg.Grid_size.clear();
+    Yellow_msg.Occupancy_Grid.clear();
+    Blue_msg.Grid_size.clear();
+    Blue_msg.Occupancy_Grid.clear();
+}
+
+// Mask_vector[0] = red_display.clone();
+/*
+cv::imshow("purple", Total_mask[6]);
+cv::imshow("brown", Total_mask[4]);
+cv::imshow("RGB", image_RGB);
+cv::imshow("green", Total_mask[2]);
+cv::imshow("blue", Total_mask[3]);
+cv::imshow("orange", Total_mask[5]);
+cv::imshow("purple", Total_mask[6]);
+*/
+// cout << "consuming time: " << result << "(s)" << endl;
 
 void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name)
 {

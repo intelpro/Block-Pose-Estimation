@@ -1,5 +1,3 @@
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <opencv2/opencv.hpp>
 #include <opencv2/viz.hpp>
@@ -16,21 +14,35 @@
 #include <chrono>
 #include <ObjectPose.h>
 #include <DominantPlane.h>
+#include <block_pose/RedBlock.h>
+#include <block_pose/YellowBlock.h>
+#include <block_pose/BlueBlock.h>
+#include <block_pose/GreenBlock.h>
+#include <block_pose/BrownBlock.h>
+#include <block_pose/OrangeBlock.h>
+#include <block_pose/PurpleBlock.h>
+
 namespace enc = sensor_msgs::image_encodings;
 static int Frame_count = 0;
 
 class SystemHandler 
 {
 public:
-	SystemHandler(Plane::DominantPlane* _plane, ObjectPose* _pose, float _fx, float _fy,
+    SystemHandler(Plane::DominantPlane& _plane, ObjectPose& _pose, float _fx, float _fy,
                   float _cx, float _cy, float _Distance_threshold,  float _unit_length, float _Threshold_for_occgrid,
                   int _width, int _height, int _max_iter, int _Depth_Accum_iter)
-	{
-		//Topic you want to publish
-		// pub_ = n_.advertise<PUBLISHED_MESSAGE_TYPE>("/published_topic", 1);
+    {
+        //Topic you want to publish
+        pub_red = nh.advertise<block_pose::RedBlock>("/block_info/red", 100);
+        pub_yellow = nh.advertise<block_pose::YellowBlock>("/block_info/yellow", 100);
+        // pub_green = nh.advertise<block_pose::GreenBlock>("/block_info/green", 100);
+        pub_blue = nh.advertise<block_pose::BlueBlock>("/block_info/blue", 100);
+        // pub_brown = nh.advertise<block_pose::BrownBlock>("/block_info/brown", 100);
+        // pub_orange = nh.advertise<block_pose::OrangeBlock>("/block_info/orange", 100);
+        // pub_purple = nh.advertise<block_pose::PurpleBlock>("/block_info/purple", 100);
         // Object pointer 
-        pose_obj = _pose;
-        plane_obj = _plane;
+        pose_obj = &_pose;
+        plane_obj = &_plane;
         // hyperparameter
         fx = _fx; 
         fy = _fy; 
@@ -43,33 +55,33 @@ public:
         height = _height;
         max_iter = _max_iter;
         Depth_Accum_iter = _Depth_Accum_iter;
-		//Topic you want to subscribe
-		sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
-		sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
+        //Topic you want to subscribe
+        sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
+        sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
+        // Publish_Message();
+        
 	}
 
 	void ImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	{
-		// ROS_INFO("Color image height = %d, width = %d", msg->height, msg->width);
-		cv_bridge::CvImagePtr cv_ptrRGB;
-		try
-		{
-			cv_ptrRGB = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-			imRGB = cv_ptrRGB->image;
-		}
-		catch (cv_bridge::Exception& e)
-		{
-			ROS_ERROR("cv_bridge exception: %s", e.what());
-			return;
-		}
-
+        // ROS_INFO("Color image height = %d, width = %d", msg->height, msg->width);
+        cv_bridge::CvImagePtr cv_ptrRGB;
+        try
+        {
+            cv_ptrRGB = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+            imRGB = cv_ptrRGB->image;
+        }
+        catch (cv_bridge::Exception& e)
+        {
+            ROS_ERROR("cv_bridge exception: %s", e.what());
+            return;
+        }
 	}
 
 	void DepthCallback(const sensor_msgs::ImageConstPtr& msg)
 	{
 		Frame_count++;
-		// ROS_INFO("Depth image height = %d, width = %d", msg->height, msg->width);
-		cv_bridge::CvImagePtr cv_ptrD;
+        cv_bridge::CvImagePtr cv_ptrD;
 		try 
 		{
 			cv_ptrD = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
@@ -79,18 +91,23 @@ public:
 				return;
 			} 
 			else if(Frame_count%6 == 0)
-				Run_pipeline(imRGB, imDepth);
+            {
+                Run_pipeline(imRGB, imDepth);
+            }
 		}
 		catch (cv_bridge::Exception& e)
 		{
 			ROS_ERROR("cv_bridge exception: %s", e.what());
 			return;
 		}
+        Publish_Message();
 	}
 
 	void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
+    void Publish_Message();
 
 private:
+    // hyper parameter
     float fx;
     float fy;
     float cx;
@@ -103,13 +120,30 @@ private:
     int height;
     int max_iter;
     int Depth_Accum_iter;
-
-	ros::NodeHandle nh;
-	ros::Publisher pub_;
-	ros::Subscriber sub_color;
-	ros::Subscriber sub_depth;
+    // Node Handler
+    ros::NodeHandle nh;
+    // Publisher and subscriber
+    ros::Publisher pub_red;
+    ros::Publisher pub_yellow;
+    ros::Publisher pub_green;
+    ros::Publisher pub_blue;
+    ros::Publisher pub_brown;
+    ros::Publisher pub_orange;
+    ros::Publisher pub_purple;
+    ros::Subscriber sub_color;
+    ros::Subscriber sub_depth;
+    // Block message
+    block_pose::RedBlock Red_msg;
+    block_pose::YellowBlock Yellow_msg;
+    block_pose::GreenBlock Green_msg;
+    block_pose::BlueBlock Blue_msg;
+    block_pose::BrownBlock Brown_msg;
+    block_pose::OrangeBlock Orange_msg;
+    block_pose::PurpleBlock Purple_msg;
+    // RGB image and Depth image
     cv::Mat imRGB;
 	cv::Mat imDepth;
+    // Plane and pose object
     Plane::DominantPlane* plane_obj;
     ObjectPose* pose_obj;
 };//End of class SubscribeAndPublish
