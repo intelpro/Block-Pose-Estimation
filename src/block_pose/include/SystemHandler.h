@@ -35,11 +35,11 @@ public:
         //Topic you want to publish
         pub_red = nh.advertise<block_pose::RedBlock>("/block_info/red", 100);
         pub_yellow = nh.advertise<block_pose::YellowBlock>("/block_info/yellow", 100);
-        // pub_green = nh.advertise<block_pose::GreenBlock>("/block_info/green", 100);
+        pub_green = nh.advertise<block_pose::GreenBlock>("/block_info/green", 100);
         pub_blue = nh.advertise<block_pose::BlueBlock>("/block_info/blue", 100);
-        // pub_brown = nh.advertise<block_pose::BrownBlock>("/block_info/brown", 100);
-        // pub_orange = nh.advertise<block_pose::OrangeBlock>("/block_info/orange", 100);
-        // pub_purple = nh.advertise<block_pose::PurpleBlock>("/block_info/purple", 100);
+        pub_brown = nh.advertise<block_pose::BrownBlock>("/block_info/brown", 100);
+        pub_orange = nh.advertise<block_pose::OrangeBlock>("/block_info/orange", 100);
+        pub_purple = nh.advertise<block_pose::PurpleBlock>("/block_info/purple", 100);
         // Object pointer 
         pose_obj = &_pose;
         plane_obj = &_plane;
@@ -55,6 +55,8 @@ public:
         height = _height;
         max_iter = _max_iter;
         Depth_Accum_iter = _Depth_Accum_iter;
+        imRGB = cv::Mat::zeros(height, width, CV_8UC3);
+        imDepth = cv::Mat::zeros(height, width, CV_8UC3);
         //Topic you want to subscribe
         sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
         sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
@@ -122,7 +124,10 @@ private:
     int Depth_Accum_iter;
     // Node Handler
     ros::NodeHandle nh;
-    // Publisher and subscriber
+    // Subscriber
+    ros::Subscriber sub_color;
+    ros::Subscriber sub_depth;
+    // Publisher
     ros::Publisher pub_red;
     ros::Publisher pub_yellow;
     ros::Publisher pub_green;
@@ -130,8 +135,6 @@ private:
     ros::Publisher pub_brown;
     ros::Publisher pub_orange;
     ros::Publisher pub_purple;
-    ros::Subscriber sub_color;
-    ros::Subscriber sub_depth;
     // Block message
     block_pose::RedBlock Red_msg;
     block_pose::YellowBlock Yellow_msg;

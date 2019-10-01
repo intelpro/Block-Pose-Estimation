@@ -16,20 +16,20 @@ using namespace cv::line_descriptor;
 using namespace std;
 
 ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, 
-                       float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane* plane)
+                       float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane& plane)
 {
     height = _height;
     width = _width;
     Accum_iter = _Accum_iter;
     Accum_idx = 0; 
-    plane_object = plane;
+    plane_object = &plane;
     fx = _fx; 
     fy = _fy;
     cx = _cx; 
     cy = _cy;
     unit_length = _unit_length;
     dist_thresh = _dist_thresh;
-    best_plane = plane->cur_best_plane;
+    best_plane = plane.cur_best_plane;
     box_flag=0;
     color_string="red";
     std::vector<int> red_Grid(3);
@@ -871,7 +871,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 {   
                     line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                 } 
-                cv::imshow(color_string + "_drawing", _Projected_image);
+                // cv::imshow(color_string + "_drawing", _Projected_image);
                 red_Grid = Grid_size;
                 red_occ_Grid = occ_grid;
             }
@@ -901,7 +901,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               cv::imshow(color_string + "_drawing", _Projected_image);
+               // cv::imshow(color_string + "_drawing", _Projected_image);
                yellow_Grid = Grid_size;
                yellow_occ_Grid = occ_grid;
            }
@@ -928,7 +928,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               cv::imshow(color_string + "_drawing", _Projected_image);
+               // cv::imshow(color_string + "_drawing", _Projected_image);
                blue_Grid = Grid_size;
                blue_occ_Grid = occ_grid;
            }
@@ -959,7 +959,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               cv::imshow(color_string + "_drawing", _Projected_image);
+               // cv::imshow(color_string + "_drawing", _Projected_image);
                brown_Grid = Grid_size;
                brown_occ_Grid = occ_grid;
            }
@@ -992,7 +992,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               cv::imshow(color_string + "_drawing", _Projected_image);
+               // cv::imshow(color_string + "_drawing", _Projected_image);
                orange_Grid = Grid_size;
                orange_occ_Grid = occ_grid;
            }
@@ -1023,7 +1023,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               cv::imshow(color_string + "_drawing", _Projected_image);
+               // cv::imshow(color_string + "_drawing", _Projected_image);
                purple_Grid = Grid_size;
                purple_occ_Grid = occ_grid;
            }
