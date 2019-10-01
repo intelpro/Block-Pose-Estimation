@@ -657,7 +657,9 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
     else if(max_height > 3*unit_length - dist_thresh & max_height < 3*unit_length + dist_thresh)
         max_height = 3*unit_length + 0.003;
     else if(max_height > 4*unit_length - dist_thresh & max_height < 4*unit_length + dist_thresh)
-        max_height = -1; 
+        max_height = 4*unit_length + 0.003;
+    else
+        max_height = 0; 
     return max_height;
 }
 
@@ -698,7 +700,7 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     else if(dist1 > 3*unit_length-dist_thresh & dist1 < 3*unit_length+dist_thresh)
         Grid_size[0] = 3;
     else 
-        Grid_size[0] = -1; 
+        Grid_size[0] = 0; 
 
     if(dist2 > unit_length-dist_thresh & dist2 < unit_length+dist_thresh)
         Grid_size[1] = 1;
@@ -707,7 +709,7 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     else if(dist2 > 3*unit_length-dist_thresh & dist2 < 3*unit_length+dist_thresh)
         Grid_size[1] = 3;
     else 
-        Grid_size[1] = -1; 
+        Grid_size[1] = 0; 
 
     if(max_height > unit_length - dist_thresh & max_height < unit_length + dist_thresh)
         Grid_size[2] = 1;
@@ -716,7 +718,7 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     else if(max_height > 3*unit_length - dist_thresh & max_height < 3*unit_length + dist_thresh)
         Grid_size[2] = 3;
     else 
-        Grid_size[2] = -1; 
+        Grid_size[2] = 0; 
 
     int cnt_tot = 0; 
     if(color_string=="red")
@@ -1012,7 +1014,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
        if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==2))
        {
            int tot_occ_grid_cnt=0;
-           for(int i = 0; i < 6; i++)
+           for(int i = 0; i < 8; i++)
                tot_occ_grid_cnt+=occ_grid[i];
 
            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
