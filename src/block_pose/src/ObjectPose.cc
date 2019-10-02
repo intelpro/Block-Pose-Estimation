@@ -32,6 +32,7 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     best_plane = plane->cur_best_plane;
     box_flag=0;
     color_string="red";
+    // initilaize Grid vector
     std::vector<int> red_Grid(3);
     std::vector<int> yellow_Grid(3);
     std::vector<int> green_Grid(3);
@@ -39,6 +40,7 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     std::vector<int> brown_Grid(3);
     std::vector<int> orange_Grid(3);
     std::vector<int> purple_Grid(3);
+    // initilaize Occupancy Grid vector
     std::vector<int> red_occ_Grid(3);
     std::vector<int> yellow_occ_Grid(3);
     std::vector<int> green_occ_Grid(3);
@@ -46,7 +48,30 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     std::vector<int> brown_occ_Grid(3);
     std::vector<int> orange_occ_Grid(3);
     std::vector<int> purple_occ_Grid(3);
+    // initilaize Bounding box information vector
     std::vector<BB_Point> BB_info_red(8);
+    std::vector<BB_Point> BB_info_yellow(8);
+    std::vector<BB_Point> BB_info_green(8);
+    std::vector<BB_Point> BB_info_blue(8);
+    std::vector<BB_Point> BB_info_brown(8);
+    std::vector<BB_Point> BB_info_orange(8);
+    std::vector<BB_Point> BB_info_purple(8);
+    // initilaize Point cloud pointer 
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Red_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Yellow_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Green_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Blue_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Brown_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Orange_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Purple_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
+    // Load Synthetic Point cloud 
+    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/red.pcd", *Red_Synthetic);
+    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/yellow.pcd", *Yellow_Synthetic);
+    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/green.pcd", *Green_Synthetic);
+    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/blue.pcd", *Blue_Synthetic);
+    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/brown.pcd", *Brown_Synthetic);
+    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/orange.pcd", *Orange_Synthetic);
+    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/purple.pcd", *Purple_Synthetic);
 }
 
 void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat> &Mask)
@@ -648,13 +673,13 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
     // cout << "max height: " << max_height << endl;
     // Discretize max height
     if(max_height > unit_length-dist_thresh & max_height < unit_length+dist_thresh)
-        max_height = unit_length + 0.003;
+        max_height = unit_length+0.001;
     else if(max_height > 2*unit_length - dist_thresh & max_height < 2*unit_length + dist_thresh)
-        max_height = 2*unit_length + 0.003;
+        max_height = 2*unit_length+0.003;
     else if(max_height > 3*unit_length - dist_thresh & max_height < 3*unit_length + dist_thresh)
-        max_height = 3*unit_length + 0.003;
+        max_height = 3*unit_length+0.004;
     else if(max_height > 4*unit_length - dist_thresh & max_height < 4*unit_length + dist_thresh)
-        max_height = 4*unit_length + 0.003;
+        max_height = 4*unit_length+0.005;
     else
         max_height = 0; 
     return max_height;
@@ -775,7 +800,6 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
     float d = best_plane.d;
 
     // TODO: Find max height of occ grid, and find occupancy grid it will be more accurate.
-    pcl::PointCloud<pcl::PointXYZRGB> CubeInCloud;
     for(int i=1; i <= Grid_size[0]; i++)
     {
         for(int j=1; j <= Grid_size[1]; j++)
@@ -802,7 +826,6 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
                     if(0 < dot_x & dot_x < Cube_I_value & 0 < dot_y & dot_y < Cube_J_value & 0 < dot_z & dot_z < Cube_K_value)
                     {
                         cnt_temp++;
-                        CubeInCloud.push_back(temp_cloud);
                     }
                 }
 
@@ -810,7 +833,6 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
                 // cout << "cnt : " <<  cnt_temp << endl;
                 // float mean_height = FindBlockMeanHeight(CubeInCloud, a, b, c, d);
                 Grid_pcd_cnt[Grid_cnt] = cnt_temp;
-                CubeInCloud.clear();
                 cnt_temp = 0; 
                 if(k==Grid_size[2])
                 {
@@ -850,11 +872,70 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
     CheckOccGridWithKnownShape(Grid_size, occ_grid);
 }
 
+void ObjectPose::GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vector<int> occ_Grid, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector)
+{
+    pcl::PointXYZRGB BB_vertex1 = std::get<0>(pos_vector[0]);
+    pcl::PointXYZRGB BB_vertex2 = std::get<0>(pos_vector[1]);
+    pcl::PointXYZRGB BB_vertex3 = std::get<0>(pos_vector[2]);
+    pcl::PointXYZRGB BB_vertex4 = std::get<0>(pos_vector[3]);
+    pcl::PointXYZRGB BB_vertex5 = std::get<1>(pos_vector[0]);
+
+    // i vector of Cube
+    cv::Vec3f Cube_I(BB_vertex1.x - BB_vertex2.x, BB_vertex1.y - BB_vertex2.y, BB_vertex1.z - BB_vertex2.z);
+    // j vector of Cube
+    cv::Vec3f Cube_J(BB_vertex1.x - BB_vertex4.x, BB_vertex1.y - BB_vertex4.y, BB_vertex1.z - BB_vertex4.z);
+    // k vector of Cube
+    cv::Vec3f Cube_K(BB_vertex1.x - BB_vertex5.x, BB_vertex1.y - BB_vertex5.y, BB_vertex1.z - BB_vertex5.z);
+    // I vector of Unit Cube
+    cv::Vec3f Unit_Cube_I = Cube_I/Grid_size[0];
+    // J vector of Unit Cube
+    cv::Vec3f Unit_Cube_J = Cube_J/Grid_size[1];
+    // k vector of Unit Cube
+    cv::Vec3f Unit_Cube_K = Cube_K/Grid_size[2];
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr CubeInCloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+    int Grid_cnt = 0;
+    for(int i=1; i <= Grid_size[0]; i++)
+    {
+        for(int j=1; j <= Grid_size[1]; j++)
+        {
+            for(int k=1; k <= Grid_size[2]; k++)
+            {
+                if(occ_Grid[Grid_cnt]==1)
+                {
+                    pcl::PointXYZRGB temp_cloud;
+                    cv::Vec3f temp_cloud_vec3f = cv::Vec3f(BB_vertex1.x, BB_vertex1.y, BB_vertex1.z);
+                    for(int l = 0; l < 3; l++)
+                    {
+                        temp_cloud_vec3f[l] -= (i-1)*Unit_Cube_I[l];
+                        temp_cloud_vec3f[l] -= (j-1)*Unit_Cube_J[l];
+                        temp_cloud_vec3f[l] -= (k-1)*Unit_Cube_K[l];
+                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_I[l];
+                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_J[l];
+                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_K[l];
+                    }
+                    temp_cloud.x = temp_cloud_vec3f[0];
+                    temp_cloud.y = temp_cloud_vec3f[1];
+                    temp_cloud.z = temp_cloud_vec3f[2];
+                    temp_cloud.r = 255; 
+                    temp_cloud.g = 255; 
+                    temp_cloud.b = 255; 
+                    CubeInCloud->push_back(temp_cloud);
+                }
+                Grid_cnt++;
+            }
+        }
+    }
+
+    // pcl::PointCloud<pcl::PointXYZRGB>::Ptr Cloud_for_viewer(new pcl::PointCloud<pcl::PointXYZRGB>);
+    // CloudView(CubeInCloud, pos_vector);
+}
+
 void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vector<int> occ_grid)
 {
     RNG rng(12345);
     if(color_string=="red")
-    {
+	{
         if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==1)
            || (Grid_size[0]==1 & Grid_size[1]==2 & Grid_size[2]==2) || (Grid_size[0]==2 & Grid_size[1]==1 & Grid_size[2]==1))
         {
@@ -881,6 +962,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                     BB_info_red.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
                     BB_info_red.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
                 }
+                GenerateRealSyntheticCloud(red_Grid, red_occ_Grid, BBinfo_temp);
                 red_change_flag=1;
             }
             else
@@ -924,6 +1006,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                     BB_info_yellow.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
                     BB_info_yellow.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
                }
+               GenerateRealSyntheticCloud(yellow_Grid, yellow_occ_Grid, BBinfo_temp);
            }
            else
                cout << "yellow block mis detected" << endl;
@@ -959,7 +1042,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                     BB_info_blue.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
                     BB_info_blue.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
                }
-
+               GenerateRealSyntheticCloud(blue_Grid, blue_occ_Grid, BBinfo_temp);
            }
            else
                cout << "blue block mis detected" << endl;
@@ -999,6 +1082,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                     BB_info_brown.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
                     BB_info_brown.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
                }
+               GenerateRealSyntheticCloud(brown_Grid, brown_occ_Grid, BBinfo_temp);
 
            }
            else
@@ -1041,7 +1125,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                     BB_info_orange.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
                     BB_info_orange.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
                }
-
+               GenerateRealSyntheticCloud(orange_Grid, orange_occ_Grid, BBinfo_temp);
            }
            else
            {
@@ -1093,14 +1177,17 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
     }
 }
 
+
+
+
 void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector) 
 {
 	// pcl::PointCloud<pcl::PointXYZRGB>::Ptr ptrCloud(in_cloud);
     pcl::visualization::PCLVisualizer viewer("Cloud Viewer");
-    
+
     //blocks until the cloud is actually rendered
     viewer.addPointCloud(in_cloud, "in_cloud", 0);
-    viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 2, "in_cloud", 0);
+    viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 10, "in_cloud", 0);
     viewer.setBackgroundColor(0.05, 0.05, 0.05, 0); // Setting background to a dark grey
     // viewer.addCube(BB.X_min, BB.X_max, BB.Y_min, BB.Y_max, BB.Z_min, BB.Z_max,1.0, 0, 0, "in_cloud", 0);
     // viewer.setShapeRenderingProperties(pcl::visualization::PCL_VISUALIZER_REPRESENTATION, pcl::visualization::PCL_VISUALIZER_REPRESENTATION_WIREFRAME, "in_cloud", 0);
@@ -1112,7 +1199,7 @@ void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std:
 
     for(int i = 0; i < 4; i++)
     {
-        if(i <3)
+        if(i<3)
         {
             viewer.addLine<pcl::PointXYZRGB, pcl::PointXYZRGB> (std::get<0>(pos_vector[i]), std::get<0>(pos_vector[i+1]), 0.0, 1.0, 0.5, "Line1" + std::to_string(i));
             viewer.addLine<pcl::PointXYZRGB, pcl::PointXYZRGB> (std::get<1>(pos_vector[i]), std::get<1>(pos_vector[i+1]), 0.0, 1.0, 0.5, "Line2" + std::to_string(i));

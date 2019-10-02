@@ -38,6 +38,7 @@ class ObjectPose{
         void FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height);
         void MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, std::vector<int> Grid_size, pcl::PointCloud<pcl::PointXYZRGB> ref_cloud);
         void CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vector<int> occ_grid);
+        void GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vector<int> occ_Grid, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector);
         void ClearVariable();
         std::vector<int> red_Grid;
         std::vector<int> yellow_Grid;
@@ -76,6 +77,13 @@ class ObjectPose{
         float dist_thresh;
         bool red_change_flag;
         std::string color_string;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Red_Synthetic;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Yellow_Synthetic;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Green_Synthetic;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Blue_Synthetic;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Brown_Synthetic;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Orange_Synthetic;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Purple_Synthetic;
         pcl::PointCloud<pcl::PointXYZRGB> red_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> yellow_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> green_cloud;
