@@ -21,10 +21,12 @@
 using namespace std;
 using namespace cv; 
 
+struct BB_Point{ float x; float y; float z; };
+
 
 class ObjectPose{
     public:
-        ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane& plane);
+        ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane* plane);
         void Accumulate_PointCloud(cv::Mat& pcd_outlier, std::vector<cv::Mat>& Mask);
         void CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector);
         void ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string _color_string);
@@ -36,6 +38,7 @@ class ObjectPose{
         void FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height);
         void MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, std::vector<int> Grid_size, pcl::PointCloud<pcl::PointXYZRGB> ref_cloud);
         void CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vector<int> occ_grid);
+        void ClearVariable();
         std::vector<int> red_Grid;
         std::vector<int> yellow_Grid;
         std::vector<int> green_Grid; 
@@ -50,9 +53,15 @@ class ObjectPose{
         std::vector<int> brown_occ_Grid;
         std::vector<int> orange_occ_Grid;
         std::vector<int> purple_occ_Grid;
+        std::vector<BB_Point> BB_info_red;
+        std::vector<BB_Point> BB_info_yellow;
+        std::vector<BB_Point> BB_info_green;
+        std::vector<BB_Point> BB_info_blue;
+        std::vector<BB_Point> BB_info_brown;
+        std::vector<BB_Point> BB_info_orange;
+        std::vector<BB_Point> BB_info_purple;
 
-    protected:
-        // cv::Mat Red_Mask;
+      protected:
         int Accum_iter; 
         int Accum_idx; 
         int height; 
@@ -65,6 +74,7 @@ class ObjectPose{
         float cy;
         float unit_length;
         float dist_thresh;
+        bool red_change_flag;
         std::string color_string;
         pcl::PointCloud<pcl::PointXYZRGB> red_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> yellow_cloud;
@@ -76,6 +86,7 @@ class ObjectPose{
         std::vector<Point> _RectPoints = std::vector<Point> (4);
         cv::Mat _Projected_image;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr projected_cloud;
+        std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> BBinfo_temp; 
         Plane::DominantPlane* plane_object;
         Plane::Plane_model best_plane; 
 };

@@ -21,6 +21,7 @@
 #include <block_pose/BrownBlock.h>
 #include <block_pose/OrangeBlock.h>
 #include <block_pose/PurpleBlock.h>
+#include <geometry_msgs/Point.h>
 
 namespace enc = sensor_msgs::image_encodings;
 static int Frame_count = 0;
@@ -28,7 +29,8 @@ static int Frame_count = 0;
 class SystemHandler 
 {
 public:
-    SystemHandler(Plane::DominantPlane& _plane, ObjectPose& _pose, float _fx, float _fy,
+
+    SystemHandler(Plane::DominantPlane* _plane, ObjectPose* _pose, float _fx, float _fy,
                   float _cx, float _cy, float _Distance_threshold,  float _unit_length, float _Threshold_for_occgrid,
                   int _width, int _height, int _max_iter, int _Depth_Accum_iter)
     {
@@ -41,8 +43,8 @@ public:
         pub_orange = nh.advertise<block_pose::OrangeBlock>("/block_info/orange", 100);
         pub_purple = nh.advertise<block_pose::PurpleBlock>("/block_info/purple", 100);
         // Object pointer 
-        pose_obj = &_pose;
-        plane_obj = &_plane;
+        PoseFinder = _pose;
+        PlaneFinder = _plane;
         // hyperparameter
         fx = _fx; 
         fy = _fy; 
@@ -95,6 +97,7 @@ public:
 			else if(Frame_count%6 == 0)
             {
                 Run_pipeline(imRGB, imDepth);
+                Publish_Message();
             }
 		}
 		catch (cv_bridge::Exception& e)
@@ -102,7 +105,6 @@ public:
 			ROS_ERROR("cv_bridge exception: %s", e.what());
 			return;
 		}
-        Publish_Message();
 	}
 
 	void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
@@ -147,6 +149,6 @@ private:
     cv::Mat imRGB;
 	cv::Mat imDepth;
     // Plane and pose object
-    Plane::DominantPlane* plane_obj;
-    ObjectPose* pose_obj;
+    Plane::DominantPlane* PlaneFinder;
+    ObjectPose* PoseFinder;
 };//End of class SubscribeAndPublish

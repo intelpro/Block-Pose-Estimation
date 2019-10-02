@@ -16,20 +16,20 @@ using namespace cv::line_descriptor;
 using namespace std;
 
 ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, 
-                       float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane& plane)
+                       float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane* plane)
 {
     height = _height;
     width = _width;
     Accum_iter = _Accum_iter;
     Accum_idx = 0; 
-    plane_object = &plane;
+    plane_object = plane;
     fx = _fx; 
     fy = _fy;
     cx = _cx; 
     cy = _cy;
     unit_length = _unit_length;
     dist_thresh = _dist_thresh;
-    best_plane = plane.cur_best_plane;
+    best_plane = plane->cur_best_plane;
     box_flag=0;
     color_string="red";
     std::vector<int> red_Grid(3);
@@ -46,6 +46,7 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     std::vector<int> brown_occ_Grid(3);
     std::vector<int> orange_occ_Grid(3);
     std::vector<int> purple_occ_Grid(3);
+    std::vector<BB_Point> BB_info_red(8);
 }
 
 void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat> &Mask)
@@ -542,7 +543,7 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
     else if(color_string=="purple")
         max_length = FindBlockHeight(purple_cloud, a, b, c, d);
 
-    std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector; 
+    std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> BB_points; 
     for (int i = 0; i < Rect_points.size(); i++)
     {
         float x = Rect_points[i].x;
@@ -561,9 +562,12 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
         temp_cloud_upper.y = Y + b*max_length; 
         temp_cloud_upper.z = Z + c*max_length;
         temp_cloud_upper.g = 255; 
-        pos_vector.push_back(make_pair(temp_cloud,temp_cloud_upper));
+        BB_points.push_back(make_pair(temp_cloud,temp_cloud_upper));
     }
 
+    BBinfo_temp = BB_points;
+    // Find Occupancy Grid
+    FindOccGrid(BB_points, max_length);
     // pcl::PointCloud<pcl::PointXYZRGB>::Ptr Cloud_for_viewer(new pcl::PointCloud<pcl::PointXYZRGB>);
     if(color_string=="red")
     {
@@ -571,9 +575,7 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
         // cout << "red point cloud size: " << red_cloud.size() << endl;
         // pcl::copyPointCloud(red_cloud, *Cloud_for_viewer);
         // CloudView(Cloud_for_viewer, pos_vector);
-        FindOccGrid(pos_vector, max_length);
         // cout << color_string << " Grid: " << red_Grid[0] << " " << red_Grid[1] << " " << red_Grid[2] << endl;
-        red_cloud.clear();
     }
 
     else if(color_string=="yellow")
@@ -582,9 +584,8 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
         // cout << "yellow point cloud size: " << yellow_cloud.size() << endl;
         // pcl::copyPointCloud(yellow_cloud, *Cloud_for_viewer);
         // CloudView(Cloud_for_viewer, pos_vector);
-        FindOccGrid(pos_vector, max_length);
+        // FindOccGrid(pos_vector, max_length);
         // cout << color_string << " Grid: " << yellow_Grid[0] << " " << yellow_Grid[1] << " " << yellow_Grid[2] << endl;
-        yellow_cloud.clear();
     }
 
     else if(color_string=="green")
@@ -599,39 +600,35 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
         // cout << "blue height: " << max_length << endl;
         // pcl::copyPointCloud(blue_cloud, *Cloud_for_viewer);
         // CloudView(Cloud_for_viewer, pos_vector);
-        FindOccGrid(pos_vector, max_length);
+        // FindOccGrid(pos_vector, max_length);
         // cout << color_string << " Grid" << blue_Grid[0] << " " << blue_Grid[1] << " " << blue_Grid[2] << endl;
-        blue_cloud.clear();
     }
 
     else if(color_string=="brown")
     {
         // cout << "brown height: " << max_length << endl;
         // pcl::copyPointCloud(brown_cloud, *Cloud_for_viewer);
-        FindOccGrid(pos_vector, max_length);
+        // FindOccGrid(pos_vector, max_length);
         // cout << color_string << " Grid" << brown_Grid[0] << " " << brown_Grid[1] << " " << brown_Grid[2] << endl;
         // CloudView(Cloud_for_viewer, pos_vector);
-        brown_cloud.clear();
     }
 
     else if(color_string=="orange")
     {
         // cout << "orange height: " << max_length << endl;
         // pcl::copyPointCloud(orange_cloud, *Cloud_for_viewer);
-        FindOccGrid(pos_vector, max_length);
+        // FindOccGrid(pos_vector, max_length);
         // CloudView(Cloud_for_viewer, pos_vector);
         // cout << color_string << " Grid" << orange_Grid[0] << " " << orange_Grid[1] << " " << orange_Grid[2] << endl;
-        orange_cloud.clear();
     }
 
     else if(color_string=="purple")
     {
         // cout << "purple height: " << max_length << endl;
         // pcl::copyPointCloud(purple_cloud, *Cloud_for_viewer);
-        FindOccGrid(pos_vector, max_length);
+        // FindOccGrid(pos_vector, max_length);
         // cout << color_string << " Grid" << purple_Grid[0] << " " << purple_Grid[1] << " " << purple_Grid[2] << endl;
         // CloudView(Cloud_for_viewer, pos_vector);
-        purple_cloud.clear();
     }
 }
 
@@ -726,7 +723,7 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     else if(color_string=="yellow")
         MeasureOccupany(pos_vector, Grid_size, yellow_cloud);
     else if(color_string=="green")
-        green_Grid=Grid_size;
+        MeasureOccupany(pos_vector, Grid_size, yellow_cloud);
     else if(color_string=="blue")
         MeasureOccupany(pos_vector, Grid_size, blue_cloud);
     else if(color_string=="brown")
@@ -876,13 +873,26 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 // cv::imshow(color_string + "_drawing", _Projected_image);
                 red_Grid = Grid_size;
                 red_occ_Grid = occ_grid;
+                BB_info_red.clear();
+                for(int k = 0; k < BBinfo_temp.size(); k++)
+                {
+                    pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+                    pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+                    BB_info_red.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_red.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+                }
+                red_change_flag=1;
             }
             else
+            {
                cout << "red block mis detected" << endl;
+               red_change_flag=0;
+            }
         }
         else
         {
-            cout << "red block mis detected" << endl;
+           cout << "red block mis detected" << endl;
+           red_change_flag=0;
         }
     }
 
@@ -906,6 +916,14 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                // cv::imshow(color_string + "_drawing", _Projected_image);
                yellow_Grid = Grid_size;
                yellow_occ_Grid = occ_grid;
+               BB_info_yellow.clear();
+               for(int k = 0; k < BBinfo_temp.size(); k++)
+               {
+                    pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+                    pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+                    BB_info_yellow.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_yellow.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+               }
            }
            else
                cout << "yellow block mis detected" << endl;
@@ -933,6 +951,15 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                // cv::imshow(color_string + "_drawing", _Projected_image);
                blue_Grid = Grid_size;
                blue_occ_Grid = occ_grid;
+               BB_info_blue.clear();
+               for(int k = 0; k < BBinfo_temp.size(); k++)
+               {
+                    pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+                    pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+                    BB_info_blue.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_blue.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+               }
+
            }
            else
                cout << "blue block mis detected" << endl;
@@ -964,6 +991,15 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                // cv::imshow(color_string + "_drawing", _Projected_image);
                brown_Grid = Grid_size;
                brown_occ_Grid = occ_grid;
+               BB_info_brown.clear();
+               for(int k = 0; k < BBinfo_temp.size(); k++)
+               {
+                    pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+                    pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+                    BB_info_brown.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_brown.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+               }
+
            }
            else
            {
@@ -997,6 +1033,15 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                // cv::imshow(color_string + "_drawing", _Projected_image);
                orange_Grid = Grid_size;
                orange_occ_Grid = occ_grid;
+               BB_info_orange.clear();
+               for(int k = 0; k < BBinfo_temp.size(); k++)
+               {
+                    pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+                    pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+                    BB_info_orange.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_orange.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+               }
+
            }
            else
            {
@@ -1028,6 +1073,15 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                // cv::imshow(color_string + "_drawing", _Projected_image);
                purple_Grid = Grid_size;
                purple_occ_Grid = occ_grid;
+               BB_info_purple.clear();
+               for(int k = 0; k < BBinfo_temp.size(); k++)
+               {
+                    pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+                    pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+                    BB_info_purple.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_purple.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+               }
+
            }
            else 
                cout << "purple block mis detected" << endl;
@@ -1083,4 +1137,16 @@ void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std:
         viewer.spinOnce ();
     }
     exit(0);
+}
+
+void ObjectPose::ClearVariable()
+{
+    red_cloud.clear();
+    yellow_cloud.clear();
+    green_cloud.clear();
+    blue_cloud.clear();
+    brown_cloud.clear();
+    orange_cloud.clear();
+    purple_cloud.clear();
+    BBinfo_temp.clear();
 }

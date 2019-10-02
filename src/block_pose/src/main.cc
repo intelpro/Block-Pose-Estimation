@@ -1,7 +1,7 @@
 #include <DominantPlane.h>
 #include <ObjectPose.h>
 #include <SystemHandler.h>
-#include <block_pose/RedBlock.h>
+
 using namespace std;
 using namespace cv;
 
@@ -23,10 +23,10 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
 
 int main(int argc, char** argv)
 {
-    Plane::DominantPlane plane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
-    ObjectPose pose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, plane);
+    Plane::DominantPlane* plane_ptr = new Plane::DominantPlane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
+    ObjectPose* pose_ptr = new ObjectPose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, plane_ptr);
     ros::init(argc, argv,"block_pose");
-    SystemHandler System(plane, pose, fx, fy, cx, cy,
+    SystemHandler System(plane_ptr, pose_ptr, fx, fy, cx, cy,
                         Distance_theshold, unit_length, Threshold_for_occgrid,
                         width, height, max_iter, Depth_Accum_iter);
     ros::spin();
@@ -43,9 +43,9 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     cv::Mat pCloud_inlier(height, width, CV_32FC3);
 
     start = clock();
-    cv::Mat pointCloud = plane_obj->Depth2pcd(image_Depth);
+    cv::Mat pointCloud = PlaneFinder->Depth2pcd(image_Depth);
     cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3);
-    Plane::Plane_model best_plane = plane_obj->RunRansac(pCloud_inlier);
+    Plane::Plane_model best_plane = PlaneFinder->RunRansac(pCloud_inlier);
     cv::Mat pCloud_outlier = cv::Mat::zeros(height, width, CV_32FC3);
 
     for (int y=0; y<height; y++)
@@ -55,8 +55,9 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
             pCloud_outlier.at<cv::Vec3f>(y,x) = pointCloud.at<cv::Vec3f>(y,x) - pCloud_inlier.at<cv::Vec3f>(y,x);
         }
     }
+
     cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
-    plane_obj->ObjectSegmentation(best_plane, pcd_object);
+    // PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
 
     end = clock();
     double result = (double)(end - start)/CLOCKS_PER_SEC;
@@ -64,114 +65,161 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     imshow("RGB_image", image_RGB);
     waitKey(2);
     imageCb(image_RGB, Total_mask);
-    pose_obj->Accumulate_PointCloud(pCloud_outlier, Total_mask);
+    PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
 }
 
 void SystemHandler::Publish_Message()
 {
     std::vector<int> occ_grid_temp;
     std::vector<int> Grid_temp; 
+    std::vector<BB_Point> BB_Point_temp;
+
     // red block 
-    Grid_temp = pose_obj->red_Grid;
-    occ_grid_temp = pose_obj->red_occ_Grid;
+    Grid_temp = PoseFinder->red_Grid;
+    occ_grid_temp = PoseFinder->red_occ_Grid;
+    BB_Point_temp = PoseFinder->BB_info_red;
     Red_msg.Frame_id = Frame_count;
     Red_msg.Object_id = 0; 
     for(int i = 0; i < Grid_temp.size(); i++)
         Red_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Red_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    // object grid, occupancy grid
+    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Red_msg.BB_Points.push_back(point);
+    }
     pub_red.publish(Red_msg);
-    Grid_temp.clear();
-    occ_grid_temp.clear();
 
     // yellow block 
-    Grid_temp = pose_obj->yellow_Grid;
-    occ_grid_temp = pose_obj->yellow_occ_Grid;
+    Grid_temp = PoseFinder->yellow_Grid;
+    occ_grid_temp = PoseFinder->yellow_occ_Grid;
+    BB_Point_temp = PoseFinder->BB_info_yellow;
     Yellow_msg.Frame_id = Frame_count;
     Yellow_msg.Object_id = 1;
     for(int i = 0; i < Grid_temp.size(); i++)
         Yellow_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Yellow_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Yellow_msg.BB_Points.push_back(point);
+    }
     pub_yellow.publish(Yellow_msg);
-    Grid_temp.clear();
-    occ_grid_temp.clear();
 
     // Green block 
     // 
     // Temporally deactivate
     //
-    //
+    // End of Green block 
+    
     // blue block
-    Grid_temp = pose_obj->blue_Grid;
-    occ_grid_temp = pose_obj->blue_occ_Grid;
+    Grid_temp = PoseFinder->blue_Grid;
+    occ_grid_temp = PoseFinder->blue_occ_Grid;
+    BB_Point_temp = PoseFinder->BB_info_blue;
     Blue_msg.Frame_id = Frame_count;
     Blue_msg.Object_id = 3;
     for(int i = 0; i < Grid_temp.size(); i++)
         Blue_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Blue_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Blue_msg.BB_Points.push_back(point);
+    }
     pub_blue.publish(Blue_msg);
 
-    Grid_temp.clear();
-    occ_grid_temp.clear();
-
     // Brown Block 
-    Grid_temp = pose_obj->brown_Grid;
-    occ_grid_temp = pose_obj->brown_occ_Grid;
+    Grid_temp = PoseFinder->brown_Grid;
+    occ_grid_temp = PoseFinder->brown_occ_Grid;
+    BB_Point_temp = PoseFinder->BB_info_brown;
     Brown_msg.Frame_id = Frame_count;
     Brown_msg.Object_id = 4;
     for(int i = 0; i < Grid_temp.size(); i++)
         Brown_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Brown_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Brown_msg.BB_Points.push_back(point);
+    }
     pub_brown.publish(Brown_msg);
 
-    Grid_temp.clear();
-    occ_grid_temp.clear();
-
     // Orange Block
-    Grid_temp = pose_obj->orange_Grid;
-    occ_grid_temp = pose_obj->orange_occ_Grid;
+    Grid_temp = PoseFinder->orange_Grid;
+    occ_grid_temp = PoseFinder->orange_occ_Grid;
+    BB_Point_temp = PoseFinder->BB_info_orange;
     Orange_msg.Frame_id = Frame_count;
     Orange_msg.Object_id = 5;
     for(int i = 0; i < Grid_temp.size(); i++)
         Orange_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Orange_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Orange_msg.BB_Points.push_back(point);
+    }
     pub_orange.publish(Orange_msg);
 
-    Grid_temp.clear();
-    occ_grid_temp.clear();
-
     // Purple Block
-    Grid_temp = pose_obj->purple_Grid;
-    occ_grid_temp = pose_obj->purple_occ_Grid;
+    Grid_temp = PoseFinder->purple_Grid;
+    occ_grid_temp = PoseFinder->purple_occ_Grid;
+    BB_Point_temp = PoseFinder->BB_info_purple;
     Purple_msg.Frame_id = Frame_count;
     Purple_msg.Object_id = 6;
     for(int i = 0; i < Grid_temp.size(); i++)
         Purple_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Purple_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Purple_msg.BB_Points.push_back(point);
+    }
     pub_purple.publish(Purple_msg);
 
-    Grid_temp.clear();
-    occ_grid_temp.clear();
-
     // clear all object
+    // Red message clear
     Red_msg.Grid_size.clear();
     Red_msg.Occupancy_Grid.clear();
+    Red_msg.BB_Points.clear();
+    // Yellow message clear
     Yellow_msg.Grid_size.clear();
     Yellow_msg.Occupancy_Grid.clear();
+    Yellow_msg.BB_Points.clear();
+    // Blue message clear
     Blue_msg.Grid_size.clear();
     Blue_msg.Occupancy_Grid.clear();
+    Blue_msg.BB_Points.clear();
+    // Brown message clear
     Brown_msg.Grid_size.clear();
     Brown_msg.Occupancy_Grid.clear();
+    Brown_msg.BB_Points.clear();
+    // Orange message clear
     Orange_msg.Grid_size.clear();
     Orange_msg.Occupancy_Grid.clear();
+    Orange_msg.BB_Points.clear();
+    // Purple message clear
     Purple_msg.Grid_size.clear();
     Purple_msg.Occupancy_Grid.clear();
+    Purple_msg.BB_Points.clear();
+    PoseFinder->ClearVariable();
 }
 
 // Mask_vector[0] = red_display.clone();
