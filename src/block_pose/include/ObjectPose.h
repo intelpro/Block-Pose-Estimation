@@ -73,7 +73,7 @@ class ObjectPose{
         float fy;
         float cx; 
         float cy;
-        float unit_length;
+        float Unit_Cube_L;
         float dist_thresh;
         bool red_change_flag;
         std::string color_string;

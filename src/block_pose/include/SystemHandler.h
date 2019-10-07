@@ -62,7 +62,6 @@ public:
         //Topic you want to subscribe
         sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
         sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
-        // Publish_Message();
         
 	}
 

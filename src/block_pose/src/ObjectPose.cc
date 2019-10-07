@@ -16,7 +16,7 @@ using namespace cv::line_descriptor;
 using namespace std;
 
 ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, 
-                       float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane* plane)
+                       float _cy, float _Unit_Cube_L, float _dist_thresh, Plane::DominantPlane* plane)
 {
     height = _height;
     width = _width;
@@ -27,7 +27,7 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     fy = _fy;
     cx = _cx; 
     cy = _cy;
-    unit_length = _unit_length;
+    Unit_Cube_L = _Unit_Cube_L;
     dist_thresh = _dist_thresh;
     best_plane = plane->cur_best_plane;
     box_flag=0;
@@ -672,14 +672,14 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
 
     // cout << "max height: " << max_height << endl;
     // Discretize max height
-    if(max_height > unit_length-dist_thresh & max_height < unit_length+dist_thresh)
-        max_height = unit_length+0.001;
-    else if(max_height > 2*unit_length - dist_thresh & max_height < 2*unit_length + dist_thresh)
-        max_height = 2*unit_length+0.003;
-    else if(max_height > 3*unit_length - dist_thresh & max_height < 3*unit_length + dist_thresh)
-        max_height = 3*unit_length+0.004;
-    else if(max_height > 4*unit_length - dist_thresh & max_height < 4*unit_length + dist_thresh)
-        max_height = 4*unit_length+0.005;
+    if(max_height > Unit_Cube_L-dist_thresh & max_height < Unit_Cube_L+dist_thresh)
+        max_height = Unit_Cube_L+0.001;
+    else if(max_height > 2*Unit_Cube_L - dist_thresh & max_height < 2*Unit_Cube_L + dist_thresh)
+        max_height = 2*Unit_Cube_L+0.003;
+    else if(max_height > 3*Unit_Cube_L - dist_thresh & max_height < 3*Unit_Cube_L + dist_thresh)
+        max_height = 3*Unit_Cube_L+0.004;
+    else if(max_height > 4*Unit_Cube_L - dist_thresh & max_height < 4*Unit_Cube_L + dist_thresh)
+        max_height = 4*Unit_Cube_L+0.005;
     else
         max_height = 0; 
     return max_height;
@@ -715,29 +715,29 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     float dist1 = std::sqrt(std::pow(BB_vertex1.x - BB_vertex2.x, 2) + std::pow(BB_vertex1.y - BB_vertex2.y, 2) + std::pow(BB_vertex1.z - BB_vertex2.z,2));
     float dist2 = std::sqrt(std::pow(BB_vertex1.x - BB_vertex4.x, 2) + std::pow(BB_vertex1.y - BB_vertex4.y, 2) + std::pow(BB_vertex1.z - BB_vertex4.z,2));
 
-    if(dist1 > unit_length-dist_thresh & dist1 < unit_length+dist_thresh)
+    if(dist1 > Unit_Cube_L-dist_thresh & dist1 < Unit_Cube_L+dist_thresh)
         Grid_size[0] = 1;
-    else if(dist1 > 2*unit_length-dist_thresh & dist1 < 2*unit_length+dist_thresh)
+    else if(dist1 > 2*Unit_Cube_L-dist_thresh & dist1 < 2*Unit_Cube_L+dist_thresh)
         Grid_size[0] = 2;
-    else if(dist1 > 3*unit_length-dist_thresh & dist1 < 3*unit_length+dist_thresh)
+    else if(dist1 > 3*Unit_Cube_L-dist_thresh & dist1 < 3*Unit_Cube_L+dist_thresh)
         Grid_size[0] = 3;
     else 
         Grid_size[0] = 0; 
 
-    if(dist2 > unit_length-dist_thresh & dist2 < unit_length+dist_thresh)
+    if(dist2 > Unit_Cube_L-dist_thresh & dist2 < Unit_Cube_L+dist_thresh)
         Grid_size[1] = 1;
-    else if(dist2 > 2*unit_length-dist_thresh & dist2 < 2*unit_length+dist_thresh)
+    else if(dist2 > 2*Unit_Cube_L-dist_thresh & dist2 < 2*Unit_Cube_L+dist_thresh)
         Grid_size[1] = 2;
-    else if(dist2 > 3*unit_length-dist_thresh & dist2 < 3*unit_length+dist_thresh)
+    else if(dist2 > 3*Unit_Cube_L-dist_thresh & dist2 < 3*Unit_Cube_L+dist_thresh)
         Grid_size[1] = 3;
     else 
         Grid_size[1] = 0; 
 
-    if(max_height > unit_length - dist_thresh & max_height < unit_length + dist_thresh)
+    if(max_height > Unit_Cube_L - dist_thresh & max_height < Unit_Cube_L + dist_thresh)
         Grid_size[2] = 1;
-    else if(max_height > 2*unit_length - dist_thresh & max_height < 2*unit_length + dist_thresh)
+    else if(max_height > 2*Unit_Cube_L - dist_thresh & max_height < 2*Unit_Cube_L + dist_thresh)
         Grid_size[2] = 2;
-    else if(max_height > 3*unit_length - dist_thresh & max_height < 3*unit_length + dist_thresh)
+    else if(max_height > 3*Unit_Cube_L - dist_thresh & max_height < 3*Unit_Cube_L + dist_thresh)
         Grid_size[2] = 3;
     else 
         Grid_size[2] = 0; 
@@ -892,6 +892,13 @@ void ObjectPose::GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vec
     cv::Vec3f Unit_Cube_J = Cube_J/Grid_size[1];
     // k vector of Unit Cube
     cv::Vec3f Unit_Cube_K = Cube_K/Grid_size[2];
+    float Cube_I_value = std::sqrt(std::pow(Unit_Cube_I[0],2) + std::pow(Unit_Cube_I[1],2) + std::pow(Unit_Cube_I[2],2));
+    float Cube_J_value = std::sqrt(std::pow(Unit_Cube_J[0],2) + std::pow(Unit_Cube_J[1],2) + std::pow(Unit_Cube_J[2],2));
+    float Cube_K_value = std::sqrt(std::pow(Unit_Cube_K[0],2) + std::pow(Unit_Cube_K[1],2) + std::pow(Unit_Cube_K[2],2));
+    // I, J, K vector of normalized vector
+    cv::Vec3f Cube_I_normalized = Unit_Cube_I/Cube_I_value;
+    cv::Vec3f Cube_J_normalized = Unit_Cube_J/Cube_J_value;
+    cv::Vec3f Cube_K_normalized = Unit_Cube_K/Cube_K_value;
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr CubeInCloud(new pcl::PointCloud<pcl::PointXYZRGB>);
     int Grid_cnt = 0;
@@ -907,18 +914,18 @@ void ObjectPose::GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vec
                     cv::Vec3f temp_cloud_vec3f = cv::Vec3f(BB_vertex1.x, BB_vertex1.y, BB_vertex1.z);
                     for(int l = 0; l < 3; l++)
                     {
-                        temp_cloud_vec3f[l] -= (i-1)*Unit_Cube_I[l];
-                        temp_cloud_vec3f[l] -= (j-1)*Unit_Cube_J[l];
-                        temp_cloud_vec3f[l] -= (k-1)*Unit_Cube_K[l];
-                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_I[l];
-                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_J[l];
-                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_K[l];
+                        temp_cloud_vec3f[l] -= (i-1)*Unit_Cube_L*Cube_I_normalized[l];
+                        temp_cloud_vec3f[l] -= (j-1)*Unit_Cube_L*Cube_J_normalized[l];
+                        temp_cloud_vec3f[l] -= (k-1)*Unit_Cube_L*Cube_K_normalized[l];
+                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_L*Cube_I_normalized[l];
+                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_L*Cube_J_normalized[l];
+                        temp_cloud_vec3f[l] -= 0.5*Unit_Cube_L*Cube_K_normalized[l];
                     }
                     temp_cloud.x = temp_cloud_vec3f[0];
                     temp_cloud.y = temp_cloud_vec3f[1];
                     temp_cloud.z = temp_cloud_vec3f[2];
-                    temp_cloud.r = 255; 
-                    temp_cloud.g = 255; 
+                    temp_cloud.r = 178;
+                    temp_cloud.g = 0; 
                     temp_cloud.b = 255; 
                     CubeInCloud->push_back(temp_cloud);
                 }
@@ -926,8 +933,7 @@ void ObjectPose::GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vec
             }
         }
     }
-
-    // pcl::PointCloud<pcl::PointXYZRGB>::Ptr Cloud_for_viewer(new pcl::PointCloud<pcl::PointXYZRGB>);
+    // pcl::io::savePCDFile("output_cloud/purple.pcd", *CubeInCloud);
     // CloudView(CubeInCloud, pos_vector);
 }
 
@@ -1165,6 +1171,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                     BB_info_purple.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
                     BB_info_purple.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
                }
+               GenerateRealSyntheticCloud(purple_Grid, purple_occ_Grid, BBinfo_temp);
 
            }
            else 
