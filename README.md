@@ -28,7 +28,7 @@ https://www.learnopencv.com/install-opencv-3-4-4-on-ubuntu-16-04/
 
 $ cd ~/catkin_ws
 
-$ git clone
+$ git clone https://github.com/intelpro/Block-Pose-Estimation
 
 $ source ./devel/setup.bash 
 
