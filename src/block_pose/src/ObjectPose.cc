@@ -49,13 +49,21 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     std::vector<int> orange_occ_Grid(3);
     std::vector<int> purple_occ_Grid(3);
     // initilaize Bounding box information vector
-    std::vector<BB_Point> BB_info_red(8);
-    std::vector<BB_Point> BB_info_yellow(8);
-    std::vector<BB_Point> BB_info_green(8);
-    std::vector<BB_Point> BB_info_blue(8);
-    std::vector<BB_Point> BB_info_brown(8);
-    std::vector<BB_Point> BB_info_orange(8);
-    std::vector<BB_Point> BB_info_purple(8);
+    std::vector<Point3D> BB_info_red(8);
+    std::vector<Point3D> BB_info_yellow(8);
+    std::vector<Point3D> BB_info_green(8);
+    std::vector<Point3D> BB_info_blue(8);
+    std::vector<Point3D> BB_info_brown(8);
+    std::vector<Point3D> BB_info_orange(8);
+    std::vector<Point3D> BB_info_purple(8);
+    // initialize Block center information vector
+    std::vector<Point3D> Block_center_red(3);
+    std::vector<Point3D> Block_center_yellow(4);
+    std::vector<Point3D> Block_center_green(4);
+    std::vector<Point3D> Block_center_blue(4);
+    std::vector<Point3D> Block_center_brown(4);
+    std::vector<Point3D> Block_center_orange(4);
+    std::vector<Point3D> Block_center_purple(4);
     // initilaize Point cloud pointer 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr Red_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr Yellow_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -935,6 +943,9 @@ void ObjectPose::GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vec
     }
     // pcl::io::savePCDFile("output_cloud/purple.pcd", *CubeInCloud);
     // CloudView(CubeInCloud, pos_vector);
+    cout << "function size: " << CubeInCloud->size() << endl;
+    for (int i=0; i<CubeInCloud->size(); i++)
+        Block_center_temp.push_back(CubeInCloud->points[i]);
 }
 
 void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vector<int> occ_grid)
@@ -965,10 +976,17 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 {
                     pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
                     pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
-                    BB_info_red.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
-                    BB_info_red.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+                    BB_info_red.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_red.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
                 }
+                Block_center_temp.clear();
+                Block_center_red.clear();
                 GenerateRealSyntheticCloud(red_Grid, red_occ_Grid, BBinfo_temp);
+                for(int l = 0; l < Block_center_temp.size(); l++)
+                {
+                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
+                    Block_center_red.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+                }
                 red_change_flag=1;
             }
             else
@@ -1009,10 +1027,18 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {
                     pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
                     pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
-                    BB_info_yellow.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
-                    BB_info_yellow.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+                    BB_info_yellow.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_yellow.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
                }
+               Block_center_temp.clear();
+               Block_center_yellow.clear();
                GenerateRealSyntheticCloud(yellow_Grid, yellow_occ_Grid, BBinfo_temp);
+               for(int l = 0; l < Block_center_temp.size(); l++)
+               {
+                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
+                    Block_center_yellow.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+               }
+
            }
            else
                cout << "yellow block mis detected" << endl;
@@ -1045,10 +1071,17 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {
                     pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
                     pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
-                    BB_info_blue.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
-                    BB_info_blue.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+                    BB_info_blue.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_blue.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
                }
+               Block_center_temp.clear();
+               Block_center_blue.clear();
                GenerateRealSyntheticCloud(blue_Grid, blue_occ_Grid, BBinfo_temp);
+               for(int l = 0; l < Block_center_temp.size(); l++)
+               {
+                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
+                    Block_center_blue.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+               }
            }
            else
                cout << "blue block mis detected" << endl;
@@ -1085,11 +1118,17 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {
                     pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
                     pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
-                    BB_info_brown.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
-                    BB_info_brown.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+                    BB_info_brown.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_brown.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
                }
+               Block_center_brown.clear();
+               Block_center_temp.clear();
                GenerateRealSyntheticCloud(brown_Grid, brown_occ_Grid, BBinfo_temp);
-
+               for(int l = 0; l < Block_center_temp.size(); l++)
+               {
+                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
+                    Block_center_brown.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+               }
            }
            else
            {
@@ -1128,10 +1167,17 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {
                     pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
                     pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
-                    BB_info_orange.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
-                    BB_info_orange.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+                    BB_info_orange.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_orange.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
                }
+               Block_center_temp.clear();
+               Block_center_orange.clear();
                GenerateRealSyntheticCloud(orange_Grid, orange_occ_Grid, BBinfo_temp);
+               for(int l = 0; l < Block_center_temp.size(); l++)
+               {
+                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
+                    Block_center_orange.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+               }
            }
            else
            {
@@ -1168,11 +1214,17 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {
                     pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
                     pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
-                    BB_info_purple.push_back(BB_Point{point_temp1.x, point_temp1.y, point_temp1.z});
-                    BB_info_purple.push_back(BB_Point{point_temp2.x, point_temp2.y, point_temp2.z});
+                    BB_info_purple.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_purple.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
                }
+               Block_center_temp.clear();
+               Block_center_purple.clear();
                GenerateRealSyntheticCloud(purple_Grid, purple_occ_Grid, BBinfo_temp);
-
+               for(int l = 0; l < Block_center_temp.size(); l++)
+               {
+                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
+                    Block_center_purple.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+               }
            }
            else 
                cout << "purple block mis detected" << endl;
@@ -1243,4 +1295,5 @@ void ObjectPose::ClearVariable()
     orange_cloud.clear();
     purple_cloud.clear();
     BBinfo_temp.clear();
+    Block_center_temp.clear();
 }

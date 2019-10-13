@@ -72,24 +72,34 @@ void SystemHandler::Publish_Message()
 {
     std::vector<int> occ_grid_temp;
     std::vector<int> Grid_temp; 
-    std::vector<BB_Point> BB_Point_temp;
+    std::vector<Point3D> BB_Point_temp;
+    std::vector<Point3D> Block_center_temp;
 
     // red block 
     Grid_temp = PoseFinder->red_Grid;
     occ_grid_temp = PoseFinder->red_occ_Grid;
     BB_Point_temp = PoseFinder->BB_info_red;
+    Block_center_temp = PoseFinder->Block_center_red;
     Red_msg.Frame_id = Frame_count;
     Red_msg.Object_id = 0; 
+    cout << "Block size: " << Block_center_temp.size() << endl;
     for(int i = 0; i < Grid_temp.size(); i++)
         Red_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Red_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
         geometry_msgs::Point point;
         point.x = (*it).x;
         point.y = (*it).y;
         point.z = (*it).z;
         Red_msg.BB_Points.push_back(point);
+    }
+    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Red_msg.Block_center_Points.push_back(point);
     }
     pub_red.publish(Red_msg);
 
@@ -97,18 +107,26 @@ void SystemHandler::Publish_Message()
     Grid_temp = PoseFinder->yellow_Grid;
     occ_grid_temp = PoseFinder->yellow_occ_Grid;
     BB_Point_temp = PoseFinder->BB_info_yellow;
+    Block_center_temp = PoseFinder->Block_center_yellow;
     Yellow_msg.Frame_id = Frame_count;
     Yellow_msg.Object_id = 1;
     for(int i = 0; i < Grid_temp.size(); i++)
         Yellow_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Yellow_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
         geometry_msgs::Point point;
         point.x = (*it).x;
         point.y = (*it).y;
         point.z = (*it).z;
         Yellow_msg.BB_Points.push_back(point);
+    }
+    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Yellow_msg.Block_center_Points.push_back(point);
     }
     pub_yellow.publish(Yellow_msg);
 
@@ -122,18 +140,26 @@ void SystemHandler::Publish_Message()
     Grid_temp = PoseFinder->blue_Grid;
     occ_grid_temp = PoseFinder->blue_occ_Grid;
     BB_Point_temp = PoseFinder->BB_info_blue;
+    Block_center_temp = PoseFinder->Block_center_blue;
     Blue_msg.Frame_id = Frame_count;
     Blue_msg.Object_id = 3;
     for(int i = 0; i < Grid_temp.size(); i++)
         Blue_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Blue_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
         geometry_msgs::Point point;
         point.x = (*it).x;
         point.y = (*it).y;
         point.z = (*it).z;
         Blue_msg.BB_Points.push_back(point);
+    }
+    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Blue_msg.Block_center_Points.push_back(point);
     }
     pub_blue.publish(Blue_msg);
 
@@ -141,18 +167,26 @@ void SystemHandler::Publish_Message()
     Grid_temp = PoseFinder->brown_Grid;
     occ_grid_temp = PoseFinder->brown_occ_Grid;
     BB_Point_temp = PoseFinder->BB_info_brown;
+    Block_center_temp = PoseFinder->Block_center_brown;
     Brown_msg.Frame_id = Frame_count;
     Brown_msg.Object_id = 4;
     for(int i = 0; i < Grid_temp.size(); i++)
         Brown_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Brown_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
         geometry_msgs::Point point;
         point.x = (*it).x;
         point.y = (*it).y;
         point.z = (*it).z;
         Brown_msg.BB_Points.push_back(point);
+    }
+    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Brown_msg.Block_center_Points.push_back(point);
     }
     pub_brown.publish(Brown_msg);
 
@@ -160,18 +194,26 @@ void SystemHandler::Publish_Message()
     Grid_temp = PoseFinder->orange_Grid;
     occ_grid_temp = PoseFinder->orange_occ_Grid;
     BB_Point_temp = PoseFinder->BB_info_orange;
+    Block_center_temp = PoseFinder->Block_center_orange;
     Orange_msg.Frame_id = Frame_count;
     Orange_msg.Object_id = 5;
     for(int i = 0; i < Grid_temp.size(); i++)
         Orange_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Orange_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
         geometry_msgs::Point point;
         point.x = (*it).x;
         point.y = (*it).y;
         point.z = (*it).z;
         Orange_msg.BB_Points.push_back(point);
+    }
+    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Orange_msg.Block_center_Points.push_back(point);
     }
     pub_orange.publish(Orange_msg);
 
@@ -185,12 +227,19 @@ void SystemHandler::Publish_Message()
         Purple_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
         Purple_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<BB_Point>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
         geometry_msgs::Point point;
         point.x = (*it).x;
         point.y = (*it).y;
         point.z = (*it).z;
         Purple_msg.BB_Points.push_back(point);
+    }
+    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Purple_msg.Block_center_Points.push_back(point);
     }
     pub_purple.publish(Purple_msg);
 
@@ -199,26 +248,32 @@ void SystemHandler::Publish_Message()
     Red_msg.Grid_size.clear();
     Red_msg.Occupancy_Grid.clear();
     Red_msg.BB_Points.clear();
+    Red_msg.Block_center_Points.clear();
     // Yellow message clear
     Yellow_msg.Grid_size.clear();
     Yellow_msg.Occupancy_Grid.clear();
     Yellow_msg.BB_Points.clear();
+    Yellow_msg.Block_center_Points.clear();
     // Blue message clear
     Blue_msg.Grid_size.clear();
     Blue_msg.Occupancy_Grid.clear();
     Blue_msg.BB_Points.clear();
+    Blue_msg.Block_center_Points.clear();
     // Brown message clear
     Brown_msg.Grid_size.clear();
     Brown_msg.Occupancy_Grid.clear();
     Brown_msg.BB_Points.clear();
+    Brown_msg.Block_center_Points.clear();
     // Orange message clear
     Orange_msg.Grid_size.clear();
     Orange_msg.Occupancy_Grid.clear();
     Orange_msg.BB_Points.clear();
+    Orange_msg.Block_center_Points.clear();
     // Purple message clear
     Purple_msg.Grid_size.clear();
     Purple_msg.Occupancy_Grid.clear();
     Purple_msg.BB_Points.clear();
+    Purple_msg.Block_center_Points.clear();
     PoseFinder->ClearVariable();
 }
 

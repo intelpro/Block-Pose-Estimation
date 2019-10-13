@@ -21,7 +21,7 @@
 using namespace std;
 using namespace cv; 
 
-struct BB_Point{ float x; float y; float z; };
+struct Point3D{ float x; float y; float z; };
 
 
 class ObjectPose{
@@ -54,13 +54,22 @@ class ObjectPose{
         std::vector<int> brown_occ_Grid;
         std::vector<int> orange_occ_Grid;
         std::vector<int> purple_occ_Grid;
-        std::vector<BB_Point> BB_info_red;
-        std::vector<BB_Point> BB_info_yellow;
-        std::vector<BB_Point> BB_info_green;
-        std::vector<BB_Point> BB_info_blue;
-        std::vector<BB_Point> BB_info_brown;
-        std::vector<BB_Point> BB_info_orange;
-        std::vector<BB_Point> BB_info_purple;
+        // Bounding box vertex information
+        std::vector<Point3D> BB_info_red;
+        std::vector<Point3D> BB_info_yellow;
+        std::vector<Point3D> BB_info_green;
+        std::vector<Point3D> BB_info_blue;
+        std::vector<Point3D> BB_info_brown;
+        std::vector<Point3D> BB_info_orange;
+        std::vector<Point3D> BB_info_purple;
+        // Block center point cloud infomation
+        std::vector<Point3D> Block_center_red;
+        std::vector<Point3D> Block_center_yellow;
+        std::vector<Point3D> Block_center_green;
+        std::vector<Point3D> Block_center_blue;
+        std::vector<Point3D> Block_center_brown;
+        std::vector<Point3D> Block_center_orange;
+        std::vector<Point3D> Block_center_purple;
 
       protected:
         int Accum_iter; 
@@ -95,6 +104,7 @@ class ObjectPose{
         cv::Mat _Projected_image;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr projected_cloud;
         std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> BBinfo_temp; 
+        pcl::PointCloud<pcl::PointXYZRGB> Block_center_temp;
         Plane::DominantPlane* plane_object;
         Plane::Plane_model best_plane; 
 };
