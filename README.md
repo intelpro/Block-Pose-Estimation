@@ -3,9 +3,9 @@
 This repository was developed for robotic hand manipulation operation Intelligence testing.
 This code has been tested under Ubuntu 16.04 and ROS Kinetic. Please remember that this is on-going code which is subject to changes in the future.
 
-** Authors **: Taewoo Kim(KAIST visual Intelligence Lab.)
+**Authors**: Taewoo Kim(KAIST visual Intelligence Lab.)
 
-** Contact information: ** intelpro@kaist.ac.kr
+**Contact information:** intelpro@kaist.ac.kr
 
 ## Dependencies
 
@@ -21,6 +21,8 @@ https://github.com/IntelRealSense/realsense-ros/releases
 http://pointclouds.org/
 
 #### OpenCV - 3.3.1
+
+https://www.learnopencv.com/install-opencv-3-4-4-on-ubuntu-16-04/
 
 ## Installation & execution
 
