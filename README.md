@@ -1,6 +1,6 @@
 # Block Pose Estimation
 
-This repository was developed for robotic hand manipulation operation Intelligence testing.
+This repository was developed for robotic manipulation operation testing.
 This code has been tested under Ubuntu 16.04 and ROS Kinetic. Please remember that this is on-going code which is subject to changes in the future.
 
 **Authors**: Taewoo Kim(KAIST visual Intelligence Lab.)
@@ -10,7 +10,6 @@ This code has been tested under Ubuntu 16.04 and ROS Kinetic. Please remember th
 ## Dependencies
 
 #### C++11 or C++0x Compiler
-
 
 #### Realsense-ros wrapper
 
