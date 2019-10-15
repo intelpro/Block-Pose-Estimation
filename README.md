@@ -56,3 +56,6 @@ Published ROS Topic information
 
 
 ## Demo picture
+
+![ex_screenshot](./images/Demo_video_test_hand_project_1901015_1.png)
+
