@@ -1,4 +1,4 @@
-# Block Pose Estimation
+# 3D bounding box detection and Pose Estimation of Block 
 
 This repository was developed for robotic manipulation operation testing.
 This code has been tested under Ubuntu 16.04 and ROS Kinetic. Please remember that this is on-going code which is subject to changes in the future.
