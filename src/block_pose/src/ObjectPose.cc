@@ -455,13 +455,14 @@ void ObjectPose::ProjectedCloudToImagePlane()
             }
         }
     }
-    // cv::imshow("projected_image", projected_image);
+    cv::imshow("projected_image", projected_image);
     */
 }
 
 
 void ObjectPose::fitRectangle(cv::Mat projected_image)
 {
+    RNG rng(12345);
     int thresh = 0.1;
     Mat gray;
     cv::cvtColor(projected_image, gray, CV_BGR2GRAY);
@@ -478,8 +479,7 @@ void ObjectPose::fitRectangle(cv::Mat projected_image)
     {
         minRect[i] = minAreaRect( contours[i] );
     }
-    
-    double max_size = 1000;
+    double max_size = 100;
     for( size_t i = 0; i< contours.size(); i++ )
     {
         // rotated rectangle
@@ -498,9 +498,17 @@ void ObjectPose::fitRectangle(cv::Mat projected_image)
             }  
         }
     }
+    Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
     _RectPoints = RectPoints;
     BackProjectToDominatPlane(RectPoints);
-
+    // for rectpoint visualization 
+    /*
+    for ( int j = 0; j < 4; j++ )
+    {   
+        line(projected_image, RectPoints.at(j), RectPoints.at((j+1)%4), color);
+    } 
+    cv::imshow(color_string + "_2drawing", projected_image);
+    */
     /*
     double prev_dist_rect_1 = sqrt(pow(prev_RectPoints[0].x - prev_RectPoints[1].x, 2) + pow(prev_RectPoints[0].y - prev_RectPoints[1].y, 2));
     double prev_dist_rect_2 = sqrt(pow(prev_RectPoints[1].x - prev_RectPoints[2].x, 2) + pow(prev_RectPoints[1].y - prev_RectPoints[2].y, 2));
@@ -943,7 +951,6 @@ void ObjectPose::GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vec
     }
     // pcl::io::savePCDFile("output_cloud/purple.pcd", *CubeInCloud);
     // CloudView(CubeInCloud, pos_vector);
-    cout << "function size: " << CubeInCloud->size() << endl;
     for (int i=0; i<CubeInCloud->size(); i++)
         Block_center_temp.push_back(CubeInCloud->points[i]);
 }
@@ -954,7 +961,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
     if(color_string=="red")
 	{
         if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==1)
-           || (Grid_size[0]==1 & Grid_size[1]==2 & Grid_size[2]==2) || (Grid_size[0]==2 & Grid_size[1]==1 & Grid_size[2]==1))
+           || (Grid_size[0]==1 & Grid_size[1]==2 & Grid_size[2]==2) || (Grid_size[0]==2 & Grid_size[1]==1 & Grid_size[2]==2))
         {
             int tot_occ_grid_cnt=0;
             for(int i = 0; i < 4; i++)
@@ -968,7 +975,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 {   
                     line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                 } 
-                // cv::imshow(color_string + "_drawing", _Projected_image);
+                cv::imshow(color_string + "_drawing", _Projected_image);
                 red_Grid = Grid_size;
                 red_occ_Grid = occ_grid;
                 BB_info_red.clear();
@@ -1019,7 +1026,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               // cv::imshow(color_string + "_drawing", _Projected_image);
+               cv::imshow(color_string + "_drawing", _Projected_image);
                yellow_Grid = Grid_size;
                yellow_occ_Grid = occ_grid;
                BB_info_yellow.clear();
@@ -1052,18 +1059,22 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
        if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==2))
        {
            int tot_occ_grid_cnt=0;
+           int second_floor_cnt=0;
            for(int i = 0; i < 8; i++)
+           {
                tot_occ_grid_cnt+=occ_grid[i];
-
+               if(i%2==1)
+                   second_floor_cnt += occ_grid[i];
+           }
            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
-           if(tot_occ_grid_cnt==4)
+           if(tot_occ_grid_cnt==4 && second_floor_cnt==1)
            {
                cout << "blue block detected" << endl;
                for ( int j = 0; j < 4; j++ )
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               // cv::imshow(color_string + "_drawing", _Projected_image);
+               cv::imshow(color_string + "_drawing", _Projected_image);
                blue_Grid = Grid_size;
                blue_occ_Grid = occ_grid;
                BB_info_blue.clear();
@@ -1084,7 +1095,10 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                }
            }
            else
-               cout << "blue block mis detected" << endl;
+           {
+                cout << "blue block mis detected, Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2];
+                cout << " total occ grid: " << tot_occ_grid_cnt << "  second floor cnt: " << second_floor_cnt << endl;
+           }
        }
        else
        {
@@ -1092,25 +1106,27 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
        }
     }
 
-
-
     if(color_string=="brown")
     {
        if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==2))
        {
            int tot_occ_grid_cnt=0;
+           int second_floor_cnt=0;
            for(int i = 0; i < 8; i++)
+           {
                tot_occ_grid_cnt+=occ_grid[i];
-
+               if(i%2==1)
+                   second_floor_cnt += occ_grid[i];
+           }
            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
-           if(tot_occ_grid_cnt==4)
+           if(tot_occ_grid_cnt==4 && second_floor_cnt==1)
            {
                cout << "brown block detected" << endl;
                for ( int j = 0; j < 4; j++ )
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               // cv::imshow(color_string + "_drawing", _Projected_image);
+               cv::imshow(color_string + "_drawing", _Projected_image);
                brown_Grid = Grid_size;
                brown_occ_Grid = occ_grid;
                BB_info_brown.clear();
@@ -1132,7 +1148,8 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
            }
            else
            {
-               cout << "brown block mis detected" << endl;
+                cout << "brown block mis detected, Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2];
+                cout << " total occ grid: " << tot_occ_grid_cnt << "  second floor cnt: " << second_floor_cnt << endl;
            }
        }
        else
@@ -1159,7 +1176,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               // cv::imshow(color_string + "_drawing", _Projected_image);
+               cv::imshow(color_string + "_drawing", _Projected_image);
                orange_Grid = Grid_size;
                orange_occ_Grid = occ_grid;
                BB_info_orange.clear();
@@ -1195,9 +1212,13 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
        if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==2))
        {
            int tot_occ_grid_cnt=0;
+           int second_floor_cnt=0;
            for(int i = 0; i < 8; i++)
+           {
                tot_occ_grid_cnt+=occ_grid[i];
-
+               if(i%2==0)
+                   second_floor_cnt += occ_grid[i];
+           }
            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
            if(tot_occ_grid_cnt==4)
            {
@@ -1206,7 +1227,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                {   
                    line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
                } 
-               // cv::imshow(color_string + "_drawing", _Projected_image);
+               cv::imshow(color_string + "_drawing", _Projected_image);
                purple_Grid = Grid_size;
                purple_occ_Grid = occ_grid;
                BB_info_purple.clear();

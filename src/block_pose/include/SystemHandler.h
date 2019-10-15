@@ -95,7 +95,8 @@ public:
 			} 
 			else if(Frame_count%6 == 0)
             {
-                Run_pipeline(imRGB, imDepth);
+                preprocess_image(imRGB, imDepth);
+                Run_pipeline(imRGB_processed, imDepth_processed);
                 Publish_Message();
             }
 		}
@@ -106,6 +107,7 @@ public:
 		}
 	}
 
+	void preprocess_image(cv::Mat& image_RGB, cv::Mat& image_Depth);
 	void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
     void Publish_Message();
 
@@ -147,6 +149,8 @@ private:
     // RGB image and Depth image
     cv::Mat imRGB;
 	cv::Mat imDepth;
+    cv::Mat imRGB_processed;
+    cv::Mat imDepth_processed;
     // Plane and pose object
     Plane::DominantPlane* PlaneFinder;
     ObjectPose* PoseFinder;

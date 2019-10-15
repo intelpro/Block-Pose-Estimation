@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/intelpro/catkin_ws/src/block_pose/build/devel/setup.sh

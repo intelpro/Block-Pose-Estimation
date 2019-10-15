@@ -210,6 +210,7 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 find_package(OpenCV REQUIRED)
+message(OPENCV_VERSION)
 find_package(PCL REQUIRED)
 set(SOURCE_FILES src/main.cc src/DominantPlane.cc src/ObjectPose.cc)
 add_executable(block_pose ${SOURCE_FILES})

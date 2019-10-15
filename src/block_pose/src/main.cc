@@ -17,8 +17,13 @@ const int width = 640;
 const int height = 480;
 const int max_iter = 100;
 const int Depth_Accum_iter = 3; 
+const int crop_x_min = 80;
+const int crop_x_max = 570;
+const int crop_y_min = 150;
+const int crop_y_max = 450;
 
-void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name);
+
+void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
 void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
 
 int main(int argc, char** argv)
@@ -33,6 +38,27 @@ int main(int argc, char** argv)
     return 0;
 }
 
+
+void SystemHandler::preprocess_image(cv::Mat& imRGB, cv::Mat& imDepth)
+{
+    imRGB_processed = imRGB.clone(); 
+    imDepth_processed = imDepth.clone();
+    for (int y=0; y<height; y++)
+    {
+        for(int x=0; x < width; x++)
+        {
+            if(!(x>crop_x_min && x<crop_x_max && y>crop_y_min && y<crop_y_max))
+            {
+                imRGB_processed.at<Vec3b>(y,x)[0] = 0; 
+                imRGB_processed.at<Vec3b>(y,x)[1] = 0; 
+                imRGB_processed.at<Vec3b>(y,x)[2] = 0; 
+                imDepth_processed.at<uint16_t>(y,x) = 0; 
+            }
+            else{
+            }
+        }
+    }
+}
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
@@ -57,15 +83,24 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     }
 
     cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
-    // PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
+    PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
 
     end = clock();
     double result = (double)(end - start)/CLOCKS_PER_SEC;
-	// Show_Results(pCloud_outlier, image_RGB, "seg_image");
-    imshow("RGB_image", image_RGB);
-    waitKey(2);
+	Show_Results(pCloud_outlier, imRGB, imRGB_processed, "seg_image");
     imageCb(image_RGB, Total_mask);
     PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
+    /*
+    cv::imshow("RGB", image_RGB);
+    cv::imshow("red", Total_mask[0]);
+    cv::imshow("yellow", Total_mask[1]);
+    cv::imshow("green", Total_mask[2]);
+    cv::imshow("blue", Total_mask[3]);
+    cv::imshow("brown", Total_mask[4]);
+    cv::imshow("orange", Total_mask[5]);
+    cv::imshow("purple", Total_mask[6]);
+    waitKey(2);
+    */
 }
 
 void SystemHandler::Publish_Message()
@@ -82,7 +117,6 @@ void SystemHandler::Publish_Message()
     Block_center_temp = PoseFinder->Block_center_red;
     Red_msg.Frame_id = Frame_count;
     Red_msg.Object_id = 0; 
-    cout << "Block size: " << Block_center_temp.size() << endl;
     for(int i = 0; i < Grid_temp.size(); i++)
         Red_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
@@ -279,17 +313,10 @@ void SystemHandler::Publish_Message()
 
 // Mask_vector[0] = red_display.clone();
 /*
-cv::imshow("purple", Total_mask[6]);
-cv::imshow("brown", Total_mask[4]);
-cv::imshow("RGB", image_RGB);
-cv::imshow("green", Total_mask[2]);
-cv::imshow("blue", Total_mask[3]);
-cv::imshow("orange", Total_mask[5]);
-cv::imshow("purple", Total_mask[6]);
 */
 // cout << "consuming time: " << result << "(s)" << endl;
 
-void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string window_name)
+void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name)
 {
     cv::Mat RGB_image = RGB_image_original.clone();
 
@@ -307,7 +334,8 @@ void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, std::string w
     }
 
     cv::Mat red_image;
-    imshow("RGB_image_org", RGB_image_original);
+    imshow("RGB_image_orginal", RGB_image_original);
+    imshow("RGB_image_maked", RGB_masked);
     imshow("RGB_image_seg", RGB_image);
     waitKey(2);
 }
@@ -317,15 +345,16 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     Mat hsv_image;
     cvtColor(RGB_image, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
-    // imshow("HSV_image", hsv_image);
+    imshow("HSV_image", hsv_image);
 
     Mat lower_red_hue;
     Mat upper_red_hue;
 
+    // Color threshold for red color
     // inRange(hsv_image, Scalar(0, 150, 50), Scalar(2, 255, 180), lower_red_hue);
     // inRange(hsv_image, Scalar(150, 100, 66), Scalar(179, 255, 130), upper_red_hue);
-    inRange(hsv_image, Scalar(0, 100, 65), Scalar(3, 255, 255), lower_red_hue);
-    inRange(hsv_image, Scalar(178, 100, 65), Scalar(179, 255, 255), upper_red_hue);
+    inRange(hsv_image, Scalar(0, 160, 100), Scalar(3, 255, 160), lower_red_hue);
+    inRange(hsv_image, Scalar(175, 160, 100), Scalar(180, 255, 160), upper_red_hue);
 
     Mat red;
     addWeighted(lower_red_hue, 1.0, upper_red_hue, 1.0, 0.0, red);
@@ -336,7 +365,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     // Threshold for yellow color
     cv::Mat yellow = cv::Mat::zeros(640, 480, CV_8UC1);
-    inRange(hsv_image, Scalar(11, 130, 50), Scalar(25, 255, 255), yellow);
+    inRange(hsv_image, Scalar(15, 130, 170), Scalar(30, 255, 200), yellow);
 
     // Threshold for green color
     Mat green;
@@ -345,24 +374,26 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     // Threshold for blue color
     Mat blue;
-    inRange(hsv_image, Scalar(90, 100, 10), Scalar(130, 255, 100), blue);
+    inRange(hsv_image, Scalar(90, 100, 10), Scalar(150, 230, 100), blue);
     //inRange(hsv_image, Scalar(102, 70, 20), Scalar(130, 200, 60), blue);
 
     // Threshold for purple color. the hue for purple is the same as red. Only difference is value.
-    Mat purple;
-    inRange(hsv_image, Scalar(140, 35, 30), Scalar(179, 90, 110), purple);
+    Mat lower_purple, upper_purple, purple;
+    inRange(hsv_image, Scalar(160, 100, 30), Scalar(179, 160, 110), lower_purple);
+    inRange(hsv_image, Scalar(0, 100, 30), Scalar(5, 160, 110), upper_purple);
+    addWeighted(lower_purple, 1.0, upper_purple, 1.0, 0.0, purple);
 
     // Threshold for orange color
     // Threshold for brown color. the hue for brown is the same as red and orange. Only difference is value.
 
     Mat lower_brown, upper_brown, brown;
-    inRange(hsv_image, Scalar(0, 10, 50), Scalar(10, 50, 100), upper_brown);
-    inRange(hsv_image, Scalar(160, 10, 50), Scalar(179, 50, 100), lower_brown);
+    inRange(hsv_image, Scalar(0, 30, 25), Scalar(40, 130, 60), upper_brown);
+    inRange(hsv_image, Scalar(160, 30, 25), Scalar(179, 130, 60), lower_brown);
     addWeighted(lower_brown, 1.0, upper_brown, 1.0, 0.0, brown);
 
     // morphological opening (remove small objects from the foreground)
-    erode(red, red, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    dilate(red, red, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(red, red, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+    dilate(red, red, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
     // morphological closing (fill small holes in the foreground)
     dilate(red, red, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
@@ -393,28 +424,28 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
     erode(green, green, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
     // morphological opening (remove small objects from the foreground)
-    erode(blue, blue, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    dilate(blue, blue, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(blue, blue, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+    dilate(blue, blue, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
 
     // morphological closing (fill small holes in the foreground)
     dilate(blue, blue, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
     erode(blue, blue, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
     // morphological opening (remove small objects from the foreground)
-    erode(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    dilate(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+    dilate(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
 
     // morphological closing (fill small holes in the foreground)
     dilate(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
     erode(purple, purple, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
     // morphological opening (remove small objects from the foreground)
-    erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+    dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
 
     // morphological closing (fill small holes in the foreground)
-    dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
-    erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+    dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
     cv::Mat red_display = cv::Mat::zeros(480, 640, CV_8UC1);
     cv::Mat yellow_display = cv::Mat::zeros(480, 640, CV_8UC1);
@@ -525,6 +556,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
         }
     }
 
+    /*
     for(int y=0; y < blue.rows; y++)
     {
         for(int x=0; x < blue.cols; x++)
@@ -611,6 +643,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
                 brown_display.at<uchar>(y,x) = 0; 
         }
     }
+    */
 
     float sum_x_orange=0; 
     float sum_y_orange=0;
@@ -665,11 +698,11 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
         }
     }
 
-    Mask_vector[0] = red_display.clone();
+    Mask_vector[0] = red.clone();
     Mask_vector[1] = yellow_display.clone();
     Mask_vector[2] = green_display.clone();
-    Mask_vector[3] = blue_display.clone();
-    Mask_vector[4] = brown_display.clone();
-    Mask_vector[5] = orange_display.clone();
+    Mask_vector[3] = blue.clone();
+    Mask_vector[4] = brown.clone();
+    Mask_vector[5] = orange.clone();
     Mask_vector[6] = purple.clone();
 }
