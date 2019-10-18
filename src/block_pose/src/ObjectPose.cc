@@ -64,22 +64,6 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     std::vector<Point3D> Block_center_brown(4);
     std::vector<Point3D> Block_center_orange(4);
     std::vector<Point3D> Block_center_purple(4);
-    // initilaize Point cloud pointer 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Red_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Yellow_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Green_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Blue_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Brown_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Orange_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr Purple_Synthetic(new pcl::PointCloud<pcl::PointXYZRGB>);
-    // Load Synthetic Point cloud 
-    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/red.pcd", *Red_Synthetic);
-    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/yellow.pcd", *Yellow_Synthetic);
-    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/green.pcd", *Green_Synthetic);
-    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/blue.pcd", *Blue_Synthetic);
-    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/brown.pcd", *Brown_Synthetic);
-    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/orange.pcd", *Orange_Synthetic);
-    pcl::io::loadPCDFile<pcl::PointXYZRGB>("./src/block_pose/blocks/purple.pcd", *Purple_Synthetic);
 }
 
 void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat> &Mask)
