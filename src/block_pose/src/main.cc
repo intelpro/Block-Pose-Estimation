@@ -255,6 +255,7 @@ void SystemHandler::Publish_Message()
     Grid_temp = PoseFinder->purple_Grid;
     occ_grid_temp = PoseFinder->purple_occ_Grid;
     BB_Point_temp = PoseFinder->BB_info_purple;
+    Block_center_temp = PoseFinder->Block_center_purple;
     Purple_msg.Frame_id = Frame_count;
     Purple_msg.Object_id = 6;
     for(int i = 0; i < Grid_temp.size(); i++)
