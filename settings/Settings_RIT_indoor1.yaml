@@ -1,0 +1,48 @@
+%YAML:1.0ML:1.0
+#--------------------------------------------------------------------------------------------
+# Camera Parameters.
+#--------------------------------------------------------------------------------------------
+
+# Camera calibration information
+Camera.fx: 615.6707153320312
+Camera.fy: 615.962158203125
+Camera.cx: 328.0010681152344
+Camera.cy: 241.31031799316406
+
+Camera.width: 640
+Camera.height: 480
+
+# Camera frames per second 
+Camera.fps: 30.0
+
+# IR projector baseline times fx (aprox.)
+Camera.bf: 40.0
+
+# Deptmap values factor
+DepthMapFactor: 1000
+
+#--------------------------------------------------------------------------------------------
+# Crop Parameter
+#--------------------------------------------------------------------------------------------
+
+Crop.xmin: 80
+Crop.xmax: 570
+Crop.ymin: 150
+Crop.ymax: 450
+
+#--------------------------------------------------------------------------------------------
+# Class(Dominant Plane, Object Pose) Parameter
+#--------------------------------------------------------------------------------------------
+
+# Dominant Plane Threshold
+Plane.DistanceThresh: 0.005
+Plane.Maxiter: 100
+
+# Object Pose Threshold
+Pose.CloudAccumIter: 3
+Pose.GridUnitLength: 0.025
+Pose.ThresholdForOccGrid: 0.0125
+
+#--------------------------------------------------------------------------------------------
+# Color space Paramter
+#--------------------------------------------------------------------------------------------

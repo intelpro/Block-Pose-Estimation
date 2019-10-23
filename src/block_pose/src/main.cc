@@ -5,35 +5,14 @@
 using namespace std;
 using namespace cv;
 
-const float fx = 615.6707153320312;
-const float fy = 615.962158203125;
-const float cx = 328.0010681152344;
-const float cy = 241.31031799316406;
-const float scale = 1000;
-const float Distance_theshold = 0.005;
-const float unit_length = 0.025; 
-const float Threshold_for_occgrid = unit_length/2;
-const int width = 640;
-const int height = 480;
-const int max_iter = 100;
-const int Depth_Accum_iter = 3; 
-const int crop_x_min = 80;
-const int crop_x_max = 570;
-const int crop_y_min = 150;
-const int crop_y_max = 450;
-
 
 void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
 void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
 
 int main(int argc, char** argv)
 {
-    Plane::DominantPlane* plane_ptr = new Plane::DominantPlane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
-    ObjectPose* pose_ptr = new ObjectPose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, plane_ptr);
     ros::init(argc, argv,"block_pose");
-    SystemHandler System(plane_ptr, pose_ptr, fx, fy, cx, cy,
-                        Distance_theshold, unit_length, Threshold_for_occgrid,
-                        width, height, max_iter, Depth_Accum_iter);
+    SystemHandler System(argv[1]);
     ros::spin();
     return 0;
 }
@@ -47,7 +26,7 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB, cv::Mat& imDepth)
     {
         for(int x=0; x < width; x++)
         {
-            if(!(x>crop_x_min && x<crop_x_max && y>crop_y_min && y<crop_y_max))
+            if(!(x>Crop_x_min && x<Crop_x_max && y>Crop_y_min && y<Crop_y_max))
             {
                 imRGB_processed.at<Vec3b>(y,x)[0] = 0; 
                 imRGB_processed.at<Vec3b>(y,x)[1] = 0; 

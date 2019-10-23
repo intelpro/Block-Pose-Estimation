@@ -30,10 +30,54 @@ class SystemHandler
 {
 public:
 
-    SystemHandler(Plane::DominantPlane* _plane, ObjectPose* _pose, float _fx, float _fy,
-                  float _cx, float _cy, float _Distance_threshold,  float _unit_length, float _Threshold_for_occgrid,
-                  int _width, int _height, int _max_iter, int _Depth_Accum_iter)
+    SystemHandler(const string &strConfig)
     {
+        cv::FileStorage fconfig(strConfig.c_str(), cv::FileStorage::READ);
+        if(!fconfig.isOpened())
+        {
+           cerr << "Failed to open Configuration file at: " << strConfig << endl;
+           exit(-1);
+        }
+        // Camera parameters
+        fx = fconfig["Camera.fx"];
+        fy = fconfig["Camera.fy"];
+        cx = fconfig["Camera.cx"];
+        cy = fconfig["Camera.cy"];
+        width = fconfig["Camera.width"];
+        height = fconfig["Camera.height"];
+        scale = fconfig["DepthMapFactor"];
+        // Pose Finder parameters 
+        Depth_Accum_iter = fconfig["Pose.CloudAccumIter"];
+        unit_length = fconfig["Pose.GridUnitLength"];
+        Threshold_for_occgrid = fconfig["Pose.ThresholdForOccGrid"];
+        // Plane Finder parameters
+        Distance_theshold = fconfig["Plane.DistanceThresh"];
+        max_iter = fconfig["Plane.Maxiter"];
+        // Crop parameters
+        Crop_x_min = fconfig["Crop.xmin"];
+        Crop_x_max = fconfig["Crop.xmax"];
+        Crop_y_min = fconfig["Crop.ymin"];
+        Crop_y_max = fconfig["Crop.ymax"];
+        cout << "------------------------- Parameter -------------------------" << endl;
+        cout << "fx: " << fx << endl;
+        cout << "fy: " << fy << endl;
+        cout << "cx: " << cx << endl;
+        cout << "cy: " << cy << endl;
+        cout << "scale: " << scale << endl;
+        cout << "unit length: " << unit_length << endl;
+        cout << "Threshold for occ grid: " << Threshold_for_occgrid << endl;
+        cout << "Cloud Accum iter: " << Depth_Accum_iter << endl;
+        cout << "Dist Thresh: " << Distance_theshold << endl;
+        cout << "max iter: " << max_iter << endl;
+        cout << "width: " << width << endl;
+        cout << "height: " << height << endl;
+        cout << "Crop x min: " << Crop_x_min << endl;
+        cout << "Crop x max: " << Crop_x_max << endl;
+        cout << "Crop y min: " << Crop_y_min << endl;
+        cout << "Crop y max: " << Crop_y_max << endl;
+        // Object pointer declaration
+        PlaneFinder = new Plane::DominantPlane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
+        PoseFinder = new ObjectPose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, PlaneFinder);
         //Topic you want to publish
         pub_red = nh.advertise<block_pose::RedBlock>("/block_info/red", 100);
         pub_yellow = nh.advertise<block_pose::YellowBlock>("/block_info/yellow", 100);
@@ -42,21 +86,7 @@ public:
         pub_brown = nh.advertise<block_pose::BrownBlock>("/block_info/brown", 100);
         pub_orange = nh.advertise<block_pose::OrangeBlock>("/block_info/orange", 100);
         pub_purple = nh.advertise<block_pose::PurpleBlock>("/block_info/purple", 100);
-        // Object pointer 
-        PoseFinder = _pose;
-        PlaneFinder = _plane;
-        // hyperparameter
-        fx = _fx; 
-        fy = _fy; 
-        cx = _cx; 
-        cy = _cy;
-        Distance_theshold = _Distance_threshold;
-        unit_length = _unit_length;
-        Threshold_for_occgrid = _Threshold_for_occgrid;
-        width = _width;
-        height = _height;
-        max_iter = _max_iter;
-        Depth_Accum_iter = _Depth_Accum_iter;
+        // image declear
         imRGB = cv::Mat::zeros(height, width, CV_8UC3);
         imDepth = cv::Mat::zeros(height, width, CV_8UC3);
         //Topic you want to subscribe
@@ -125,6 +155,10 @@ private:
     int height;
     int max_iter;
     int Depth_Accum_iter;
+    int Crop_x_max;
+    int Crop_x_min;
+    int Crop_y_max;
+    int Crop_y_min;
     // Node Handler
     ros::NodeHandle nh;
     // Subscriber
