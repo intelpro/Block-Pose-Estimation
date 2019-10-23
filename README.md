@@ -23,7 +23,7 @@ http://pointclouds.org/
 
 https://www.learnopencv.com/install-opencv-3-4-4-on-ubuntu-16-04/
 
-## Installation & execution
+## Installation & Build
 
 $ cd ~/catkin_ws
 
@@ -33,7 +33,13 @@ $ source ./devel/setup.bash
 
 $ catkin_make DCMAKE\_BUILD\_TYPE=Release
 
+## Running Block Pose Node
+
+You will need to provide a settings file. See the excution examples below.
+
 $ rosrun block_pose block_pose PATH_TO_SETTINGS_FILE
+
+$ sh.run.sh
 
 ## Rostopic publish message
 
