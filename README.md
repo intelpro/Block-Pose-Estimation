@@ -33,7 +33,7 @@ $ source ./devel/setup.bash
 
 $ catkin_make DCMAKE\_BUILD\_TYPE=Release
 
-$ rosrun block\_pose block\_pose
+$ sh run_ros.sh or $ rosrun block_pose block_pose PATH_TO_SETTINGS_FILE
 
 ## Rostopic publish message
 
