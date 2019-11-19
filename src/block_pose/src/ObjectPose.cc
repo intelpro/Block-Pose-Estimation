@@ -247,7 +247,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
         cout << "-------------------------" << endl;
         ProjectToDominantPlane(red_cloud, "red");
         ProjectToDominantPlane(yellow_cloud, "yellow");
-        // ProjectToDominantPlane(green_cloud, "green");
+        ProjectToDominantPlane(green_cloud, "green");
         ProjectToDominantPlane(blue_cloud, "blue");
         ProjectToDominantPlane(brown_cloud, "brown");
         ProjectToDominantPlane(orange_cloud, "orange");
@@ -446,45 +446,76 @@ void ObjectPose::ProjectedCloudToImagePlane()
 
 void ObjectPose::fitRectangle(cv::Mat projected_image)
 {
-    RNG rng(12345);
-    int thresh = 0.1;
-    Mat gray;
-    cv::cvtColor(projected_image, gray, CV_BGR2GRAY);
-
-    std::vector<Point> RectPoints = std::vector<Point>(4);
-    Mat canny_output;
-    Canny(projected_image, canny_output, thresh, thresh*10, 3 );
-    vector<vector<Point> > contours;
-    findContours( canny_output, contours, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
-
-    vector<RotatedRect> minRect( contours.size() );
-    vector<RotatedRect> minEllipse( contours.size() );
-    for( size_t i = 0; i < contours.size(); i++ )
+    if(color_string!="green")
     {
-        minRect[i] = minAreaRect( contours[i] );
-    }
-    double max_size = 100;
-    for( size_t i = 0; i< contours.size(); i++ )
-    {
-        // rotated rectangle
-        Point2f rect_points[4];
-        minRect[i].points( rect_points );
-        
-        double dist_1 = sqrt(pow(rect_points[0].x - rect_points[1].x, 2) + pow(rect_points[0].y - rect_points[1].y, 2));
-        double dist_2 = sqrt(pow(rect_points[1].x - rect_points[2].x, 2) + pow(rect_points[1].y - rect_points[2].y, 2));
-        double size = dist_1 * dist_2;
-        if(max_size < size)
+        RNG rng(12345);
+        int thresh = 0.1;
+        Mat gray;
+        cv::cvtColor(projected_image, gray, CV_BGR2GRAY);
+
+        std::vector<Point> RectPoints = std::vector<Point>(4);
+        Mat canny_output;
+        Canny(projected_image, canny_output, thresh, thresh*10, 3 );
+        vector<vector<Point> > contours;
+        findContours( canny_output, contours, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
+
+        vector<RotatedRect> minRect( contours.size() );
+        vector<RotatedRect> minEllipse( contours.size() );
+        for( size_t i = 0; i < contours.size(); i++ )
         {
-            max_size = size;
-            for ( int j = 0; j < 4; j++ )
-            {   
-                RectPoints.at(j) = rect_points[j];
-            }  
+            minRect[i] = minAreaRect( contours[i] );
         }
+        double max_size = 100;
+        for( size_t i = 0; i< contours.size(); i++ )
+        {
+            // rotated rectangle
+            Point2f rect_points[4];
+            minRect[i].points( rect_points );
+            
+            double dist_1 = sqrt(pow(rect_points[0].x - rect_points[1].x, 2) + pow(rect_points[0].y - rect_points[1].y, 2));
+            double dist_2 = sqrt(pow(rect_points[1].x - rect_points[2].x, 2) + pow(rect_points[1].y - rect_points[2].y, 2));
+            double size = dist_1 * dist_2;
+            if(max_size < size)
+            {
+                max_size = size;
+                for ( int j = 0; j < 4; j++ )
+                {   
+                    RectPoints.at(j) = rect_points[j];
+                }  
+            }
+        }
+        Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
+        _RectPoints = RectPoints;
+        BackProjectToDominatPlane(RectPoints);
     }
-    Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
-    _RectPoints = RectPoints;
-    BackProjectToDominatPlane(RectPoints);
+    else if(color_string=="green")
+    {
+        Mat gray;
+        vector<vector<Point> > contours;
+        cv::cvtColor(projected_image, gray, CV_BGR2GRAY);
+        vector<vector<Point>> contour(0);
+        Rect RectPts = cv::boundingRect(gray);
+        int Threshold = 5;
+        cout << "x: " << RectPts.x << endl;
+        cout << "y: " << RectPts.y << endl;
+        cout << "height: " << RectPts.height << endl;
+        cout << "width: " << RectPts.width << endl;
+        cv::Rect myROI(RectPts.x-Threshold, RectPts.y-Threshold, RectPts.height+2*Threshold, RectPts.width+2*Threshold);
+        cv::Mat croppedImage = gray(myROI);
+        cv::Mat det;
+        cv::threshold(croppedImage, det, 127, 255, 0);
+        findContours(det, contours, RETR_TREE, CHAIN_APPROX_SIMPLE);
+        RotatedRect minRect;
+        minRect = minAreaRect(contours[0]);
+        Mat boxPts;
+        boxPoints(minRect, boxPts);
+        for(int i = 0; i < 4; i++)
+            cout << boxPts.at<float>(i, 0) << " " << boxPts.at<float>(i, 1) << endl;
+        for ( int j = 0; j < 4; j++ )
+            line(croppedImage, Point2f(boxPts.at<float>(j,0), boxPts.at<float>(j,1)), Point2f(boxPts.at<float>((j+1)%4, 0), boxPts.at<float>((j+1)%4, 1)), 255);
+        cv::imshow("crop image", croppedImage);
+        cv::waitKey(1);
+    }
     // for rectpoint visualization 
     /*
     for ( int j = 0; j < 4; j++ )

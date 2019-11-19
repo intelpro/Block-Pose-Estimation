@@ -68,17 +68,17 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     double result = (double)(end - start)/CLOCKS_PER_SEC;
 	Show_Results(pCloud_outlier, imRGB, imRGB_processed, "seg_image");
     imageCb(image_RGB, Total_mask);
-    PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
+    cv::imshow("green", Total_mask[2]);
+    waitKey(2);
+    // PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
     /*
     cv::imshow("RGB", image_RGB);
     cv::imshow("red", Total_mask[0]);
     cv::imshow("yellow", Total_mask[1]);
-    cv::imshow("green", Total_mask[2]);
     cv::imshow("blue", Total_mask[3]);
     cv::imshow("brown", Total_mask[4]);
     cv::imshow("orange", Total_mask[5]);
     cv::imshow("purple", Total_mask[6]);
-    waitKey(2);
     */
 }
 
@@ -349,7 +349,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     // Threshold for green color
     Mat green;
-    inRange(hsv_image, Scalar(50, 40, 20), Scalar(90, 255, 100), green);
+    inRange(hsv_image, Scalar(50, 100, 20), Scalar(100, 255, 100), green);
     //inRange(hsv_image, Scalar(50, 100, 25), Scalar(90, 180, 60), green);
 
     // Threshold for blue color
@@ -392,16 +392,16 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
     dilate(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
     // morphological closing (fill small holes in the foreground)
-    dilate(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
-    erode(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+    dilate(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
     // morphological opening (remove small objects from the foreground)
-    erode(green, green, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    dilate(green, green, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(green, green, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+    dilate(green, green, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
     // morphological closing (fill small holes in the foreground)
-    dilate(green, green, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
-    erode(green, green, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+    dilate(green, green, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+    erode(green, green, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
 
     // morphological opening (remove small objects from the foreground)
     erode(blue, blue, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
@@ -503,38 +503,6 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
         }
     }
 
-    for(int y=0; y < green.rows; y++)
-    {
-        for(int x=0; x < green.cols; x++)
-        {
-            if(green.at<uchar>(y,x) == 255 && y > 10 && x > 10)
-            {
-                int cnt = 0; 
-                for(int y1 = 0; y1 < 10; y1++)
-                {
-                    for(int x1 = 0; x1 < 10; x1++)
-                    {
-                        if(green.at<uchar>(y-y1,x-x1)==255)
-                        {
-                            cnt ++;
-                        }
-                    }
-                }
-                if(cnt<50)
-                {
-                    green_display.at<uchar>(y,x) = 0; 
-                }
-                else
-                {
-                    green_display.at<uchar>(y,x) = 255; 
-                }
-            }
-            else
-            {
-                // cout << yellow.at<int>(y,x) << endl;
-            }
-        }
-    }
 
     /*
     for(int y=0; y < blue.rows; y++)
@@ -680,7 +648,7 @@ void imageCb(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
 
     Mask_vector[0] = red.clone();
     Mask_vector[1] = yellow_display.clone();
-    Mask_vector[2] = green_display.clone();
+    Mask_vector[2] = green.clone();
     Mask_vector[3] = blue.clone();
     Mask_vector[4] = brown.clone();
     Mask_vector[5] = orange.clone();
