@@ -58,6 +58,43 @@ public:
         Crop_x_max = fconfig["Crop.xmax"];
         Crop_y_min = fconfig["Crop.ymin"];
         Crop_y_max = fconfig["Crop.ymax"];
+        // color parameter
+        // Red color
+        lower_Red_value1 = cv::Scalar(fconfig["Red_color.lower_value_0_0"],fconfig["Red_color.lower_value_1_0"],fconfig["Red_color.lower_value_2_0"]);
+        lower_Red_value2 = cv::Scalar(fconfig["Red_color.lower_value_0_1"],fconfig["Red_color.lower_value_1_1"],fconfig["Red_color.lower_value_2_1"]);
+        upper_Red_value1 = cv::Scalar(fconfig["Red_color.upper_value_0_0"],fconfig["Red_color.upper_value_1_0"],fconfig["Red_color.upper_value_2_0"]);
+        upper_Red_value2 = cv::Scalar(fconfig["Red_color.upper_value_0_1"],fconfig["Red_color.upper_value_1_1"],fconfig["Red_color.upper_value_2_1"]);
+        Red_imshow_flag = fconfig["Red_color.imshow"];
+        // Orange color
+        Orange_value1 = cv::Scalar(fconfig["Orange_color.value_0_0"],fconfig["Orange_color.value_1_0"],fconfig["Orange_color.value_2_0"]);
+        Orange_value2 = cv::Scalar(fconfig["Orange_color.value_0_1"],fconfig["Orange_color.value_1_1"],fconfig["Orange_color.value_2_1"]);
+        Orange_imshow_flag = fconfig["Orange_color.imshow"];
+        // Yellow color
+        Yellow_value1 = cv::Scalar(fconfig["Yellow_color.value_0_0"],fconfig["Yellow_color.value_1_0"],fconfig["Yellow_color.value_2_0"]);
+        Yellow_value2 = cv::Scalar(fconfig["Yellow_color.value_0_1"],fconfig["Yellow_color.value_1_1"],fconfig["Yellow_color.value_2_1"]);
+        Yellow_imshow_flag = fconfig["Yellow_color.imshow"];
+        // Green color
+        Green_value1 = cv::Scalar(fconfig["Green_color.value_0_0"],fconfig["Green_color.value_1_0"],fconfig["Green_color.value_2_0"]);
+        Green_value2 = cv::Scalar(fconfig["Green_color.value_0_1"],fconfig["Green_color.value_1_1"],fconfig["Green_color.value_2_1"]);
+        Green_imshow_flag = fconfig["Green_color.imshow"];
+        // Blue color
+        Blue_value1 = cv::Scalar(fconfig["Blue_color.value_0_0"],fconfig["Blue_color.value_1_0"],fconfig["Blue_color.value_2_0"]);
+        Blue_value2 = cv::Scalar(fconfig["Blue_color.value_0_1"],fconfig["Blue_color.value_1_1"],fconfig["Blue_color.value_2_1"]);
+        Blue_imshow_flag = fconfig["Blue_color.imshow"];
+        // Indigo color
+        lower_Indigo_value1 = cv::Scalar(fconfig["Indigo_color.lower_value_0_0"],fconfig["Indigo_color.lower_value_1_0"],fconfig["Indigo_color.lower_value_2_0"]);
+        lower_Indigo_value2 = cv::Scalar(fconfig["Indigo_color.lower_value_0_1"],fconfig["Indigo_color.lower_value_1_1"],fconfig["Indigo_color.lower_value_2_1"]);
+        upper_Indigo_value1 = cv::Scalar(fconfig["Indigo_color.upper_value_0_0"],fconfig["Indigo_color.upper_value_1_0"],fconfig["Indigo_color.upper_value_2_0"]);
+        upper_Indigo_value2 = cv::Scalar(fconfig["Indigo_color.upper_value_0_1"],fconfig["Indigo_color.upper_value_1_1"],fconfig["Indigo_color.upper_value_2_1"]);
+        Indigo_imshow_flag = fconfig["Indigo_color.imshow"];
+
+        // Brown color
+        lower_Brown_value1 = cv::Scalar(fconfig["Brown_color.lower_value_0_0"],fconfig["Brown_color.lower_value_1_0"],fconfig["Brown_color.lower_value_2_0"]);
+        lower_Brown_value2 = cv::Scalar(fconfig["Brown_color.lower_value_0_1"],fconfig["Brown_color.lower_value_1_1"],fconfig["Brown_color.lower_value_2_1"]);
+        upper_Brown_value1 = cv::Scalar(fconfig["Brown_color.upper_value_0_0"],fconfig["Brown_color.upper_value_1_0"],fconfig["Brown_color.upper_value_2_0"]);
+        upper_Brown_value2 = cv::Scalar(fconfig["Brown_color.upper_value_0_1"],fconfig["Brown_color.upper_value_1_1"],fconfig["Brown_color.upper_value_2_1"]);
+        Brown_imshow_flag = fconfig["Brown_color.imshow"];
+
         cout << "------------------------- Parameter -------------------------" << endl;
         cout << "fx: " << fx << endl;
         cout << "fy: " << fy << endl;
@@ -75,6 +112,30 @@ public:
         cout << "Crop x max: " << Crop_x_max << endl;
         cout << "Crop y min: " << Crop_y_min << endl;
         cout << "Crop y max: " << Crop_y_max << endl;
+        cout << "------------------------- Color space value -------------------------" << endl;
+        cout << "Red value(lower): [" << lower_Red_value1[0] << " " << lower_Red_value1[1] << " " << lower_Red_value1[2] << "]  ["  <<
+                lower_Red_value2[0] << " " << lower_Red_value2[1] << " " << lower_Red_value2[2] << "]" <<  endl;
+        cout << "Red value(upper): [" << upper_Red_value1[0] << " " << upper_Red_value1[1] << " " << upper_Red_value1[2] << "]  ["  <<
+                upper_Red_value2[0] << " " << upper_Red_value2[1] << " " << upper_Red_value2[2] << "]" <<  endl;
+        cout << "Orange value: [" << Orange_value1[0] << " " << Orange_value1[1] << " " << Orange_value1[2] << "]  ["  <<
+                Orange_value2[0] << " " << Orange_value2[1] << " " << Orange_value2[2] << "]" <<  endl;
+        cout << "Yellow value: [" << Yellow_value1[0] << " " << Yellow_value1[1] << " " << Yellow_value1[2] << "]  ["  <<
+                Yellow_value2[0] << " " << Yellow_value2[1] << " " << Yellow_value2[2] << "]" <<  endl;
+        cout << "Green value: [" << Green_value1[0] << " " << Green_value1[1] << " " << Green_value1[2] << "]  ["  <<
+                Green_value2[0] << " " << Green_value2[1] << " " << Green_value2[2] << "]" <<  endl;
+        cout << "Blue value: [" << Blue_value1[0] << " " << Blue_value1[1] << " " << Blue_value1[2] << "]  ["  <<
+                Blue_value2[0] << " " << Blue_value2[1] << " " << Blue_value2[2] << "]" <<  endl;
+        cout << "Indigo value(lower): [" << lower_Indigo_value1[0] << " " << lower_Indigo_value1[1] << " " << lower_Indigo_value1[2] << "]  ["  <<
+                lower_Indigo_value2[0] << " " << lower_Indigo_value2[1] << " " << lower_Indigo_value2[2] << "]" <<  endl;
+        cout << "Indigo value(upper): [" << upper_Indigo_value1[0] << " " << upper_Indigo_value1[1] << " " << upper_Indigo_value1[2] << "]  ["  <<
+                upper_Indigo_value2[0] << " " << upper_Indigo_value2[1] << " " << upper_Indigo_value2[2] << "]" <<  endl;
+        cout << "Brown value(lower): [" << lower_Brown_value1[0] << " " << lower_Brown_value1[1] << " " << lower_Brown_value1[2] << "]  ["  <<
+                lower_Brown_value2[0] << " " << lower_Brown_value2[1] << " " << lower_Brown_value2[2] << "]" <<  endl;
+        cout << "Brown value(upper): [" << upper_Brown_value1[0] << " " << upper_Brown_value1[1] << " " << upper_Brown_value1[2] << "]  ["  <<
+                upper_Brown_value2[0] << " " << upper_Brown_value2[1] << " " << upper_Brown_value2[2] << "]" <<  endl;
+
+
+
         // Object pointer declaration
         PlaneFinder = new Plane::DominantPlane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
         PoseFinder = new ObjectPose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, PlaneFinder);
@@ -140,6 +201,7 @@ public:
 	void preprocess_image(cv::Mat& image_RGB, cv::Mat& image_Depth);
 	void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
     void Publish_Message();
+    void ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
 
 private:
     // hyper parameter
@@ -159,6 +221,34 @@ private:
     int Crop_x_min;
     int Crop_y_max;
     int Crop_y_min;
+    int Red_imshow_flag;
+    int Orange_imshow_flag;
+    int Yellow_imshow_flag;
+    int Green_imshow_flag;
+    int Blue_imshow_flag;
+    int Indigo_imshow_flag;
+    int Brown_imshow_flag;
+    // color parameter
+    cv::Scalar lower_Red_value1;
+    cv::Scalar lower_Red_value2;
+    cv::Scalar upper_Red_value1;
+    cv::Scalar upper_Red_value2;
+    cv::Scalar Orange_value1;
+    cv::Scalar Orange_value2;
+    cv::Scalar Yellow_value1;
+    cv::Scalar Yellow_value2;
+    cv::Scalar Green_value1;
+    cv::Scalar Green_value2;
+    cv::Scalar Blue_value1;
+    cv::Scalar Blue_value2;
+    cv::Scalar lower_Indigo_value1;
+    cv::Scalar lower_Indigo_value2;
+    cv::Scalar upper_Indigo_value1;
+    cv::Scalar upper_Indigo_value2;
+    cv::Scalar lower_Brown_value1;
+    cv::Scalar lower_Brown_value2;
+    cv::Scalar upper_Brown_value1;
+    cv::Scalar upper_Brown_value2;
     // Node Handler
     ros::NodeHandle nh;
     // Subscriber

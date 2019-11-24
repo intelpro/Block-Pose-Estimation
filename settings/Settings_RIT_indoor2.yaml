@@ -1,0 +1,123 @@
+%YAML:1.0ML:1.0
+#--------------------------------------------------------------------------------------------
+# Camera Parameters.
+#--------------------------------------------------------------------------------------------
+
+# Camera calibration information
+Camera.fx: 615.6707153320312
+Camera.fy: 615.962158203125
+Camera.cx: 328.0010681152344
+Camera.cy: 241.31031799316406
+
+Camera.width: 640
+Camera.height: 480
+
+# Camera frames per second 
+Camera.fps: 30.0
+
+# IR projector baseline times fx (aprox.)
+Camera.bf: 40.0
+
+# Deptmap values factor
+DepthMapFactor: 1000
+
+#--------------------------------------------------------------------------------------------
+# Crop Parameter
+#--------------------------------------------------------------------------------------------
+
+Crop.xmin: 50
+Crop.xmax: 530
+Crop.ymin: 0
+Crop.ymax: 490
+
+#--------------------------------------------------------------------------------------------
+# Class(Dominant Plane, Object Pose) Parameter
+#--------------------------------------------------------------------------------------------
+
+# Dominant Plane Threshold
+Plane.DistanceThresh: 0.005
+Plane.Maxiter: 100
+
+# Object Pose Threshold
+Pose.CloudAccumIter: 3
+Pose.GridUnitLength: 0.025
+Pose.ThresholdForOccGrid: 0.0125
+
+#--------------------------------------------------------------------------------------------
+# Color space Paramter
+#--------------------------------------------------------------------------------------------
+# Red color(lower)
+Red_color.lower_value_0_0: 0
+Red_color.lower_value_0_1: 3
+Red_color.lower_value_1_0: 160
+Red_color.lower_value_1_1: 250
+Red_color.lower_value_2_0: 70
+Red_color.lower_value_2_1: 150
+
+Red_color.upper_value_0_0: 175
+Red_color.upper_value_0_1: 180
+Red_color.upper_value_1_0: 160
+Red_color.upper_value_1_1: 250
+Red_color.upper_value_2_0: 70
+Red_color.upper_value_2_1: 150
+Red_color.imshow: 0 # semi-completed
+# Orange color
+Orange_color.value_0_0: 2
+Orange_color.value_0_1: 10
+Orange_color.value_1_0: 190
+Orange_color.value_1_1: 255
+Orange_color.value_2_0: 100
+Orange_color.value_2_1: 200
+Orange_color.imshow: 1 # complted
+# Yellow color
+Yellow_color.value_0_0: 15
+Yellow_color.value_1_0: 130
+Yellow_color.value_2_0: 150
+Yellow_color.value_0_1: 40
+Yellow_color.value_1_1: 255
+Yellow_color.value_2_1: 200
+Yellow_color.imshow: 0 # completed
+# Green color
+Green_color.value_0_0: 15
+Green_color.value_1_0: 130
+Green_color.value_2_0: 50
+Green_color.value_0_1: 80
+Green_color.value_1_1: 200
+Green_color.value_2_1: 100
+Green_color.imshow: 0 # completed
+# Blue color
+Blue_color.value_0_0: 90
+Blue_color.value_1_0: 200
+Blue_color.value_2_0: 10
+Blue_color.value_0_1: 150
+Blue_color.value_1_1: 255
+Blue_color.value_2_1: 100
+Blue_color.imshow: 0 # completed
+# Indigo color
+Indigo_color.lower_value_0_0: 80
+Indigo_color.lower_value_1_0: 80
+Indigo_color.lower_value_2_0: 20
+Indigo_color.lower_value_0_1: 130
+Indigo_color.lower_value_1_1: 180
+Indigo_color.lower_value_2_1: 100
+Indigo_color.upper_value_0_0: 0
+Indigo_color.upper_value_1_0: 0
+Indigo_color.upper_value_2_0: 0
+Indigo_color.upper_value_0_1: 0
+Indigo_color.upper_value_1_1: 0
+Indigo_color.upper_value_2_1: 0
+Indigo_color.imshow: 0 # semi-completed, color space overlap with blue
+# Brown color
+Brown_color.lower_value_0_0: 0
+Brown_color.lower_value_1_0: 30
+Brown_color.lower_value_2_0: 15
+Brown_color.lower_value_0_1: 30
+Brown_color.lower_value_1_1: 210
+Brown_color.lower_value_2_1: 75
+Brown_color.upper_value_0_0: 160
+Brown_color.upper_value_1_0: 30
+Brown_color.upper_value_2_0: 15
+Brown_color.upper_value_0_1: 179
+Brown_color.upper_value_1_1: 210
+Brown_color.upper_value_2_1: 75
+Brown_color.imshow: 0 # completed
