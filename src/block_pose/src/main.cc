@@ -60,7 +60,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     }
 
     cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
-    // PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
+    PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
 
     end = clock();
     double result = (double)(end - start)/CLOCKS_PER_SEC;
@@ -81,10 +81,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     if(Indigo_imshow_flag== 1)
         cv::imshow("Indigo", Total_mask[6]);
     waitKey(2);
-    // PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
-    /*
-    cv::imshow("RGB", image_RGB);
-    */
+    PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
 }
 
 void SystemHandler::Publish_Message()
@@ -235,32 +232,32 @@ void SystemHandler::Publish_Message()
     }
     pub_orange.publish(Orange_msg);
 
-    // Purple Block
-    Grid_temp = PoseFinder->purple_Grid;
-    occ_grid_temp = PoseFinder->purple_occ_Grid;
-    BB_Point_temp = PoseFinder->BB_info_purple;
-    Block_center_temp = PoseFinder->Block_center_purple;
-    Purple_msg.Frame_id = Frame_count;
-    Purple_msg.Object_id = 6;
+    // Indigo Block
+    Grid_temp = PoseFinder->Indigo_Grid;
+    occ_grid_temp = PoseFinder->Indigo_occ_Grid;
+    BB_Point_temp = PoseFinder->BB_info_Indigo;
+    Block_center_temp = PoseFinder->Block_center_Indigo;
+    Indigo_msg.Frame_id = Frame_count;
+    Indigo_msg.Object_id = 6;
     for(int i = 0; i < Grid_temp.size(); i++)
-        Purple_msg.Grid_size.push_back(Grid_temp[i]);
+        Indigo_msg.Grid_size.push_back(Grid_temp[i]);
     for(int i = 0; i < occ_grid_temp.size(); i++)
-        Purple_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+        Indigo_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
     for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
         geometry_msgs::Point point;
         point.x = (*it).x;
         point.y = (*it).y;
         point.z = (*it).z;
-        Purple_msg.BB_Points.push_back(point);
+        Indigo_msg.BB_Points.push_back(point);
     }
     for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
         geometry_msgs::Point point;
         point.x = (*it).x;
         point.y = (*it).y;
         point.z = (*it).z;
-        Purple_msg.Block_center_Points.push_back(point);
+        Indigo_msg.Block_center_Points.push_back(point);
     }
-    pub_purple.publish(Purple_msg);
+    pub_Indigo.publish(Indigo_msg);
 
     // clear all object
     // Red message clear
@@ -288,11 +285,11 @@ void SystemHandler::Publish_Message()
     Orange_msg.Occupancy_Grid.clear();
     Orange_msg.BB_Points.clear();
     Orange_msg.Block_center_Points.clear();
-    // Purple message clear
-    Purple_msg.Grid_size.clear();
-    Purple_msg.Occupancy_Grid.clear();
-    Purple_msg.BB_Points.clear();
-    Purple_msg.Block_center_Points.clear();
+    // Indigo message clear
+    Indigo_msg.Grid_size.clear();
+    Indigo_msg.Occupancy_Grid.clear();
+    Indigo_msg.BB_Points.clear();
+    Indigo_msg.Block_center_Points.clear();
     PoseFinder->ClearVariable();
 }
 
@@ -315,7 +312,7 @@ void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_m
 
     cv::Mat red_image;
     imshow("RGB_image_orginal", RGB_image_original);
-    imshow("RGB_image_seg", RGB_image);
+    // imshow("RGB_image_seg", RGB_image);
     waitKey(2);
 }
 
@@ -383,12 +380,12 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     erode(orange, orange, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
 
     // morphological opening (remove small objects from the foreground)
-    erode(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(4,4)));
-    dilate(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
+    dilate(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
 
     // morphological closing (fill small holes in the foreground)
-    dilate(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    erode(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    dilate(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(30,30)));
+    erode(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(30,30)));
 
     // morphological opening (remove small objects from the foreground)
     erode(green, green, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
@@ -427,41 +424,6 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     cv::Mat blue_display = cv::Mat::zeros(480, 640, CV_8UC1);
     cv::Mat brown_display = cv::Mat::zeros(480, 640, CV_8UC1);
     cv::Mat orange_display = cv::Mat::zeros(480, 640, CV_8UC1);
-
-    for(int y=0; y < yellow.rows; y++)
-    {
-        for(int x=0; x < yellow.cols; x++)
-        {
-            if(yellow.at<uchar>(y,x) == 255 && y > 10 && x > 10)
-            {
-                // yellow.at<uchar>(y,x) = 0; 
-                int cnt = 0; 
-                for(int y1 = 0; y1 < 10; y1++)
-                {
-                    for(int x1 = 0; x1 < 10; x1++)
-                    {
-                        if(yellow.at<uchar>(y-y1,x-x1)==255)
-                        {
-                            cnt ++;
-                        }
-                    }
-                }
-
-                if(cnt<50)
-                {
-                    yellow_display.at<uchar>(y,x) = 0; 
-                }
-                else
-                {
-                    yellow_display.at<uchar>(y,x) = 255; 
-                }
-            }
-            else
-            {
-                // cout << yellow.at<int>(y,x) << endl;
-            }
-        }
-    }
 
 
     /*
@@ -554,7 +516,7 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     */
 
     Mask_vector[0] = red.clone();
-    Mask_vector[1] = yellow_display.clone();
+    Mask_vector[1] = yellow.clone();
     Mask_vector[2] = green.clone();
     Mask_vector[3] = blue.clone();
     Mask_vector[4] = brown.clone();

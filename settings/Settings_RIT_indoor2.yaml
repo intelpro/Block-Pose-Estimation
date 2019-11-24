@@ -42,6 +42,21 @@ Plane.Maxiter: 100
 Pose.CloudAccumIter: 3
 Pose.GridUnitLength: 0.025
 Pose.ThresholdForOccGrid: 0.0125
+Pose.TestAll: 0
+Pose.TestRed: 0
+Red_color.imshow: 0 # semi-completed
+Pose.TestYellow: 0
+Yellow_color.imshow: 0 # completed
+Pose.TestGreen: 0
+Green_color.imshow: 0 # completed
+Pose.TestOrange: 0
+Orange_color.imshow: 0 # complted
+Pose.TestBlue: 0
+Blue_color.imshow: 0 # completed
+Pose.TestBrown: 0
+Brown_color.imshow: 0 # completed
+Pose.TestIndigo: 1
+Indigo_color.imshow: 1 # semi-completed, color space overlap with blue
 
 #--------------------------------------------------------------------------------------------
 # Color space Paramter
@@ -60,7 +75,6 @@ Red_color.upper_value_1_0: 160
 Red_color.upper_value_1_1: 250
 Red_color.upper_value_2_0: 70
 Red_color.upper_value_2_1: 150
-Red_color.imshow: 0 # semi-completed
 # Orange color
 Orange_color.value_0_0: 2
 Orange_color.value_0_1: 10
@@ -68,7 +82,6 @@ Orange_color.value_1_0: 190
 Orange_color.value_1_1: 255
 Orange_color.value_2_0: 100
 Orange_color.value_2_1: 200
-Orange_color.imshow: 1 # complted
 # Yellow color
 Yellow_color.value_0_0: 15
 Yellow_color.value_1_0: 130
@@ -76,7 +89,6 @@ Yellow_color.value_2_0: 150
 Yellow_color.value_0_1: 40
 Yellow_color.value_1_1: 255
 Yellow_color.value_2_1: 200
-Yellow_color.imshow: 0 # completed
 # Green color
 Green_color.value_0_0: 15
 Green_color.value_1_0: 130
@@ -84,7 +96,6 @@ Green_color.value_2_0: 50
 Green_color.value_0_1: 80
 Green_color.value_1_1: 200
 Green_color.value_2_1: 100
-Green_color.imshow: 0 # completed
 # Blue color
 Blue_color.value_0_0: 90
 Blue_color.value_1_0: 200
@@ -92,7 +103,6 @@ Blue_color.value_2_0: 10
 Blue_color.value_0_1: 150
 Blue_color.value_1_1: 255
 Blue_color.value_2_1: 100
-Blue_color.imshow: 0 # completed
 # Indigo color
 Indigo_color.lower_value_0_0: 80
 Indigo_color.lower_value_1_0: 80
@@ -106,7 +116,6 @@ Indigo_color.upper_value_2_0: 0
 Indigo_color.upper_value_0_1: 0
 Indigo_color.upper_value_1_1: 0
 Indigo_color.upper_value_2_1: 0
-Indigo_color.imshow: 0 # semi-completed, color space overlap with blue
 # Brown color
 Brown_color.lower_value_0_0: 0
 Brown_color.lower_value_1_0: 30
@@ -120,4 +129,3 @@ Brown_color.upper_value_2_0: 15
 Brown_color.upper_value_0_1: 179
 Brown_color.upper_value_1_1: 210
 Brown_color.upper_value_2_1: 75
-Brown_color.imshow: 0 # completed

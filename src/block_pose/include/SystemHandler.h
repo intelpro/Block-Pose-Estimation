@@ -20,7 +20,7 @@
 #include <block_pose/GreenBlock.h>
 #include <block_pose/BrownBlock.h>
 #include <block_pose/OrangeBlock.h>
-#include <block_pose/PurpleBlock.h>
+#include <block_pose/IndigoBlock.h>
 #include <geometry_msgs/Point.h>
 
 namespace enc = sensor_msgs::image_encodings;
@@ -87,7 +87,6 @@ public:
         upper_Indigo_value1 = cv::Scalar(fconfig["Indigo_color.upper_value_0_0"],fconfig["Indigo_color.upper_value_1_0"],fconfig["Indigo_color.upper_value_2_0"]);
         upper_Indigo_value2 = cv::Scalar(fconfig["Indigo_color.upper_value_0_1"],fconfig["Indigo_color.upper_value_1_1"],fconfig["Indigo_color.upper_value_2_1"]);
         Indigo_imshow_flag = fconfig["Indigo_color.imshow"];
-
         // Brown color
         lower_Brown_value1 = cv::Scalar(fconfig["Brown_color.lower_value_0_0"],fconfig["Brown_color.lower_value_1_0"],fconfig["Brown_color.lower_value_2_0"]);
         lower_Brown_value2 = cv::Scalar(fconfig["Brown_color.lower_value_0_1"],fconfig["Brown_color.lower_value_1_1"],fconfig["Brown_color.lower_value_2_1"]);
@@ -138,7 +137,7 @@ public:
 
         // Object pointer declaration
         PlaneFinder = new Plane::DominantPlane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
-        PoseFinder = new ObjectPose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, PlaneFinder);
+        PoseFinder = new ObjectPose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, PlaneFinder, fconfig);
         //Topic you want to publish
         pub_red = nh.advertise<block_pose::RedBlock>("/block_info/red", 100);
         pub_yellow = nh.advertise<block_pose::YellowBlock>("/block_info/yellow", 100);
@@ -146,14 +145,13 @@ public:
         pub_blue = nh.advertise<block_pose::BlueBlock>("/block_info/blue", 100);
         pub_brown = nh.advertise<block_pose::BrownBlock>("/block_info/brown", 100);
         pub_orange = nh.advertise<block_pose::OrangeBlock>("/block_info/orange", 100);
-        pub_purple = nh.advertise<block_pose::PurpleBlock>("/block_info/purple", 100);
+        pub_Indigo = nh.advertise<block_pose::IndigoBlock>("/block_info/Indigo", 100);
         // image declear
         imRGB = cv::Mat::zeros(height, width, CV_8UC3);
         imDepth = cv::Mat::zeros(height, width, CV_8UC3);
         //Topic you want to subscribe
         sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
         sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
-        
 	}
 
 	void ImageCallback(const sensor_msgs::ImageConstPtr& msg)
@@ -261,7 +259,7 @@ private:
     ros::Publisher pub_blue;
     ros::Publisher pub_brown;
     ros::Publisher pub_orange;
-    ros::Publisher pub_purple;
+    ros::Publisher pub_Indigo;
     // Block message
     block_pose::RedBlock Red_msg;
     block_pose::YellowBlock Yellow_msg;
@@ -269,7 +267,7 @@ private:
     block_pose::BlueBlock Blue_msg;
     block_pose::BrownBlock Brown_msg;
     block_pose::OrangeBlock Orange_msg;
-    block_pose::PurpleBlock Purple_msg;
+    block_pose::IndigoBlock Indigo_msg;
     // RGB image and Depth image
     cv::Mat imRGB;
 	cv::Mat imDepth;

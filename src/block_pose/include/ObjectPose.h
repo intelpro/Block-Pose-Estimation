@@ -26,7 +26,7 @@ struct Point3D{ float x; float y; float z; };
 
 class ObjectPose{
     public:
-        ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane* plane);
+        ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float _fy, float _cx, float _cy, float _unit_length, float _dist_thresh, Plane::DominantPlane* plane, cv::FileStorage fconfig);
         void Accumulate_PointCloud(cv::Mat& pcd_outlier, std::vector<cv::Mat>& Mask);
         void CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector);
         void ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string _color_string);
@@ -46,14 +46,14 @@ class ObjectPose{
         std::vector<int> blue_Grid;
         std::vector<int> brown_Grid;
         std::vector<int> orange_Grid;
-        std::vector<int> purple_Grid;
+        std::vector<int> Indigo_Grid;
         std::vector<int> red_occ_Grid;
         std::vector<int> yellow_occ_Grid;
         std::vector<int> green_occ_Grid;
         std::vector<int> blue_occ_Grid;
         std::vector<int> brown_occ_Grid;
         std::vector<int> orange_occ_Grid;
-        std::vector<int> purple_occ_Grid;
+        std::vector<int> Indigo_occ_Grid;
         // Bounding box vertex information
         std::vector<Point3D> BB_info_red;
         std::vector<Point3D> BB_info_yellow;
@@ -61,7 +61,7 @@ class ObjectPose{
         std::vector<Point3D> BB_info_blue;
         std::vector<Point3D> BB_info_brown;
         std::vector<Point3D> BB_info_orange;
-        std::vector<Point3D> BB_info_purple;
+        std::vector<Point3D> BB_info_Indigo;
         // Block center point cloud infomation
         std::vector<Point3D> Block_center_red;
         std::vector<Point3D> Block_center_yellow;
@@ -69,7 +69,7 @@ class ObjectPose{
         std::vector<Point3D> Block_center_blue;
         std::vector<Point3D> Block_center_brown;
         std::vector<Point3D> Block_center_orange;
-        std::vector<Point3D> Block_center_purple;
+        std::vector<Point3D> Block_center_Indigo;
 
       protected:
         int Accum_iter; 
@@ -78,6 +78,15 @@ class ObjectPose{
         int width; 
         int index; 
         int box_flag;
+        // flag for test
+        int Test_all_flag;
+        int Test_red_flag;
+        int Test_yellow_flag;
+        int Test_green_flag;
+        int Test_blue_flag;
+        int Test_brown_flag;
+        int Test_orange_flag;
+        int Test_indigo_flag;
         float fx; 
         float fy;
         float cx; 
@@ -92,14 +101,14 @@ class ObjectPose{
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Blue_Synthetic;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Brown_Synthetic;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Orange_Synthetic;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Purple_Synthetic;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Indigo_Synthetic;
         pcl::PointCloud<pcl::PointXYZRGB> red_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> yellow_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> green_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> blue_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> brown_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> orange_cloud;
-        pcl::PointCloud<pcl::PointXYZRGB> purple_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> Indigo_cloud;
         std::vector<Point> _RectPoints = std::vector<Point> (4);
         cv::Mat _Projected_image;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr projected_cloud;

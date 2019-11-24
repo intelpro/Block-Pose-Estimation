@@ -60,7 +60,7 @@ find_package(OpenCV 3.0)
    BlueBlock.msg
    BrownBlock.msg
    OrangeBlock.msg
-   PurpleBlock.msg
+   IndigoBlock.msg
    GreenBlock.msg
  )
 
