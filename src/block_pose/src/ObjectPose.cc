@@ -297,7 +297,6 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
 
 void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string _color_string)
 {
-    cout << "project DominantPlane" << endl;
     color_string=_color_string;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_projected_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
     best_plane = plane_object->cur_best_plane;

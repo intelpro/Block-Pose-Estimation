@@ -26,16 +26,17 @@ DepthMapFactor: 1000
 #--------------------------------------------------------------------------------------------
 
 Crop.xmin: 0
-Crop.xmax: 480
+Crop.xmax: 530
 Crop.ymin: 0
-Crop.ymax: 640
+Crop.ymax: 480
 
 #--------------------------------------------------------------------------------------------
 # Class(Dominant Plane, Object Pose) Parameter
 #--------------------------------------------------------------------------------------------
 
 # Verbose paramter
-SystemHandler.imshowHSV: 1 
+SystemHandler.ColorDebug: 1 
+SystemHandler.imshowHSV: 0
 SystemHandler.imshowOrgImg: 1
 SystemHandler.imshowSegImg: 0
 # Dominant Plane Threshold
@@ -48,20 +49,20 @@ Pose.GridUnitLength: 0.025
 Pose.ThresholdForOccGrid: 0.0125
 # Object Debug Test Paramter
 Pose.TestAll: 0
-Pose.TestRed: 0 
-Red_color.imshow: 0 
+Pose.TestRed: 1
+Red_color.imshow: 1
 Pose.TestYellow: 0
-Yellow_color.imshow: 0
+Yellow_color.imshow: 1 
 Pose.TestGreen: 0  
-Green_color.imshow: 0
+Green_color.imshow: 1
 Pose.TestOrange: 0 
-Orange_color.imshow: 0
+Orange_color.imshow: 1
 Pose.TestBlue: 0  
-Blue_color.imshow: 0 
+Blue_color.imshow: 1
 Pose.TestBrown: 0 
-Brown_color.imshow: 0
+Brown_color.imshow: 1 
 Pose.TestIndigo: 0 
-Indigo_color.imshow: 0 
+Indigo_color.imshow: 1 
 
 #--------------------------------------------------------------------------------------------
 # Color space Paramter

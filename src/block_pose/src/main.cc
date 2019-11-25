@@ -29,7 +29,7 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB, cv::Mat& imDepth)
                 imRGB_processed.at<Vec3b>(y,x)[0] = 0; 
                 imRGB_processed.at<Vec3b>(y,x)[1] = 0; 
                 imRGB_processed.at<Vec3b>(y,x)[2] = 0; 
-                imDepth_processed.at<uint16_t>(y,x) = 0; 
+                //imDepth_processed.at<uint16_t>(y,x) = 0; 
             }
             else{
             }
@@ -39,7 +39,7 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB, cv::Mat& imDepth)
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
-    std::vector<cv::Mat> Total_mask(7);
+    std::vector<cv::Mat> Total_mask(8);
     clock_t start, end;
 
     cv::Mat pCloud(height, width, CV_32FC3);
@@ -66,20 +66,8 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     double result = (double)(end - start)/CLOCKS_PER_SEC;
 	Show_Results(pCloud_outlier, imRGB, imRGB_processed, "seg_image");
     ColorSegmenation(image_RGB, Total_mask);
-    if(Red_imshow_flag == 1)
-        cv::imshow("Red", Total_mask[0]);
-    if(Yellow_imshow_flag == 1)
-        cv::imshow("Yellow", Total_mask[1]);
-    if(Green_imshow_flag == 1)
-        cv::imshow("Green", Total_mask[2]);
-    if(Blue_imshow_flag == 1)
-        cv::imshow("Blue", Total_mask[3]);
-    if(Brown_imshow_flag == 1)
-        cv::imshow("Brown", Total_mask[4]);
-    if(Orange_imshow_flag == 1)
-        cv::imshow("Orange", Total_mask[5]);
-    if(Indigo_imshow_flag== 1)
-        cv::imshow("Indigo", Total_mask[6]);
+    if(ColorDebug_flag==1)
+        cv::imshow("Color_debug", Total_mask[7]);
     waitKey(2);
     PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
 }
@@ -447,15 +435,65 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
     erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
-    cv::Mat yellow_display = cv::Mat::zeros(480, 640, CV_8UC1);
-    cv::Mat green_display = cv::Mat::zeros(480, 640, CV_8UC1);
-    cv::Mat blue_display = cv::Mat::zeros(480, 640, CV_8UC1);
-    cv::Mat brown_display = cv::Mat::zeros(480, 640, CV_8UC1);
-    cv::Mat orange_display = cv::Mat::zeros(480, 640, CV_8UC1);
+    cv::Mat display_window = cv::Mat::zeros(480, 640, CV_8UC3);
+    for(int y=0; y < display_window.rows; y++)
+    {
+        for(int x=0; x < display_window.cols; x++)
+        {
+            if(red.at<uchar>(y,x) == 255 && Red_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 0;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
 
+            if(orange.at<uchar>(y,x) == 255 && Orange_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 165;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
+
+            if(yellow.at<uchar>(y,x) == 255 && Yellow_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 255;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
+
+            if(green.at<uchar>(y,x) == 255 && Green_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 255;
+                display_window.at<Vec3b>(y,x)[2] = 0;
+            }
+
+            if(blue.at<uchar>(y,x) == 255 && Blue_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 255;
+                display_window.at<Vec3b>(y,x)[1] = 0;
+                display_window.at<Vec3b>(y,x)[2] = 0;
+            }
+
+            if(brown.at<uchar>(y,x) == 255 && Brown_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 50;
+                display_window.at<Vec3b>(y,x)[1] = 60;
+                display_window.at<Vec3b>(y,x)[2] = 72;
+            }
+
+            if(purple.at<uchar>(y,x) == 255 && Indigo_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 100;
+                display_window.at<Vec3b>(y,x)[1] = 50;
+                display_window.at<Vec3b>(y,x)[2] = 40;
+            }
+        }
+    }
 
     /*
-    for(int y=0; y < blue.rows; y++)
+    for(int 
+    y=0; y < blue.rows; y++)
     {
         for(int x=0; x < blue.cols; x++)
         {
@@ -550,4 +588,5 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     Mask_vector[4] = brown.clone();
     Mask_vector[5] = orange.clone();
     Mask_vector[6] = purple.clone();
+    Mask_vector[7] = display_window.clone();
 }
