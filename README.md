@@ -41,6 +41,39 @@ $ rosrun block_pose block_pose PATH_TO_SETTINGS_FILE
 
 $ sh.run.sh
 
+## Configuration file
+
+최근에 받은(11-20) bag file로 execution한 setting은 RIT_indoor2.yaml 파일 
+
+SystemHandler.imshowHSV: HSV image show flag
+
+SystemHandler.imshowOrgImg: Original image show flag
+
+SystemHandler.imshowSegImg: Segmentation image show flag
+
+SystemHandler.ColorDebug: Color Debug imshow flag(color segmation정보를 볼 수 있음.)
+
+Red_color.imshow: color Debug에 Red를 띄우느냐 마느냐
+
+Pose.TestAll: 모든 블록을 테스트 할지 아닐지 flag(0,1)
+
+Pose.TestRed: Red block 테스트 할지 말지 flag
+
+Red\_color.lower\_value\_0_0: HSV 이미지의 V에 해당(<=)
+
+Red\_color.lower\_value\_0\_1: HSV 이미지의 V에 해당(상위, >=)
+
+Red\_color.lower\_value\_1\_0: HSV 이미지의 S에 해당(하위, <=)
+
+Red\_color.lower\_value\_1\_1: HSV 이미지의 S에 해당(상위, >=)
+
+Red\_color.lower\_value\_2\_0: HSV 이미지의 H에 해당(하위, <=)
+
+
+Red\_color.lower\_value\_2\_1: HSV 이미지의 H에 해당(상위, <=)
+
+
+
 ## Rostopic publish message
 
 Our code publish Blue, Brown, Green, Orange, Purple, Red, Yellow block information. Block information rostopic contain frame id, unit occupancy grid, unit grid shape, 3D bounding box vertex, block center point.
