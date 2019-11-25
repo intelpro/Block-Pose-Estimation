@@ -18,7 +18,7 @@ Camera.fps: 30.0
 # IR projector baseline times fx (aprox.)
 Camera.bf: 40.0
 
-# Deptmap values factor
+# Depthmap values factor
 DepthMapFactor: 1000
 
 #--------------------------------------------------------------------------------------------
@@ -34,11 +34,19 @@ Crop.ymax: 480
 # Class(Dominant Plane, Object Pose) Parameter
 #--------------------------------------------------------------------------------------------
 
-# Verbose paramter
-SystemHandler.ColorDebug: 1 
+# Image show paramter
 SystemHandler.imshowHSV: 0
 SystemHandler.imshowOrgImg: 1
 SystemHandler.imshowSegImg: 0
+
+SystemHandler.ColorDebug: 1
+Red_color.imshow: 1
+Yellow_color.imshow: 1
+Green_color.imshow: 1
+Orange_color.imshow: 1
+Blue_color.imshow: 1
+Brown_color.imshow: 1
+Indigo_color.imshow: 1
 # Dominant Plane Threshold
 Plane.DistanceThresh: 0.005
 Plane.Maxiter: 100
@@ -50,19 +58,12 @@ Pose.ThresholdForOccGrid: 0.0125
 # Object Debug Test Paramter
 Pose.TestAll: 0
 Pose.TestRed: 1
-Red_color.imshow: 1
 Pose.TestYellow: 0
-Yellow_color.imshow: 1 
-Pose.TestGreen: 0  
-Green_color.imshow: 1
-Pose.TestOrange: 0 
-Orange_color.imshow: 1
-Pose.TestBlue: 0  
-Blue_color.imshow: 1
-Pose.TestBrown: 0 
-Brown_color.imshow: 1 
-Pose.TestIndigo: 0 
-Indigo_color.imshow: 1 
+Pose.TestGreen: 0
+Pose.TestOrange: 0
+Pose.TestBlue: 0
+Pose.TestBrown: 0
+Pose.TestIndigo: 0
 
 #--------------------------------------------------------------------------------------------
 # Color space Paramter
