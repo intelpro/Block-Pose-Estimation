@@ -32,6 +32,7 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     best_plane = plane->cur_best_plane;
     box_flag=0;
     color_string="red";
+    cv::Mat _Projected_image = cv::Mat::zeros(height, width, CV_8UC3);
     // initilaize Grid vector
     std::vector<int> red_Grid(3);
     std::vector<int> yellow_Grid(3);
@@ -69,7 +70,6 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     Test_red_flag = fconfig["Pose.TestRed"];
     Test_yellow_flag = fconfig["Pose.TestYellow"];
     Test_green_flag = fconfig["Pose.TestGreen"];
-    Test_orange_flag = fconfig["Pose.TestOrange"];
     Test_blue_flag = fconfig["Pose.TestBlue"];
     Test_brown_flag = fconfig["Pose.TestBrown"];
     Test_orange_flag = fconfig["Pose.TestOrange"];
@@ -82,7 +82,6 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     cout << "Test Orange:" << Test_orange_flag << endl;
     cout << "Test Blue:" << Test_blue_flag << endl;
     cout << "Test Brown:" << Test_brown_flag << endl;
-    cout << "Test Orange:" << Test_brown_flag << endl;
     cout << "Test Indigo:" << Test_indigo_flag << endl;
 }
 
@@ -247,9 +246,9 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
                         point.y = pcd_outlier.at<cv::Vec3f>(y,x)[1];
                         point.z = pcd_outlier.at<cv::Vec3f>(y,x)[2];
-                        point.r = 57; 
-                        point.g = 100; 
-                        point.b = 195;
+                        point.r = 40; 
+                        point.g = 50; 
+                        point.b = 100;
                         if(point.x!=0)
                         {
                             Indigo_cloud.push_back(point);
@@ -288,7 +287,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
         else if(Test_orange_flag==1)
             ProjectToDominantPlane(orange_cloud, "orange");
         else if(Test_indigo_flag==1)
-            ProjectToDominantPlane(Indigo_cloud, "indigo");
+            ProjectToDominantPlane(Indigo_cloud, "Indigo");
         Accum_idx = 0; 
     }
 
@@ -298,6 +297,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
 
 void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string _color_string)
 {
+    cout << "project DominantPlane" << endl;
     color_string=_color_string;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_projected_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
     best_plane = plane_object->cur_best_plane;
@@ -359,10 +359,12 @@ void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_clo
         }
         else if(color_string=="Indigo")
         {
-            ProjectedPoint.r = 102; 
-            ProjectedPoint.g = 51;
-            ProjectedPoint.b = 153;
+            ProjectedPoint.r = 40; 
+            ProjectedPoint.g = 50;
+            ProjectedPoint.b = 100;
         }
+        pcl_projected_cloud->points.push_back(ProjectedPoint);
+
         float dist_prev = sqrt(pow(ProjectedPoint.x - prev_point.x,2) + pow(ProjectedPoint.y - prev_point.y,2) + pow(ProjectedPoint.z - prev_point.z, 2));
         if(dist_prev < 0.1 && first_index==0)
         {
@@ -378,7 +380,7 @@ void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_clo
             prev_point = ProjectedPoint;
         }
     }
-    projected_cloud = pcl_projected_cloud;
+    projected_cloud = *pcl_projected_cloud;
     ProjectedCloudToImagePlane();
 }
 
@@ -386,10 +388,10 @@ void ObjectPose::ProjectedCloudToImagePlane()
 {
     cv::Mat projected_image = cv::Mat::zeros(height, width, CV_8UC3);
     std::vector<pair<int, int>> pos_vector; 
-    for (int i =0; i < projected_cloud->size(); i++)
+    for (int i =0; i < projected_cloud.size(); i++)
     {
         pcl::PointXYZRGB temp_cloud; 
-        temp_cloud = projected_cloud->points[i];
+        temp_cloud = projected_cloud.points[i];
         float X = temp_cloud.x;
         float Y = temp_cloud.y; 
         float Z = temp_cloud.z; 
@@ -404,8 +406,12 @@ void ObjectPose::ProjectedCloudToImagePlane()
             projected_image.at<Vec3b>(x, y)[1] = 255;
             projected_image.at<Vec3b>(x, y)[2] = 255;
         }
-        else if(color_string=="green")
+        else if(color_string=="green" & x < height & y < width)
+        {
+            projected_image.at<Vec3b>(x, y)[0] = 255;
             projected_image.at<Vec3b>(x, y)[1] = 255;
+            projected_image.at<Vec3b>(x, y)[2] = 255;
+        }
         else if(color_string=="blue")
             projected_image.at<Vec3b>(x, y)[0] = 255;
         else if(color_string=="brown")
@@ -416,14 +422,15 @@ void ObjectPose::ProjectedCloudToImagePlane()
         }
         else if(color_string=="orange")
         {
+            projected_image.at<Vec3b>(x,y)[0] = 0; 
             projected_image.at<Vec3b>(x,y)[1] = 165; 
             projected_image.at<Vec3b>(x,y)[2] = 255;
         }
         else if(color_string=="Indigo")
         {
-            projected_image.at<Vec3b>(x,y)[0] = 57; 
-            projected_image.at<Vec3b>(x,y)[1] = 100; 
-            projected_image.at<Vec3b>(x,y)[2] = 195;
+            projected_image.at<Vec3b>(x,y)[0] = 100; 
+            projected_image.at<Vec3b>(x,y)[1] = 50; 
+            projected_image.at<Vec3b>(x,y)[2] = 40;
         }
     }
 
@@ -434,51 +441,83 @@ void ObjectPose::ProjectedCloudToImagePlane()
 
 void ObjectPose::fitRectangle(cv::Mat projected_image)
 {
-    if(color_string!="green")
+    RNG rng(12345);
+    int thresh = 0.1;
+    Mat gray = cv::Mat::zeros(height, width, CV_8UC1);
+    std::vector<Point> RectPoints = std::vector<Point>(4);
+    Mat canny_output= cv::Mat::zeros(height, width, CV_8UC1);
+    vector<vector<Point>> contours;
+
+    cv::cvtColor(projected_image, gray, CV_BGR2GRAY);
+    // filling small hole due to occlusion
+    if(color_string=="red")
     {
-        RNG rng(12345);
-        int thresh = 0.1;
-        Mat gray;
-        cv::cvtColor(projected_image, gray, CV_BGR2GRAY);
-
-        std::vector<Point> RectPoints = std::vector<Point>(4);
-        Mat canny_output;
-        Canny(projected_image, canny_output, thresh, thresh*10, 3 );
-        vector<vector<Point> > contours;
-        findContours( canny_output, contours, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
-
-        vector<RotatedRect> minRect( contours.size() );
-        vector<RotatedRect> minEllipse( contours.size() );
-        for( size_t i = 0; i < contours.size(); i++ )
-        {
-            minRect[i] = minAreaRect( contours[i] );
-        }
-        double max_size = 100;
-        for( size_t i = 0; i< contours.size(); i++ )
-        {
-            // rotated rectangle
-            Point2f rect_points[4];
-            minRect[i].points( rect_points );
-            
-            double dist_1 = sqrt(pow(rect_points[0].x - rect_points[1].x, 2) + pow(rect_points[0].y - rect_points[1].y, 2));
-            double dist_2 = sqrt(pow(rect_points[1].x - rect_points[2].x, 2) + pow(rect_points[1].y - rect_points[2].y, 2));
-            double size = dist_1 * dist_2;
-            if(max_size < size)
-            {
-                max_size = size;
-                for ( int j = 0; j < 4; j++ )
-                {   
-                    RectPoints.at(j) = rect_points[j];
-                }  
-            }
-        }
-        Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
-        _RectPoints = RectPoints;
-        for ( int j = 0; j < 4; j++ )
-            line(projected_image, RectPoints.at(j), RectPoints.at((j+1)%4), color);
-        cv::imshow(color_string + "_2drawing", projected_image);
-        BackProjectToDominatPlane(RectPoints);
+        dilate(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
+        erode(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
     }
+    else if(color_string=="blue")
+    {
+        dilate(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        erode(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+    }
+    else if(color_string=="green")
+    {
+        dilate(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        erode(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+    }
+    else if(color_string=="orange")
+    {
+        dilate(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
+        erode(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
+    }
+    else if(color_string=="brown")
+    {
+        dilate(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        erode(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+    }
+    else if(color_string=="yellow")
+    {
+        dilate(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
+        erode(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
+    }
+    else if(color_string=="Indigo")
+    {
+        dilate(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        erode(gray, gray, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+    }
+
+    Canny(gray, canny_output, thresh, thresh*10, 3 );
+    findContours(canny_output, contours, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+    vector<RotatedRect> minRect(contours.size());
+    for( size_t i = 0; i < contours.size(); i++ )
+        minRect[i] = minAreaRect( contours[i] );
+
+    double max_size = 100;
+    for( size_t i = 0; i< contours.size(); i++ )
+    {
+        // rotated rectangle
+        Point2f rect_points[4];
+        minRect[i].points( rect_points );
+        
+        double dist_1 = sqrt(pow(rect_points[0].x - rect_points[1].x, 2) + pow(rect_points[0].y - rect_points[1].y, 2));
+        double dist_2 = sqrt(pow(rect_points[1].x - rect_points[2].x, 2) + pow(rect_points[1].y - rect_points[2].y, 2));
+        double size = dist_1 * dist_2;
+        if(max_size < size)
+        {
+            max_size = size;
+            for ( int j = 0; j < 4; j++ )
+            {   
+                RectPoints.at(j) = rect_points[j];
+            }  
+        }
+    }
+    Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256));
+    _RectPoints = RectPoints;
+    for ( int j = 0; j < 4; j++ )
+        line(gray, RectPoints.at(j), RectPoints.at((j+1)%4), color);
+    cv::imshow(color_string + "_2drawing", gray);
+    BackProjectToDominatPlane(RectPoints);
+    /*
     else if(color_string=="green")
     {
         Mat gray;
@@ -507,6 +546,7 @@ void ObjectPose::fitRectangle(cv::Mat projected_image)
         cv::imshow("crop image", croppedImage);
         cv::waitKey(1);
     }
+    */
 }
 
 void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
@@ -615,9 +655,9 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
     {
         // cout << "Indigo height: " << max_length << endl;
         // pcl::copyPointCloud(Indigo_cloud, *Cloud_for_viewer);
+        // CloudView(Cloud_for_viewer, BB_points);
         // FindOccGrid(pos_vector, max_length);
         // cout << color_string << " Grid" << Indigo_Grid[0] << " " << Indigo_Grid[1] << " " << Indigo_Grid[2] << endl;
-        // CloudView(Cloud_for_viewer, pos_vector);
     }
 }
 
@@ -686,7 +726,7 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     else if(dist1 > 3*Unit_Cube_L-dist_thresh & dist1 < 3*Unit_Cube_L+dist_thresh)
         Grid_size[0] = 3;
     else 
-        Grid_size[0] = 0; 
+        Grid_size[0] = 1; 
 
     if(dist2 > Unit_Cube_L-dist_thresh & dist2 < Unit_Cube_L+dist_thresh)
         Grid_size[1] = 1;
@@ -695,7 +735,7 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     else if(dist2 > 3*Unit_Cube_L-dist_thresh & dist2 < 3*Unit_Cube_L+dist_thresh)
         Grid_size[1] = 3;
     else 
-        Grid_size[1] = 0; 
+        Grid_size[1] = 1; 
 
     if(max_height > Unit_Cube_L - dist_thresh & max_height < Unit_Cube_L + dist_thresh)
         Grid_size[2] = 1;
@@ -704,7 +744,7 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     else if(max_height > 3*Unit_Cube_L - dist_thresh & max_height < 3*Unit_Cube_L + dist_thresh)
         Grid_size[2] = 3;
     else 
-        Grid_size[2] = 0; 
+        Grid_size[2] = 1; 
 
     int cnt_tot = 0; 
     if(color_string=="red")
@@ -712,7 +752,7 @@ void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB
     else if(color_string=="yellow")
         MeasureOccupany(pos_vector, Grid_size, yellow_cloud);
     else if(color_string=="green")
-        MeasureOccupany(pos_vector, Grid_size, yellow_cloud);
+        MeasureOccupany(pos_vector, Grid_size, green_cloud);
     else if(color_string=="blue")
         MeasureOccupany(pos_vector, Grid_size, blue_cloud);
     else if(color_string=="brown")
@@ -826,13 +866,18 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
         else 
             occ_grid[i] = 0; 
 
-        if(i!=0 & Grid_size[2]!=1 & i%Grid_size[2]==Grid_size[2]-1 & occ_grid[i]==1)
+        if(i!=0 & Grid_size[2]==2 & i%Grid_size[2]==Grid_size[2]-1 & occ_grid[i]==1)
             occ_grid[i-1] = 1;
+        if(i>1 & Grid_size[2]==3 & occ_grid[i]==1)
+        {
+            occ_grid[i-1] = 1;
+            occ_grid[i-2] = 1;
+        }
     }
 
-    // cout << "occ grid: " ;
-    // for(int i=0; i<Grid_tot_size; i++)
-    //    cout << occ_grid[i] << " " ;
+    cout << "occ grid: " ;
+    for(int i=0; i<Grid_tot_size; i++)
+        cout << occ_grid[i] << " " ;
     CheckOccGridWithKnownShape(Grid_size, occ_grid);
 }
 
@@ -1105,15 +1150,69 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
        }
     }
 
-
-    if(color_string=="orange")
+    if(color_string=="green")
     {
-       if((Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2) ||
-          (Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1) || (Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1))
+       cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
+       if((Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1) || (Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1) ||
+          (Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2))
        {
            int tot_occ_grid_cnt=0;
            for(int i = 0; i < 6; i++)
                tot_occ_grid_cnt+=occ_grid[i];
+           cout << "tot occ grid: " <<  tot_occ_grid_cnt << endl;
+
+           Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256));
+           if(tot_occ_grid_cnt==4)
+           {
+               cout << "green block detected" << endl;
+               for ( int j = 0; j < 4; j++ )
+               {   
+                   line(_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+               } 
+               cv::imshow(color_string + "_drawing", _Projected_image);
+               green_Grid = Grid_size;
+               green_occ_Grid = occ_grid;
+               BB_info_green.clear();
+               for(int k = 0; k < BBinfo_temp.size(); k++)
+               {
+                    pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+                    pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+                    BB_info_green.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+                    BB_info_green.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+               }
+               Block_center_temp.clear();
+               Block_center_green.clear();
+               GenerateRealSyntheticCloud(green_Grid, green_occ_Grid, BBinfo_temp);
+               for(int l = 0; l < Block_center_temp.size(); l++)
+               {
+                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
+                    Block_center_green.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+               }
+           }
+           else
+           {
+               cout << "green block mis detected" << endl;
+           }
+       }
+       else
+       {
+           cout << "green block mis detected" << endl;
+       }
+    }
+
+
+
+    if(color_string=="orange")
+    {
+        cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
+       if((Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2) ||
+          (Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1) || (Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1) || 
+          (Grid_size[0]==1 & Grid_size[1]==2 & Grid_size[2]==3) || (Grid_size[0]==2 & Grid_size[1]==1 & Grid_size[2]==3))
+       {
+           int tot_occ_grid_cnt=0;
+           for(int i = 0; i < 6; i++)
+               tot_occ_grid_cnt+=occ_grid[i];
+           cout << "tot occ grid: " <<  tot_occ_grid_cnt << endl;
 
            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
            if(tot_occ_grid_cnt==4)
@@ -1250,7 +1349,6 @@ void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std:
     {
         viewer.spinOnce ();
     }
-    exit(0);
 }
 
 void ObjectPose::ClearVariable()
@@ -1263,5 +1361,4 @@ void ObjectPose::ClearVariable()
     orange_cloud.clear();
     Indigo_cloud.clear();
     BBinfo_temp.clear();
-    Block_center_temp.clear();
 }

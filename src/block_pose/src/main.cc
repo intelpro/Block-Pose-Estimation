@@ -146,11 +146,33 @@ void SystemHandler::Publish_Message()
     pub_yellow.publish(Yellow_msg);
 
     // Green block 
-    // 
-    // Temporally deactivate
-    //
-    // End of Green block 
-    
+    Grid_temp = PoseFinder->green_Grid;
+    occ_grid_temp = PoseFinder->green_occ_Grid;
+    BB_Point_temp = PoseFinder->BB_info_green;
+    Block_center_temp = PoseFinder->Block_center_green;
+    Green_msg.Frame_id = Frame_count;
+    Green_msg.Object_id = 2;
+    for(int i = 0; i < Grid_temp.size(); i++)
+        Green_msg.Grid_size.push_back(Grid_temp[i]);
+    for(int i = 0; i < occ_grid_temp.size(); i++)
+        Green_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Green_msg.BB_Points.push_back(point);
+    }
+    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+        geometry_msgs::Point point;
+        point.x = (*it).x;
+        point.y = (*it).y;
+        point.z = (*it).z;
+        Green_msg.Block_center_Points.push_back(point);
+    }
+    pub_green.publish(Green_msg);
+
+
     // blue block
     Grid_temp = PoseFinder->blue_Grid;
     occ_grid_temp = PoseFinder->blue_occ_Grid;
@@ -270,6 +292,11 @@ void SystemHandler::Publish_Message()
     Yellow_msg.Occupancy_Grid.clear();
     Yellow_msg.BB_Points.clear();
     Yellow_msg.Block_center_Points.clear();
+    // Green message clear
+    Green_msg.Grid_size.clear();
+    Green_msg.Occupancy_Grid.clear();
+    Green_msg.BB_Points.clear();
+    Green_msg.Block_center_Points.clear();
     // Blue message clear
     Blue_msg.Grid_size.clear();
     Blue_msg.Occupancy_Grid.clear();
@@ -293,7 +320,7 @@ void SystemHandler::Publish_Message()
     PoseFinder->ClearVariable();
 }
 
-void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name)
+void SystemHandler::Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name)
 {
     cv::Mat RGB_image = RGB_image_original.clone();
 
@@ -309,10 +336,10 @@ void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_m
         }
 
     }
-
-    cv::Mat red_image;
-    imshow("RGB_image_orginal", RGB_image_original);
-    // imshow("RGB_image_seg", RGB_image);
+    if(OrgImgShow_flag)
+        imshow("RGB_image_orginal", RGB_image_original);
+    if(SegImgShow_flag)
+        imshow("RGB_image_seg", RGB_image);
     waitKey(2);
 }
 
@@ -321,7 +348,8 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
 
     Mat hsv_image;
     cvtColor(RGB_image, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
-    imshow("HSV_image", hsv_image);
+    if(HSVImgShow_flag)
+        imshow("HSV_image", hsv_image);
 
     Mat lower_red_hue;
     Mat upper_red_hue;
@@ -353,9 +381,9 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
 
     // Threshold for purple color. the hue for purple is the same as red. Only difference is value.
     Mat lower_purple, upper_purple, purple;
-    inRange(hsv_image, lower_Indigo_value1, lower_Indigo_value2, lower_purple);
-    inRange(hsv_image, upper_Indigo_value1, upper_Indigo_value2, upper_purple);
-    addWeighted(lower_purple, 1.0, upper_purple, 1.0, 0.0, purple);
+    inRange(hsv_image, lower_Indigo_value1, lower_Indigo_value2, purple);
+    //inRange(hsv_image, upper_Indigo_value1, upper_Indigo_value2, upper_purple);
+    //addWeighted(lower_purple, 1.0, upper_purple, 1.0, 0.0, purple);
 
    // Threshold for brown color. the hue for brown is the same as red and orange. Only difference is value.
     Mat lower_brown, upper_brown, brown;

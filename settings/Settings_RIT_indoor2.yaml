@@ -25,38 +25,43 @@ DepthMapFactor: 1000
 # Crop Parameter
 #--------------------------------------------------------------------------------------------
 
-Crop.xmin: 50
-Crop.xmax: 530
+Crop.xmin: 0
+Crop.xmax: 480
 Crop.ymin: 0
-Crop.ymax: 490
+Crop.ymax: 640
 
 #--------------------------------------------------------------------------------------------
 # Class(Dominant Plane, Object Pose) Parameter
 #--------------------------------------------------------------------------------------------
 
+# Verbose paramter
+SystemHandler.imshowHSV: 1 
+SystemHandler.imshowOrgImg: 1
+SystemHandler.imshowSegImg: 0
 # Dominant Plane Threshold
 Plane.DistanceThresh: 0.005
 Plane.Maxiter: 100
 
-# Object Pose Threshold
+# Object Pose Paramter
 Pose.CloudAccumIter: 3
 Pose.GridUnitLength: 0.025
 Pose.ThresholdForOccGrid: 0.0125
+# Object Debug Test Paramter
 Pose.TestAll: 0
-Pose.TestRed: 0
-Red_color.imshow: 0 # semi-completed
+Pose.TestRed: 0 
+Red_color.imshow: 0 
 Pose.TestYellow: 0
-Yellow_color.imshow: 0 # completed
-Pose.TestGreen: 0
-Green_color.imshow: 0 # completed
-Pose.TestOrange: 0
-Orange_color.imshow: 0 # complted
-Pose.TestBlue: 0
-Blue_color.imshow: 0 # completed
-Pose.TestBrown: 0
-Brown_color.imshow: 0 # completed
-Pose.TestIndigo: 1
-Indigo_color.imshow: 1 # semi-completed, color space overlap with blue
+Yellow_color.imshow: 0
+Pose.TestGreen: 0  
+Green_color.imshow: 0
+Pose.TestOrange: 0 
+Orange_color.imshow: 0
+Pose.TestBlue: 0  
+Blue_color.imshow: 0 
+Pose.TestBrown: 0 
+Brown_color.imshow: 0
+Pose.TestIndigo: 0 
+Indigo_color.imshow: 0 
 
 #--------------------------------------------------------------------------------------------
 # Color space Paramter
@@ -69,6 +74,7 @@ Red_color.lower_value_1_1: 250
 Red_color.lower_value_2_0: 70
 Red_color.lower_value_2_1: 150
 
+# Red color(upper)
 Red_color.upper_value_0_0: 175
 Red_color.upper_value_0_1: 180
 Red_color.upper_value_1_0: 160
@@ -84,30 +90,30 @@ Orange_color.value_2_0: 100
 Orange_color.value_2_1: 200
 # Yellow color
 Yellow_color.value_0_0: 15
-Yellow_color.value_1_0: 130
-Yellow_color.value_2_0: 150
 Yellow_color.value_0_1: 40
+Yellow_color.value_1_0: 130
 Yellow_color.value_1_1: 255
+Yellow_color.value_2_0: 150
 Yellow_color.value_2_1: 200
 # Green color
 Green_color.value_0_0: 15
-Green_color.value_1_0: 130
-Green_color.value_2_0: 50
 Green_color.value_0_1: 80
+Green_color.value_1_0: 130
 Green_color.value_1_1: 200
+Green_color.value_2_0: 50
 Green_color.value_2_1: 100
 # Blue color
 Blue_color.value_0_0: 90
-Blue_color.value_1_0: 200
-Blue_color.value_2_0: 10
 Blue_color.value_0_1: 150
+Blue_color.value_1_0: 200
 Blue_color.value_1_1: 255
+Blue_color.value_2_0: 10
 Blue_color.value_2_1: 100
-# Indigo color
+# Indigo color(lower)
 Indigo_color.lower_value_0_0: 80
 Indigo_color.lower_value_1_0: 80
 Indigo_color.lower_value_2_0: 20
-Indigo_color.lower_value_0_1: 130
+Indigo_color.lower_value_0_1: 170
 Indigo_color.lower_value_1_1: 180
 Indigo_color.lower_value_2_1: 100
 Indigo_color.upper_value_0_0: 0

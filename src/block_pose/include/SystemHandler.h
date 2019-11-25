@@ -58,6 +58,10 @@ public:
         Crop_x_max = fconfig["Crop.xmax"];
         Crop_y_min = fconfig["Crop.ymin"];
         Crop_y_max = fconfig["Crop.ymax"];
+        // Image show flag
+        HSVImgShow_flag = fconfig["SystemHandler.imshowHSV"];
+        OrgImgShow_flag = fconfig["SystemHandler.imshowOrgImg"];
+        SegImgShow_flag = fconfig["SystemHandler.imshowSegImg"];
         // color parameter
         // Red color
         lower_Red_value1 = cv::Scalar(fconfig["Red_color.lower_value_0_0"],fconfig["Red_color.lower_value_1_0"],fconfig["Red_color.lower_value_2_0"]);
@@ -133,8 +137,6 @@ public:
         cout << "Brown value(upper): [" << upper_Brown_value1[0] << " " << upper_Brown_value1[1] << " " << upper_Brown_value1[2] << "]  ["  <<
                 upper_Brown_value2[0] << " " << upper_Brown_value2[1] << " " << upper_Brown_value2[2] << "]" <<  endl;
 
-
-
         // Object pointer declaration
         PlaneFinder = new Plane::DominantPlane(fx,fy,cx,cy, scale, Distance_theshold, max_iter, width, height);
         PoseFinder = new ObjectPose(height, width, Depth_Accum_iter, fx, fy, cx, cy, unit_length, Threshold_for_occgrid, PlaneFinder, fconfig);
@@ -200,6 +202,7 @@ public:
 	void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
     void Publish_Message();
     void ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
+    void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
 
 private:
     // hyper parameter
@@ -226,6 +229,10 @@ private:
     int Blue_imshow_flag;
     int Indigo_imshow_flag;
     int Brown_imshow_flag;
+    // Imshow flag
+    int OrgImgShow_flag;
+    int SegImgShow_flag;
+    int HSVImgShow_flag;
     // color parameter
     cv::Scalar lower_Red_value1;
     cv::Scalar lower_Red_value2;

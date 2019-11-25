@@ -111,7 +111,7 @@ class ObjectPose{
         pcl::PointCloud<pcl::PointXYZRGB> Indigo_cloud;
         std::vector<Point> _RectPoints = std::vector<Point> (4);
         cv::Mat _Projected_image;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr projected_cloud;
+        pcl::PointCloud<pcl::PointXYZRGB> projected_cloud;
         std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> BBinfo_temp; 
         pcl::PointCloud<pcl::PointXYZRGB> Block_center_temp;
         Plane::DominantPlane* plane_object;
