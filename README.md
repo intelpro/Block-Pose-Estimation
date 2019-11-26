@@ -65,11 +65,11 @@ Red\_color.lower\_value\_0\_1: HSV 이미지의 V에 해당(상한, >=)
 
 Red\_color.lower\_value\_1\_0: HSV 이미지의 S에 해당(하한, <=)
 
-Red\_color.lower\_value\_1\_1: HSV 이미지의 S에 해당(상위, >=)
+Red\_color.lower\_value\_1\_1: HSV 이미지의 S에 해당(상한, >=)
 
-Red\_color.lower\_value\_2\_0: HSV 이미지의 H에 해당(하위, <=)
+Red\_color.lower\_value\_2\_0: HSV 이미지의 H에 해당(하한, <=)
 
-Red\_color.lower\_value\_2\_1: HSV 이미지의 H에 해당(상위, <=)
+Red\_color.lower\_value\_2\_1: HSV 이미지의 H에 해당(상한, <=)
 
 ## Rostopic publish message
 
