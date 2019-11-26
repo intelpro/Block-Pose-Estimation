@@ -46,6 +46,8 @@ public:
         width = fconfig["Camera.width"];
         height = fconfig["Camera.height"];
         scale = fconfig["DepthMapFactor"];
+        // Visualization 
+        cv::Mat imColorDebug = cv::Mat::zeros(height, width, CV_8UC3); 
         // Pose Finder parameters 
         Depth_Accum_iter = fconfig["Pose.CloudAccumIter"];
         unit_length = fconfig["Pose.GridUnitLength"];
@@ -60,7 +62,6 @@ public:
         Crop_y_max = fconfig["Crop.ymax"];
         // Image show flag
         HSVImgShow_flag = fconfig["SystemHandler.imshowHSV"];
-        OrgImgShow_flag = fconfig["SystemHandler.imshowOrgImg"];
         SegImgShow_flag = fconfig["SystemHandler.imshowSegImg"];
         ColorDebug_flag = fconfig["SystemHandler.ColorDebug"];
         // color parameter
@@ -188,7 +189,7 @@ public:
 			else if(Frame_count%6 == 0)
             {
                 preprocess_image(imRGB, imDepth);
-                Run_pipeline(imRGB_processed, imDepth_processed);
+                Run_pipeline(imRGB_processed, imDepth);
                 Publish_Message();
             }
 		}
@@ -199,8 +200,8 @@ public:
 		}
 	}
 
-	void preprocess_image(cv::Mat& image_RGB, cv::Mat& image_Depth);
-	void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
+    void preprocess_image(cv::Mat& image_RGB, cv::Mat& image_Depth);
+    void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
     void Publish_Message();
     void ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
     void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
@@ -231,7 +232,6 @@ private:
     int Indigo_imshow_flag;
     int Brown_imshow_flag;
     // Imshow flag
-    int OrgImgShow_flag;
     int SegImgShow_flag;
     int HSVImgShow_flag;
     int ColorDebug_flag;
@@ -281,7 +281,8 @@ private:
     cv::Mat imRGB;
 	cv::Mat imDepth;
     cv::Mat imRGB_processed;
-    cv::Mat imDepth_processed;
+    // Image for Color debug
+    cv::Mat imColorDebug;
     // Plane and pose object
     Plane::DominantPlane* PlaneFinder;
     ObjectPose* PoseFinder;

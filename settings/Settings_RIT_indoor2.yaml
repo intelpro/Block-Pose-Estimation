@@ -36,7 +36,6 @@ Crop.ymax: 480
 
 # Image show paramter
 SystemHandler.imshowHSV: 0
-SystemHandler.imshowOrgImg: 1
 SystemHandler.imshowSegImg: 0
 
 SystemHandler.ColorDebug: 1
@@ -56,12 +55,14 @@ Pose.CloudAccumIter: 3
 Pose.GridUnitLength: 0.025
 Pose.ThresholdForOccGrid: 0.0125
 # Object Debug Test Paramter
-Pose.TestAll: 0
-Pose.TestRed: 1
-Pose.TestYellow: 0
+Pose.Test_AllBlock: 0
+Pose.Test_IndividualBlock: 1
+Pose.DebugObject: 1
+Pose.TestRed: 0
+Pose.TestYellow: 0 
 Pose.TestGreen: 0
 Pose.TestOrange: 0
-Pose.TestBlue: 0
+Pose.TestBlue: 1
 Pose.TestBrown: 0
 Pose.TestIndigo: 0
 

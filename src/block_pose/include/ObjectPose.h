@@ -40,6 +40,7 @@ class ObjectPose{
         void CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vector<int> occ_grid);
         void GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vector<int> occ_Grid, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector);
         void ClearVariable();
+        // Occupany grid size
         std::vector<int> red_Grid;
         std::vector<int> yellow_Grid;
         std::vector<int> green_Grid; 
@@ -70,6 +71,18 @@ class ObjectPose{
         std::vector<Point3D> Block_center_brown;
         std::vector<Point3D> Block_center_orange;
         std::vector<Point3D> Block_center_Indigo;
+        // RectPoint of each individual block
+        std::vector<Point> Red_RectPoints = std::vector<Point>(4);
+        std::vector<Point> Yellow_RectPoints = std::vector<Point>(4);
+        std::vector<Point> Green_RectPoints = std::vector<Point>(4);
+        std::vector<Point> Blue_RectPoints = std::vector<Point>(4);
+        std::vector<Point> Brown_RectPoints = std::vector<Point>(4);
+        std::vector<Point> Orange_RectPoints = std::vector<Point>(4);
+        std::vector<Point> Indigo_RectPoints = std::vector<Point>(4);
+        std::vector<Point> _RectPoints = std::vector<Point>(4);
+        // Projected image 
+        cv::Mat Total_Projected_image;
+        cv::Mat _Projected_image;
 
       protected:
         int Accum_iter; 
@@ -80,6 +93,7 @@ class ObjectPose{
         int box_flag;
         // flag for test
         int Test_all_flag;
+        int Test_Individual_flag;
         int Test_red_flag;
         int Test_yellow_flag;
         int Test_green_flag;
@@ -87,6 +101,8 @@ class ObjectPose{
         int Test_brown_flag;
         int Test_orange_flag;
         int Test_indigo_flag;
+        // Debug flag
+        int Debug_Object;
         float fx; 
         float fy;
         float cx; 
@@ -94,7 +110,9 @@ class ObjectPose{
         float Unit_Cube_L;
         float dist_thresh;
         bool red_change_flag;
+        // color string value during pose estimation of block 
         std::string color_string;
+        // Synthetic point cloud
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Red_Synthetic;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Yellow_Synthetic;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Green_Synthetic;
@@ -102,6 +120,7 @@ class ObjectPose{
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Brown_Synthetic;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Orange_Synthetic;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Indigo_Synthetic;
+        // Accumulated point cloud
         pcl::PointCloud<pcl::PointXYZRGB> red_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> yellow_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> green_cloud;
@@ -109,8 +128,6 @@ class ObjectPose{
         pcl::PointCloud<pcl::PointXYZRGB> brown_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> orange_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> Indigo_cloud;
-        std::vector<Point> _RectPoints = std::vector<Point> (4);
-        cv::Mat _Projected_image;
         pcl::PointCloud<pcl::PointXYZRGB> projected_cloud;
         std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> BBinfo_temp; 
         pcl::PointCloud<pcl::PointXYZRGB> Block_center_temp;

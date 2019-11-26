@@ -5,7 +5,6 @@
 using namespace std;
 using namespace cv;
 
-void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
 
 int main(int argc, char** argv)
 {
@@ -19,7 +18,6 @@ int main(int argc, char** argv)
 void SystemHandler::preprocess_image(cv::Mat& imRGB, cv::Mat& imDepth)
 {
     imRGB_processed = imRGB.clone(); 
-    imDepth_processed = imDepth.clone();
     for (int y=0; y<height; y++)
     {
         for(int x=0; x < width; x++)
@@ -67,8 +65,11 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 	Show_Results(pCloud_outlier, imRGB, imRGB_processed, "seg_image");
     ColorSegmenation(image_RGB, Total_mask);
     if(ColorDebug_flag==1)
-        cv::imshow("Color_debug", Total_mask[7]);
-    waitKey(2);
+    {
+        cv::hconcat(imColorDebug, Total_mask[7], imColorDebug);
+        cv::imshow("Color_debug", imColorDebug);
+        waitKey(2);
+    }
     PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
 }
 
@@ -324,8 +325,8 @@ void SystemHandler::Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original
         }
 
     }
-    if(OrgImgShow_flag)
-        imshow("RGB_image_orginal", RGB_image_original);
+    if(ColorDebug_flag==1)
+        imColorDebug = RGB_image_original.clone();
     if(SegImgShow_flag)
         imshow("RGB_image_seg", RGB_image);
     waitKey(2);
