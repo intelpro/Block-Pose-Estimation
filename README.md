@@ -53,26 +53,23 @@ SystemHandler.imshowSegImg: Segmentation image show flag
 
 SystemHandler.ColorDebug: Color Debug imshow flag(color segmation정보를 볼 수 있음.)
 
-Red_color.imshow: color Debug에 Red를 띄우느냐 마느냐
+Red\_color.imshow: Color Debug imshow 창에 Red를 띄우느냐 마느냐
 
 Pose.TestAll: 모든 블록을 테스트 할지 아닐지 flag(0,1)
 
 Pose.TestRed: Red block 테스트 할지 말지 flag
 
-Red\_color.lower\_value\_0_0: HSV 이미지의 V에 해당(<=)
+Red\_color.lower\_value\_0_0: HSV 이미지의 V에 해당(하한, <=)
 
-Red\_color.lower\_value\_0\_1: HSV 이미지의 V에 해당(상위, >=)
+Red\_color.lower\_value\_0\_1: HSV 이미지의 V에 해당(상한, >=)
 
-Red\_color.lower\_value\_1\_0: HSV 이미지의 S에 해당(하위, <=)
+Red\_color.lower\_value\_1\_0: HSV 이미지의 S에 해당(하한, <=)
 
-Red\_color.lower\_value\_1\_1: HSV 이미지의 S에 해당(상위, >=)
+Red\_color.lower\_value\_1\_1: HSV 이미지의 S에 해당(상한, >=)
 
-Red\_color.lower\_value\_2\_0: HSV 이미지의 H에 해당(하위, <=)
+Red\_color.lower\_value\_2\_0: HSV 이미지의 H에 해당(하한, <=)
 
-
-Red\_color.lower\_value\_2\_1: HSV 이미지의 H에 해당(상위, <=)
-
-
+Red\_color.lower\_value\_2\_1: HSV 이미지의 H에 해당(상한, <=)
 
 ## Rostopic publish message
 
