@@ -1,8 +1,0 @@
-prefix=/home/intelpro/catkin_ws/src/matching_algorithm/build/devel
-
-Name: matching_algorithm
-Description: Description of matching_algorithm
-Version: 0.0.0
-Cflags: -I/home/intelpro/catkin_ws/src/matching_algorithm/build/devel/include
-Libs: -L/home/intelpro/catkin_ws/src/matching_algorithm/build/devel/lib 
-Requires: messge_runtime

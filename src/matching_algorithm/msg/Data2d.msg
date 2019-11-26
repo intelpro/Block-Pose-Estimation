@@ -1,2 +1,0 @@
-Data1d[] data
-
