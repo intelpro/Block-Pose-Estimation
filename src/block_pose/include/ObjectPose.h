@@ -102,7 +102,8 @@ class ObjectPose{
         int Test_orange_flag;
         int Test_indigo_flag;
         // Debug flag
-        int Debug_Object;
+        int Debug_Object_imshow;
+        int Debug_Object_verbose_flag;
         float fx; 
         float fy;
         float cx; 

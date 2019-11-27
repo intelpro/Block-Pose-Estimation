@@ -75,7 +75,8 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     Test_orange_flag = fconfig["Pose.TestOrange"];
     Test_indigo_flag = fconfig["Pose.TestIndigo"];
     // Debug Object
-    Debug_Object = fconfig["Pose.DebugObject"];
+    Debug_Object_imshow = fconfig["Pose.DebugObjectImshow"];
+    Debug_Object_verbose_flag = fconfig["Pose.DebugObjectVerbose"];
     cout << "------------------------- Pose Test flags -------------------------" << endl;
     cout << "Test all:" << Test_all_flag << endl;
     cout << "Test Red:" << Test_red_flag << endl;
@@ -85,7 +86,8 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     cout << "Test Blue:" << Test_blue_flag << endl;
     cout << "Test Brown:" << Test_brown_flag << endl;
     cout << "Test Indigo:" << Test_indigo_flag << endl;
-    cout << "DEBUG FLAG: " << Debug_Object << endl;
+    cout << "DEBUG IMSHOW FLAG: " << Debug_Object_imshow << endl;
+    cout << "DEBUG VERBOSE FLAG: " << Debug_Object_verbose_flag << endl;
 }
 
 void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat> &Mask)
@@ -296,8 +298,11 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             if(Test_indigo_flag==1)
                 ProjectToDominantPlane(Indigo_cloud, "Indigo");
         }
-        cv::imshow("Drawing", Total_Projected_image);
-        cv::waitKey(2);
+        if(Debug_Object_imshow==1)
+        {
+            cv::imshow("Object_Debug", Total_Projected_image);
+            cv::waitKey(2);
+        }
         Accum_idx = 0; 
     }
 
@@ -796,7 +801,6 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
     std::vector<int> occ_grid(Grid_tot_size);
     for(int i = 0; i<Grid_tot_size; i++)
     {
-        // cout << "cnt : " <<  Grid_pcd_cnt[i] << endl;
         if(Grid_pcd_cnt[i] > ref_cloud.size()/(3*Grid_tot_size))
             occ_grid[i] = 1; 
         else 
@@ -810,10 +814,8 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
             occ_grid[i-2] = 1;
         }
     }
-    cout << "(Before) Occ grid: " ;
-    for(int i=0; i<Grid_size[0]*Grid_size[1]*Grid_size[2]; i++)
-        cout << occ_grid[i] << " " ;
-    cout << endl;
+
+    // Count Occupancy Grid
     int occ_cnt = 0; 
     for(int i = 0; i < Grid_tot_size; i++)
     {
@@ -882,11 +884,6 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
                 occ_grid[0]=0;
         }
     }
-
-    cout << "After Occ grid: " ;
-    for(int i=0; i<Grid_size[0]*Grid_size[1]*Grid_size[2]; i++)
-        cout << occ_grid[i] << " " ;
-    cout << endl;
 
     CheckOccGridWithKnownShape(Grid_size, occ_grid);
 }
@@ -958,7 +955,6 @@ void ObjectPose::GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vec
 
 void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vector<int> occ_grid)
 {
-    cout << color_string << endl;
     RNG rng(12345);
     int min_x =std::numeric_limits<int>::max();
     int min_y =std::numeric_limits<int>::max();
@@ -975,7 +971,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
         if(min_y > _RectPoints.at(j).y)
             min_y = _RectPoints.at(j).y;
     }
-    if(Debug_Object==1)
+    if(Debug_Object_verbose_flag==1)
         cout << "--------------------" << endl;
 
     if(color_string=="red")
@@ -990,7 +986,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
             if(tot_occ_grid_cnt==3)
             {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "red block detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1032,7 +1028,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             }
             else
             {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Red block mis-detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1045,7 +1041,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
         }
         else
         {
-            if(Debug_Object==1)
+            if(Debug_Object_verbose_flag==1)
             {
                 cout << "Red block mis-detected" << endl;
                 cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1059,7 +1055,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
     if(color_string=="yellow")
     {
-       cout << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
        if((Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1) || (Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1)
            || (Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2))
        {
@@ -1070,7 +1065,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
            if(tot_occ_grid_cnt==4)
            {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "yellow block detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1121,7 +1116,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
            }
            else
            {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "yellow block mis-detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1134,7 +1129,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
        }
        else
        {
-            if(Debug_Object==1)
+            if(Debug_Object_verbose_flag==1)
             {
                 cout << "yellow block mis-detected" << endl;
                 cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1164,7 +1159,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 blue_Grid = Grid_size;
                 blue_occ_Grid = occ_grid;
                 BB_info_blue.clear();
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Blue block detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1204,7 +1199,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             }
             else
             {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Blue block mis-detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1217,7 +1212,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
         }
         else
         {
-            if(Debug_Object==1)
+            if(Debug_Object_verbose_flag==1)
             {
                 cout << "Blue block mis-detected" << endl;
                 cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1247,6 +1242,17 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 brown_Grid = Grid_size;
                 brown_occ_Grid = occ_grid;
                 BB_info_brown.clear();
+
+                if(Debug_Object_verbose_flag==1)
+                {
+                    cout << "Brown block detected" << endl;
+                    cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
+                    cout << "Occ grid: " ;
+                    for(int i=0; i<Grid_size[0]*Grid_size[1]*Grid_size[2]; i++)
+                        cout << occ_grid[i] << " " ;
+                    cout << endl;
+                }
+
                 for(int k = 0; k < BBinfo_temp.size(); k++)
                 {
                     pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
@@ -1279,17 +1285,33 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
            }
            else
            {
-                cout << "brown block mis detected, Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2];
-                cout << " total occ grid: " << tot_occ_grid_cnt << "  second floor cnt: " << second_floor_cnt << endl;
+                if(Debug_Object_verbose_flag==1)
+                {
+                    cout << "Brown block mis-detected" << endl;
+                    cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
+                    cout << "Occ grid: " ;
+                    for(int i=0; i<Grid_size[0]*Grid_size[1]*Grid_size[2]; i++)
+                        cout << occ_grid[i] << " " ;
+                    cout << endl;
+                }
            }
         }
         else
-           cout << "brown block mis detected" << endl;
+        {
+                if(Debug_Object_verbose_flag==1)
+                {
+                    cout << "Brown block mis-detected" << endl;
+                    cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
+                    cout << "Occ grid: " ;
+                    for(int i=0; i<Grid_size[0]*Grid_size[1]*Grid_size[2]; i++)
+                        cout << occ_grid[i] << " " ;
+                    cout << endl;
+                }
+        }
     }
 
     if(color_string=="green")
     {
-        cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
         if((Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1) || (Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1) ||
           (Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2))
         {
@@ -1302,7 +1324,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 green_Grid = Grid_size;
                 green_occ_Grid = occ_grid;
                 BB_info_green.clear();
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Green block detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1342,7 +1364,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             }
             else
             {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Green block mis-detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1355,7 +1377,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
         }
         else
         {
-            if(Debug_Object==1)
+            if(Debug_Object_verbose_flag==1)
             {
                 cout << "Green block mis-detected" << endl;
                 cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1381,7 +1403,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
             if(tot_occ_grid_cnt==4)
             {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Orange block detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1426,7 +1448,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             }
             else
             {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Orange block mis-detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1440,7 +1462,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
         }
         else
         {
-            if(Debug_Object==1)
+            if(Debug_Object_verbose_flag==1)
             {
                 cout << "Orange block mis-detected" << endl;
                 cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1468,7 +1490,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
             if(tot_occ_grid_cnt==4)
             {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Indigo block detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1513,7 +1535,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             }
             else 
             {
-                if(Debug_Object==1)
+                if(Debug_Object_verbose_flag==1)
                 {
                     cout << "Indigo block mis-detected" << endl;
                     cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
@@ -1526,7 +1548,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
         }
         else
         {
-            if(Debug_Object==1)
+            if(Debug_Object_verbose_flag==1)
             {
                 cout << "Indigo block mis-detected" << endl;
                 cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;

@@ -57,7 +57,8 @@ Pose.ThresholdForOccGrid: 0.0125
 # Object Debug Test Paramter
 Pose.Test_AllBlock: 0
 Pose.Test_IndividualBlock: 1
-Pose.DebugObject: 1
+Pose.DebugObjectImshow: 1
+Pose.DebugObjectVerbose: 0
 Pose.TestRed: 0
 Pose.TestYellow: 0 
 Pose.TestGreen: 1 
