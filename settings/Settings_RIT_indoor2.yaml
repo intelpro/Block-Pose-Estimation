@@ -60,10 +60,10 @@ Pose.Test_IndividualBlock: 1
 Pose.DebugObject: 1
 Pose.TestRed: 0
 Pose.TestYellow: 0 
-Pose.TestGreen: 0
+Pose.TestGreen: 1 
 Pose.TestOrange: 0
-Pose.TestBlue: 1
-Pose.TestBrown: 0
+Pose.TestBlue: 1 
+Pose.TestBrown: 1
 Pose.TestIndigo: 0
 
 #--------------------------------------------------------------------------------------------

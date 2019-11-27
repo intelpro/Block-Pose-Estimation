@@ -797,7 +797,7 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
     for(int i = 0; i<Grid_tot_size; i++)
     {
         // cout << "cnt : " <<  Grid_pcd_cnt[i] << endl;
-        if(Grid_pcd_cnt[i] > ref_cloud.size()/(4*Grid_tot_size))
+        if(Grid_pcd_cnt[i] > ref_cloud.size()/(3*Grid_tot_size))
             occ_grid[i] = 1; 
         else 
             occ_grid[i] = 0; 
@@ -820,6 +820,12 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
         if(occ_grid[i]==1)
             occ_cnt++;
     }
+
+    /*
+    ************* Pose procsseing of green block occ grid **************
+    1 1 1 1 1 0 -> 0 1 1 1 1 0 
+    1 0 1 1 1 1 -> 1 0 1 1 0 1
+     */
     if(color_string=="green")
     {
         if(Grid_tot_size==6 && occ_cnt==5)
@@ -830,26 +836,53 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
                 occ_grid[1]=0;
         }
     }
+
+    /* 
+    ************* Post procsseing of blue block occ grid **************
+    0 1 2 3 4 5 6 7    0 1 2 3 4 5 6 7
+    0 0 1 1 1 0 1 1 -> 0 0 0 1 1 0 1 1 
+    1 1 0 0 1 1 1 0 -> 0 1 0 0 1 1 1 0
+    1 1 1 1 0 0 1 0 -> 0 1 1 1 0 0 1 0
+    1 1 1 1 1 0 0 0 -> 1 1 0 1 1 0 0 0 
+    */
     if(color_string=="blue")
     {
         if(Grid_tot_size==8 && occ_cnt==5)
         {
-            if(occ_grid[0]==0 && occ_grid[1]==0 && occ_grid[4]==0)
+            if(occ_grid[0]==0 && occ_grid[1]==0 && occ_grid[5]==0)
                 occ_grid[2]=0;
             if(occ_grid[2]==0 && occ_grid[3]==0 && occ_grid[7]==0)
                 occ_grid[0]=0;
-            if(occ_grid[5]==0 && occ_grid[6]==0 && occ_grid[7]==0)
+            if(occ_grid[4]==0 && occ_grid[5]==0 && occ_grid[7]==0)
                 occ_grid[0]=0;
             if(occ_grid[5]==0 && occ_grid[6]==0 && occ_grid[7]==0)
-                occ_grid[0]=0;
-            /*
-            0 0 1 1 1 0 1 1 -> 0 0 0 1 1 0 1 1 
-            1 1 0 0 1 1 1 0 -> 0 1 0 0 1 1 1 0
-            1 1 1 1 0 0 1 0 -> 0 1 1 1 0 0 1 0
-            1 1 1 1 1 0 0 0 -> 1 1 1 0 1 0 0 0 
-            */
+                occ_grid[2]=0;
         }
     }
+    /* 
+    ************* Post procsseing of brown block occ grid **************
+    0 1 2 3 4 5 6 7    0 1 2 3 4 5 6 7
+    1 1 1 1 0 0 1 0 -> 0 1 1 1 0 0 1 0 
+    1 1 0 0 1 1 1 0 -> 0 1 0 0 1 1 1 0 
+    0 0 1 0 1 1 1 1 -> 0 0 1 0 0 1 1 1
+    1 1 1 1 1 0 0 0 -> 1 1 0 1 1 0 0 0
+    */
+
+    if(color_string=="brown")
+    {
+        if(Grid_tot_size==8 && occ_cnt==5)
+        {
+            if(occ_grid[0]==0 && occ_grid[4]==0 && occ_grid[5]==0)
+                occ_grid[0]=0;
+            if(occ_grid[2]==0 && occ_grid[3]==0 && occ_grid[7]==0)
+                occ_grid[0]=0;
+            if(occ_grid[0]==0 && occ_grid[1]==0 && occ_grid[3]==0)
+                occ_grid[0]=0;
+            if(occ_grid[5]==0 && occ_grid[6]==0 && occ_grid[7]==0)
+                occ_grid[0]=0;
+        }
+    }
+
     cout << "After Occ grid: " ;
     for(int i=0; i<Grid_size[0]*Grid_size[1]*Grid_size[2]; i++)
         cout << occ_grid[i] << " " ;
@@ -1126,7 +1159,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                    second_floor_cnt += occ_grid[i];
             }
             Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
-            if(tot_occ_grid_cnt==4 && second_floor_cnt==1)
+            if(tot_occ_grid_cnt==4 && (second_floor_cnt==1 ||second_floor_cnt==2))
             {
                 blue_Grid = Grid_size;
                 blue_occ_Grid = occ_grid;
@@ -1209,7 +1242,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                    second_floor_cnt += occ_grid[i];
             }
             Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
-            if(tot_occ_grid_cnt==4 && second_floor_cnt==1)
+            if(tot_occ_grid_cnt==4 && (second_floor_cnt==1||second_floor_cnt==2))
             {
                 brown_Grid = Grid_size;
                 brown_occ_Grid = occ_grid;
