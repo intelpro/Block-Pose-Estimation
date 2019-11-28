@@ -89,13 +89,12 @@ void SystemHandler::Publish_Message()
     std::vector<int> occ_grid_temp;
     std::vector<int> Grid_temp; 
     std::vector<Point3D> BB_Point_temp;
-    std::vector<Point3D> Block_center_temp;
 
     // red block 
     Grid_temp = PoseFinder->red_Grid;
     occ_grid_temp = PoseFinder->red_occ_Grid;
     BB_Point_temp = PoseFinder->BB_info_red;
-    Block_center_temp = PoseFinder->Block_center_red;
+    std::vector<Point3D> Block_center_temp = PoseFinder->Block_center_red;
     Red_msg.Frame_id = Frame_count;
     Red_msg.Object_id = 0; 
     for(int i = 0; i < Grid_temp.size(); i++)
@@ -119,6 +118,7 @@ void SystemHandler::Publish_Message()
     pub_red.publish(Red_msg);
 
     // yellow block 
+    Block_center_temp.clear();
     Grid_temp = PoseFinder->yellow_Grid;
     occ_grid_temp = PoseFinder->yellow_occ_Grid;
     BB_Point_temp = PoseFinder->BB_info_yellow;

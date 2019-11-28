@@ -1084,7 +1084,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 for(int l = 0; l < Block_center_temp.size(); l++)
                 {
                     pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
-                    Block_center_red.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+                    Block_center_yellow.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
                 }
                 Red_RectPoints = _RectPoints;
                 for(int y = 0; y < height; y++)
@@ -1101,12 +1101,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 }
                 for ( int j = 0; j < 4; j++ )
                     line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
-
-               for(int l = 0; l < Block_center_temp.size(); l++)
-               {
-                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
-                    Block_center_yellow.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
-               }
            }
            else
            {
