@@ -37,7 +37,7 @@ Crop.ymax: 480
 # Image show paramter
 SystemHandler.imshowHSV: 0
 SystemHandler.imshowSegImg: 0
-
+SystemHandler.imshowDepthImg: 0
 SystemHandler.ColorDebug: 1
 Red_color.imshow: 1
 Yellow_color.imshow: 1
@@ -59,12 +59,13 @@ Pose.Test_AllBlock: 0
 Pose.Test_IndividualBlock: 1
 Pose.DebugObjectImshow: 1
 Pose.DebugObjectVerbose: 0
+Pose.DebugObject3D: 1
 Pose.TestRed: 0
-Pose.TestYellow: 0 
-Pose.TestGreen: 1 
+Pose.TestYellow: 0
+Pose.TestGreen: 1
 Pose.TestOrange: 0
-Pose.TestBlue: 1 
-Pose.TestBrown: 1
+Pose.TestBlue: 0
+Pose.TestBrown: 0
 Pose.TestIndigo: 0
 
 #--------------------------------------------------------------------------------------------

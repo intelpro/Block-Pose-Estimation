@@ -77,6 +77,7 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     // Debug Object
     Debug_Object_imshow = fconfig["Pose.DebugObjectImshow"];
     Debug_Object_verbose_flag = fconfig["Pose.DebugObjectVerbose"];
+    Debug_Object_3D = fconfig["Pose.DebugObject3D"];
     cout << "------------------------- Pose Test flags -------------------------" << endl;
     cout << "Test all:" << Test_all_flag << endl;
     cout << "Test Red:" << Test_red_flag << endl;
@@ -540,70 +541,63 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
     }
 
     BBinfo_temp = BB_points;
-    // Find Occupancy Grid
+    if(Debug_Object_3D==1)
+    {
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Cloud_for_viewer(new pcl::PointCloud<pcl::PointXYZRGB>);
+        if(color_string=="red")
+        {
+            pcl::copyPointCloud(red_cloud, *Cloud_for_viewer);
+            CloudView(Cloud_for_viewer, BB_points);
+        }
+
+        else if(color_string=="yellow")
+        {
+            pcl::copyPointCloud(yellow_cloud, *Cloud_for_viewer);
+            CloudView(Cloud_for_viewer, BB_points);
+        }
+
+        else if(color_string=="green")
+        {
+            pcl::copyPointCloud(green_cloud, *Cloud_for_viewer);
+            CloudView(Cloud_for_viewer, BB_points);
+        }
+
+        else if(color_string=="blue")
+        {
+            pcl::copyPointCloud(blue_cloud, *Cloud_for_viewer);
+            CloudView(Cloud_for_viewer, BB_points);
+        }
+
+        else if(color_string=="brown")
+        {
+            // cout << "brown height: " << max_length << endl;
+            // pcl::copyPointCloud(brown_cloud, *Cloud_for_viewer);
+            // FindOccGrid(pos_vector, max_length);
+            // cout << color_string << " Grid" << brown_Grid[0] << " " << brown_Grid[1] << " " << brown_Grid[2] << endl;
+            // CloudView(Cloud_for_viewer, pos_vector);
+        }
+
+        else if(color_string=="orange")
+        {
+            // cout << "orange height: " << max_length << endl;
+            // pcl::copyPointCloud(orange_cloud, *Cloud_for_viewer);
+            // FindOccGrid(pos_vector, max_length);
+            // CloudView(Cloud_for_viewer, pos_vector);
+            // cout << color_string << " Grid" << orange_Grid[0] << " " << orange_Grid[1] << " " << orange_Grid[2] << endl;
+        }
+
+        else if(color_string=="Indigo")
+        {
+            // cout << "Indigo height: " << max_length << endl;
+            // pcl::copyPointCloud(Indigo_cloud, *Cloud_for_viewer);
+            // CloudView(Cloud_for_viewer, BB_points);
+            // FindOccGrid(pos_vector, max_length);
+            // cout << color_string << " Grid" << Indigo_Grid[0] << " " << Indigo_Grid[1] << " " << Indigo_Grid[2] << endl;
+        }
+        // Find Occupancy Grid
+
+    }
     FindOccGrid(BB_points, max_length);
-    // pcl::PointCloud<pcl::PointXYZRGB>::Ptr Cloud_for_viewer(new pcl::PointCloud<pcl::PointXYZRGB>);
-    if(color_string=="red")
-    {
-        // cout << "red height: " << max_length << endl;
-        // cout << "red point cloud size: " << red_cloud.size() << endl;
-        // pcl::copyPointCloud(red_cloud, *Cloud_for_viewer);
-        // CloudView(Cloud_for_viewer, pos_vector);
-        // cout << color_string << " Grid: " << red_Grid[0] << " " << red_Grid[1] << " " << red_Grid[2] << endl;
-    }
-
-    else if(color_string=="yellow")
-    {
-        // cout << "yellow height: " << max_length << endl;
-        // cout << "yellow point cloud size: " << yellow_cloud.size() << endl;
-        // pcl::copyPointCloud(yellow_cloud, *Cloud_for_viewer);
-        // CloudView(Cloud_for_viewer, pos_vector);
-        // FindOccGrid(pos_vector, max_length);
-        // cout << color_string << " Grid: " << yellow_Grid[0] << " " << yellow_Grid[1] << " " << yellow_Grid[2] << endl;
-    }
-
-    else if(color_string=="green")
-    {
-        // cout << "green height: " << max_length << endl;
-        // pcl::copyPointCloud(green_cloud, *Cloud_for_viewer);
-        // CloudView(Cloud_for_viewer, pos_vector);
-    }
-
-    else if(color_string=="blue")
-    {
-        // cout << "blue height: " << max_length << endl;
-        // pcl::copyPointCloud(blue_cloud, *Cloud_for_viewer);
-        // CloudView(Cloud_for_viewer, pos_vector);
-        // FindOccGrid(pos_vector, max_length);
-        // cout << color_string << " Grid" << blue_Grid[0] << " " << blue_Grid[1] << " " << blue_Grid[2] << endl;
-    }
-
-    else if(color_string=="brown")
-    {
-        // cout << "brown height: " << max_length << endl;
-        // pcl::copyPointCloud(brown_cloud, *Cloud_for_viewer);
-        // FindOccGrid(pos_vector, max_length);
-        // cout << color_string << " Grid" << brown_Grid[0] << " " << brown_Grid[1] << " " << brown_Grid[2] << endl;
-        // CloudView(Cloud_for_viewer, pos_vector);
-    }
-
-    else if(color_string=="orange")
-    {
-        // cout << "orange height: " << max_length << endl;
-        // pcl::copyPointCloud(orange_cloud, *Cloud_for_viewer);
-        // FindOccGrid(pos_vector, max_length);
-        // CloudView(Cloud_for_viewer, pos_vector);
-        // cout << color_string << " Grid" << orange_Grid[0] << " " << orange_Grid[1] << " " << orange_Grid[2] << endl;
-    }
-
-    else if(color_string=="Indigo")
-    {
-        // cout << "Indigo height: " << max_length << endl;
-        // pcl::copyPointCloud(Indigo_cloud, *Cloud_for_viewer);
-        // CloudView(Cloud_for_viewer, BB_points);
-        // FindOccGrid(pos_vector, max_length);
-        // cout << color_string << " Grid" << Indigo_Grid[0] << " " << Indigo_Grid[1] << " " << Indigo_Grid[2] << endl;
-    }
 }
 
 float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, float a, float b, float c, float d)

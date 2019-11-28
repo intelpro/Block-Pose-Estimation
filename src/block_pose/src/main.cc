@@ -64,6 +64,17 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     double result = (double)(end - start)/CLOCKS_PER_SEC;
 	Show_Results(pCloud_outlier, imRGB, imRGB_processed, "seg_image");
     ColorSegmenation(image_RGB, Total_mask);
+    if(DepthImgShow_flag==1)
+    {
+        double min;
+        double max;
+        cv::minMaxIdx(imDepth, &min, &max);
+        cv::Mat adjMap;
+        cv::convertScaleAbs(imDepth, adjMap, 255/0.01);
+        cv::Mat falseColorsMap;
+        cv::imshow("Depth image", adjMap);
+        waitKey(2);
+    }
     if(ColorDebug_flag==1)
     {
         cv::hconcat(imColorDebug, Total_mask[7], imColorDebug);
@@ -492,95 +503,6 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
         }
     }
 
-    /*
-    for(int 
-    y=0; y < blue.rows; y++)
-    {
-        for(int x=0; x < blue.cols; x++)
-        {
-            if(blue.at<uchar>(y,x) == 255 && y > 10 && x > 10)
-            {
-                int cnt = 0; 
-                for(int y1 = 0; y1 < 10; y1++)
-                {
-                    for(int x1 = 0; x1 < 10; x1++)
-                    {
-                        if(blue.at<uchar>(y-y1,x-x1)==255)
-                        {
-                            cnt ++;
-                        }
-                    }
-                }
-                if(cnt<50)
-                {
-                    blue_display.at<uchar>(y,x) = 0; 
-                }
-                else
-                {
-                    blue_display.at<uchar>(y,x) = 255; 
-                }
-            }
-            else
-            {
-                // cout << yellow.at<int>(y,x) << endl;
-            }
-        }
-    }
-
-    float sum_x_brown=0; 
-    float sum_y_brown=0;
-    int cnt_brown=0; 
-
-    for(int y=0; y < brown.rows; y++)
-    {
-        for(int x=0; x < brown.cols; x++)
-        {
-            if(brown.at<uchar>(y,x)==255)
-            {
-                cnt_brown++;
-                sum_x_brown += x;
-                sum_y_brown += y;
-            }
-        }
-    }
-
-    float mean_x_brown = sum_x_brown/cnt_brown;
-    float mean_y_brown = sum_y_brown/cnt_brown;
-
-    for(int y=0; y < brown.rows; y++)
-    {
-        for(int x=0; x < brown.cols; x++)
-        {
-            if(brown.at<uchar>(y,x) == 255 && y > 10 && x > 10)
-            {
-                int cnt = 0; 
-                for(int y1 = 0; y1 < 10; y1++)
-                {
-                    for(int x1 = 0; x1 < 10; x1++)
-                    {
-                        if(brown.at<uchar>(y-y1,x-x1)==255)
-                        {
-                            cnt ++;
-                        }
-                    }
-                }
-                if(cnt<50)
-                {
-                    brown_display.at<uchar>(y,x) = 0; 
-                }
-                else
-                {
-                    brown_display.at<uchar>(y,x) = 255; 
-                }
-            }
-            else
-            {
-            }
-            if(std::sqrt(std::pow(x - mean_x_brown, 2) + std::pow(y-mean_y_brown,2)) > 100)
-                brown_display.at<uchar>(y,x) = 0; 
-        }
-    }
-    */
 
     Mask_vector[0] = red.clone();
     Mask_vector[1] = yellow.clone();

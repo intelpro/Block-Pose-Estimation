@@ -63,6 +63,7 @@ public:
         // Image show flag
         HSVImgShow_flag = fconfig["SystemHandler.imshowHSV"];
         SegImgShow_flag = fconfig["SystemHandler.imshowSegImg"];
+        DepthImgShow_flag = fconfig["SystemHandler.imshowDepthImg"];
         ColorDebug_flag = fconfig["SystemHandler.ColorDebug"];
         // color parameter
         // Red color
@@ -235,6 +236,7 @@ private:
     int SegImgShow_flag;
     int HSVImgShow_flag;
     int ColorDebug_flag;
+    int DepthImgShow_flag;
     // color parameter
     cv::Scalar lower_Red_value1;
     cv::Scalar lower_Red_value2;

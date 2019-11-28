@@ -104,6 +104,7 @@ class ObjectPose{
         // Debug flag
         int Debug_Object_imshow;
         int Debug_Object_verbose_flag;
+        int Debug_Object_3D;
         float fx; 
         float fy;
         float cx; 
