@@ -43,7 +43,17 @@ $ sh.run.sh
 
 ## Configuration file
 
-최근에 받은(11-20) bag file로 execution한 setting은 RIT_indoor2.yaml 파일 
+최근에 받은(11-21) bag file로 execution한 setting은 RIT_indoor2.yaml 파일 
+
+Pose.Test_AllBlock: 모든블록 테스트
+
+Pose.Test_IndividualBlock: 개별블록 테스트
+
+Pose.DebugObjectImshow: Object Detection Window Imshow Flag
+
+Pose.DebugObjectVerbose: Object Detection result verbose Flag
+
+Pose.TestRed: Red block 테스트 할지 말지 flag
 
 SystemHandler.imshowHSV: HSV image show flag
 
@@ -54,10 +64,6 @@ SystemHandler.imshowSegImg: Segmentation image show flag
 SystemHandler.ColorDebug: Color Debug imshow flag(color segmation정보를 볼 수 있음.)
 
 Red\_color.imshow: Color Debug imshow 창에 Red를 띄우느냐 마느냐
-
-Pose.TestAll: 모든 블록을 테스트 할지 아닐지 flag(0,1)
-
-Pose.TestRed: Red block 테스트 할지 말지 flag
 
 Red\_color.lower\_value\_0_0: HSV 이미지의 V에 해당(하한, <=)
 
