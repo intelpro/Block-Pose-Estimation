@@ -114,14 +114,6 @@ class ObjectPose{
         bool red_change_flag;
         // color string value during pose estimation of block 
         std::string color_string;
-        // Synthetic point cloud
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Red_Synthetic;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Yellow_Synthetic;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Green_Synthetic;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Blue_Synthetic;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Brown_Synthetic;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Orange_Synthetic;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr Indigo_Synthetic;
         // Accumulated point cloud
         pcl::PointCloud<pcl::PointXYZRGB> red_cloud;
         pcl::PointCloud<pcl::PointXYZRGB> yellow_cloud;

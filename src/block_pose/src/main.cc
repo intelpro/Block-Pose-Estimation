@@ -64,6 +64,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     double result = (double)(end - start)/CLOCKS_PER_SEC;
 	Show_Results(pCloud_outlier, imRGB, imRGB_processed, "seg_image");
     ColorSegmenation(image_RGB, Total_mask);
+
     if(DepthImgShow_flag==1)
     {
         double min;
@@ -75,6 +76,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         cv::imshow("Depth image", adjMap);
         waitKey(2);
     }
+
     if(ColorDebug_flag==1)
     {
         cv::hconcat(imColorDebug, Total_mask[7], imColorDebug);

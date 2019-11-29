@@ -31,7 +31,7 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     dist_thresh = _dist_thresh;
     best_plane = plane->cur_best_plane;
     box_flag=0;
-    cv::Mat _Projected_image = cv::Mat::zeros(height, width, CV_8UC3);
+    cv::Mat _Projected_image = cv::Mat::zeros(height, width, CV_8UC1);
     // initilaize Grid vector
     std::vector<int> red_Grid(3);
     std::vector<int> yellow_Grid(3);
@@ -313,23 +313,31 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
 
 void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string _color_string)
 {
+    projected_cloud.clear();
     color_string = _color_string;
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_projected_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
     best_plane = plane_object->cur_best_plane;
     float a = best_plane.a;
     float b = best_plane.b; 
     float c = best_plane.c; 
     float d = best_plane.d; 
-    bool first_index=1;
     pcl::PointXYZRGB prev_point; 
     for(int i = 0; i < in_cloud.size(); i++)
     {
         pcl::PointXYZRGB point = in_cloud[i];
-        float t = (-a*point.x - b*point.y - c*point.z - d)/(a*a+b*b+c*c);
         pcl::PointXYZRGB ProjectedPoint; 
-        ProjectedPoint.x = point.x + t*a; 
-        ProjectedPoint.y = point.y + t*b; 
-        ProjectedPoint.z = point.z + t*c; 
+        if(std::abs(a*a + b*b +c*c)>0.00001)
+        {
+            float t = (-a*point.x - b*point.y - c*point.z - d)/(a*a+b*b+c*c);
+            ProjectedPoint.x = point.x + t*a; 
+            ProjectedPoint.y = point.y + t*b; 
+            ProjectedPoint.z = point.z + t*c; 
+        }
+        else
+        {
+            ProjectedPoint.x = 0; 
+            ProjectedPoint.y = 0;
+            ProjectedPoint.z = 0; 
+        }
         if(color_string=="red")
         {
             ProjectedPoint.r = 255; 
@@ -378,45 +386,31 @@ void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_clo
             ProjectedPoint.g = 50;
             ProjectedPoint.b = 100;
         }
-        pcl_projected_cloud->points.push_back(ProjectedPoint);
-
-        float dist_prev = sqrt(pow(ProjectedPoint.x - prev_point.x,2) + pow(ProjectedPoint.y - prev_point.y,2) + pow(ProjectedPoint.z - prev_point.z, 2));
-        if(dist_prev < 0.1 && first_index==0)
-        {
-            pcl_projected_cloud->points.push_back(ProjectedPoint);
-            prev_point = ProjectedPoint;
-        }
-        else
-        {
-        }
-        if(first_index ==1)
-        {
-            first_index = 0;
-            prev_point = ProjectedPoint;
-        }
+        projected_cloud.points.push_back(ProjectedPoint);
     }
-    projected_cloud = *pcl_projected_cloud;
     ProjectedCloudToImagePlane();
 }
 
 void ObjectPose::ProjectedCloudToImagePlane()
 {
-    cv::Mat projected_image = cv::Mat::zeros(height, width, CV_8UC1);
-    std::vector<pair<int, int>> pos_vector; 
-    for (int i =0; i < projected_cloud.size(); i++)
+    _Projected_image = cv::Mat::zeros(height, width, CV_8UC1);
+    if(projected_cloud.size() >  100)
     {
-        pcl::PointXYZRGB temp_cloud; 
-        temp_cloud = projected_cloud.points[i];
-        float X = temp_cloud.x;
-        float Y = temp_cloud.y; 
-        float Z = temp_cloud.z; 
-        int x = cy + fy*Y/Z;
-        int y = cx + fx*X/Z;
-        pos_vector.push_back(make_pair(x,y));
-        projected_image.at<uchar>(x, y) = 255; 
+        for (int i =0; i < projected_cloud.size(); i++)
+        {
+            int x, y;
+            pcl::PointXYZRGB temp_cloud; 
+            temp_cloud = projected_cloud.points[i];
+            float X = temp_cloud.x;
+            float Y = temp_cloud.y; 
+            float Z = temp_cloud.z; 
+            y = cy + fy*Y/Z;
+            x = cx + fx*X/Z;
+            if(y < height && x < width && y > 0 && x > 0)
+                _Projected_image.at<uint8_t>(y, x) = 255; 
+        }
     }
-    _Projected_image = projected_image;
-    fitRectangle(projected_image);
+    fitRectangle(_Projected_image);
 }
 
 
@@ -570,29 +564,20 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
 
         else if(color_string=="brown")
         {
-            // cout << "brown height: " << max_length << endl;
-            // pcl::copyPointCloud(brown_cloud, *Cloud_for_viewer);
-            // FindOccGrid(pos_vector, max_length);
-            // cout << color_string << " Grid" << brown_Grid[0] << " " << brown_Grid[1] << " " << brown_Grid[2] << endl;
-            // CloudView(Cloud_for_viewer, pos_vector);
+            pcl::copyPointCloud(brown_cloud, *Cloud_for_viewer);
+            CloudView(Cloud_for_viewer, BB_points);
         }
 
         else if(color_string=="orange")
         {
-            // cout << "orange height: " << max_length << endl;
-            // pcl::copyPointCloud(orange_cloud, *Cloud_for_viewer);
-            // FindOccGrid(pos_vector, max_length);
-            // CloudView(Cloud_for_viewer, pos_vector);
-            // cout << color_string << " Grid" << orange_Grid[0] << " " << orange_Grid[1] << " " << orange_Grid[2] << endl;
+            pcl::copyPointCloud(orange_cloud, *Cloud_for_viewer);
+            CloudView(Cloud_for_viewer, BB_points);
         }
 
         else if(color_string=="Indigo")
         {
-            // cout << "Indigo height: " << max_length << endl;
-            // pcl::copyPointCloud(Indigo_cloud, *Cloud_for_viewer);
-            // CloudView(Cloud_for_viewer, BB_points);
-            // FindOccGrid(pos_vector, max_length);
-            // cout << color_string << " Grid" << Indigo_Grid[0] << " " << Indigo_Grid[1] << " " << Indigo_Grid[2] << endl;
+            pcl::copyPointCloud(Indigo_cloud, *Cloud_for_viewer);
+            CloudView(Cloud_for_viewer, BB_points);
         }
         // Find Occupancy Grid
 
@@ -601,7 +586,7 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
 }
 
 float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, float a, float b, float c, float d)
-{
+{    
     float max_height=0;
     float dist_temp;
     float denom = std::sqrt(a*a + b*b + c*c);
@@ -645,7 +630,7 @@ float ObjectPose::FindBlockMeanHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud
 }
 
 void ObjectPose::FindOccGrid(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, float max_height)
-{
+{    
     std::vector<int> Grid_size(3);
     pcl::PointXYZRGB BB_vertex1 = std::get<0>(pos_vector[0]);
     pcl::PointXYZRGB BB_vertex2 = std::get<0>(pos_vector[1]);

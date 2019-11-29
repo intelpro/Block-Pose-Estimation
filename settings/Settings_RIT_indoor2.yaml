@@ -26,7 +26,7 @@ DepthMapFactor: 1000
 #--------------------------------------------------------------------------------------------
 
 Crop.xmin: 0
-Crop.xmax: 530
+Crop.xmax: 640
 Crop.ymin: 0
 Crop.ymax: 480
 
@@ -60,13 +60,13 @@ Pose.Test_AllBlock: 0
 Pose.Test_IndividualBlock: 1
 Pose.DebugObjectImshow: 1
 Pose.DebugObjectVerbose: 1
-Pose.TestRed: 1
+Pose.TestRed: 0
 Pose.TestYellow: 1
-Pose.TestGreen: 1
-Pose.TestOrange: 1
-Pose.TestBlue: 1
-Pose.TestBrown: 1
-Pose.TestIndigo: 1
+Pose.TestGreen: 0
+Pose.TestOrange: 0
+Pose.TestBlue: 0
+Pose.TestBrown: 0
+Pose.TestIndigo: 0
 
 #--------------------------------------------------------------------------------------------
 # Color space Paramter
