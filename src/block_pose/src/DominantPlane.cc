@@ -97,7 +97,7 @@ Plane_model DominantPlane::RunRansac(cv::Mat &pcd_inlier) {
     best_plane.a = best_plane.a/normalizer;
     best_plane.b = best_plane.b/normalizer; 
     best_plane.c = best_plane.c/normalizer;
-    best_plane.d = best_plane.d/normalizer; 
+    best_plane.d = best_plane.d/normalizer;
     best_plane.denominator = sqrt(pow(best_plane.a, 2) + pow(best_plane.b, 2) + pow(best_plane.c, 2));
 
     if (best_plane.c>0) 
@@ -108,7 +108,7 @@ Plane_model DominantPlane::RunRansac(cv::Mat &pcd_inlier) {
        best_plane.d = -best_plane.d;
     }
 
-    CheckTemporalConsistency(best_plane, best_cost);
+    // CheckTemporalConsistency(best_plane, best_cost);
     cur_best_plane = best_plane;
     ResetValue();
     return cur_best_plane;

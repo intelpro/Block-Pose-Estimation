@@ -339,7 +339,7 @@ void SystemHandler::Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original
 
     }
     if(ColorDebug_flag==1)
-        imColorDebug = RGB_image_original.clone();
+        imColorDebug = RGB_masked.clone();
     if(SegImgShow_flag)
         imshow("RGB_image_seg", RGB_image);
     waitKey(2);

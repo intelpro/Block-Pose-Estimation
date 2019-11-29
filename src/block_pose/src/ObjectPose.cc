@@ -269,6 +269,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
     Accum_idx++;
     // Initialize Total DominanPlane Projected Image
     Total_Projected_image = cv::Mat::zeros(height, width, CV_8UC3);
+    Projected_image_for_debug = cv::Mat::zeros(height, width, CV_8UC3);
     if(Accum_idx >= Accum_iter)
     {
         if(Test_all_flag==1)
@@ -284,6 +285,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
 
         if(Test_Individual_flag==1)
         {
+            cout << "size of yellow cloud: " << yellow_cloud.size() << endl;
             if(Test_red_flag==1)
                 ProjectToDominantPlane(red_cloud, "red");
             if(Test_yellow_flag==1)
@@ -301,7 +303,8 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
         }
         if(Debug_Object_imshow==1)
         {
-            cv::imshow("Object_Debug", Total_Projected_image);
+            cv::hconcat(Projected_image_for_debug, Total_Projected_image, Projected_image_for_debug);
+            cv::imshow("Object_Debug", Projected_image_for_debug);
             cv::waitKey(2);
         }
         Accum_idx = 0; 
@@ -325,19 +328,11 @@ void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_clo
     {
         pcl::PointXYZRGB point = in_cloud[i];
         pcl::PointXYZRGB ProjectedPoint; 
-        if(std::abs(a*a + b*b +c*c)>0.00001)
-        {
-            float t = (-a*point.x - b*point.y - c*point.z - d)/(a*a+b*b+c*c);
-            ProjectedPoint.x = point.x + t*a; 
-            ProjectedPoint.y = point.y + t*b; 
-            ProjectedPoint.z = point.z + t*c; 
-        }
-        else
-        {
-            ProjectedPoint.x = 0; 
-            ProjectedPoint.y = 0;
-            ProjectedPoint.z = 0; 
-        }
+        float t = (-a*point.x - b*point.y - c*point.z - d)/(a*a+b*b+c*c);
+        ProjectedPoint.x = point.x + t*a; 
+        ProjectedPoint.y = point.y + t*b; 
+        ProjectedPoint.z = point.z + t*c; 
+
         if(color_string=="red")
         {
             ProjectedPoint.r = 255; 
@@ -394,21 +389,18 @@ void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_clo
 void ObjectPose::ProjectedCloudToImagePlane()
 {
     _Projected_image = cv::Mat::zeros(height, width, CV_8UC1);
-    if(projected_cloud.size() >  100)
+    for (int i =0; i < projected_cloud.size(); i++)
     {
-        for (int i =0; i < projected_cloud.size(); i++)
-        {
-            int x, y;
-            pcl::PointXYZRGB temp_cloud; 
-            temp_cloud = projected_cloud.points[i];
-            float X = temp_cloud.x;
-            float Y = temp_cloud.y; 
-            float Z = temp_cloud.z; 
-            y = cy + fy*Y/Z;
-            x = cx + fx*X/Z;
-            if(y < height && x < width && y > 0 && x > 0)
-                _Projected_image.at<uint8_t>(y, x) = 255; 
-        }
+        int x, y;
+        pcl::PointXYZRGB temp_cloud; 
+        temp_cloud = projected_cloud.points[i];
+        float X = temp_cloud.x;
+        float Y = temp_cloud.y; 
+        float Z = temp_cloud.z; 
+        y = cy + fy*Y/Z;
+        x = cx + fx*X/Z;
+        if(y < height && x < width && y > 0 && x > 0)
+            _Projected_image.at<uint8_t>(y, x) = 255; 
     }
     fitRectangle(_Projected_image);
 }
@@ -863,7 +855,6 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
                 occ_grid[0]=0;
         }
     }
-
     CheckOccGridWithKnownShape(Grid_size, occ_grid);
 }
 
@@ -939,6 +930,7 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
     int min_y =std::numeric_limits<int>::max();
     int max_x = 0; 
     int max_y = 0; 
+    Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
     for ( int j = 0; j < 4; j++ )
     {
         if(max_x < _RectPoints.at(j).x)
@@ -955,6 +947,17 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
     if(color_string=="red")
 	{
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 255;
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
         if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==1)
            || (Grid_size[0]==1 & Grid_size[1]==2 & Grid_size[2]==2) || (Grid_size[0]==2 & Grid_size[1]==1 & Grid_size[2]==2))
         {
@@ -962,7 +965,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             for(int i = 0; i < 4; i++)
                 tot_occ_grid_cnt+=occ_grid[i];
 
-            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
             if(tot_occ_grid_cnt==3)
             {
                 if(Debug_Object_verbose_flag==1)
@@ -1034,6 +1036,23 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
     if(color_string=="yellow")
     {
+
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 0;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 255;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 255;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
+
        if((Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1) || (Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1)
            || (Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2))
        {
@@ -1041,7 +1060,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
            for(int i = 0; i < 6; i++)
                tot_occ_grid_cnt+=occ_grid[i];
 
-           Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
            if(tot_occ_grid_cnt==4)
            {
                 if(Debug_Object_verbose_flag==1)
@@ -1116,6 +1134,21 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
     if(color_string=="blue")
     {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 255;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 0;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 0;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
         if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==2))
         {
             int tot_occ_grid_cnt=0;
@@ -1126,7 +1159,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                if(i%2==1)
                    second_floor_cnt += occ_grid[i];
             }
-            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
             if(tot_occ_grid_cnt==4 && (second_floor_cnt==1 ||second_floor_cnt==2))
             {
                 blue_Grid = Grid_size;
@@ -1199,6 +1231,21 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
     if(color_string=="brown")
     {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 51;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 60;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 72;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
         if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==2))
         {
             int tot_occ_grid_cnt=0;
@@ -1209,7 +1256,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 if(i%2==1)
                    second_floor_cnt += occ_grid[i];
             }
-            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
             if(tot_occ_grid_cnt==4 && (second_floor_cnt==1||second_floor_cnt==2))
             {
                 brown_Grid = Grid_size;
@@ -1285,13 +1331,25 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
     if(color_string=="green")
     {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 255;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
         if((Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1) || (Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1) ||
           (Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2))
         {
             int tot_occ_grid_cnt=0;
             for(int i = 0; i < 6; i++)
                tot_occ_grid_cnt+=occ_grid[i];
-            Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256));
             if(tot_occ_grid_cnt==4)
             {
                 green_Grid = Grid_size;
@@ -1365,6 +1423,21 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
     if(color_string=="orange")
     {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 0;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 165;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 255;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
         if((Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2) ||
         (Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1) || (Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1) || 
         (Grid_size[0]==1 & Grid_size[1]==2 & Grid_size[2]==3) || (Grid_size[0]==2 & Grid_size[1]==1 & Grid_size[2]==3))
@@ -1373,7 +1446,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
             for(int i = 0; i < 6; i++)
                 tot_occ_grid_cnt+=occ_grid[i];
 
-            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
             if(tot_occ_grid_cnt==4)
             {
                 if(Debug_Object_verbose_flag==1)
@@ -1450,6 +1522,21 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
     if(color_string=="Indigo")
     {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 100;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 50;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 40;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
         if((Grid_size[0]==2 & Grid_size[1]==2 & Grid_size[2]==2))
         {
             int tot_occ_grid_cnt=0;
@@ -1460,7 +1547,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 if(i%2==0)
                     second_floor_cnt += occ_grid[i];
             }
-            Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
             if(tot_occ_grid_cnt==4)
             {
                 if(Debug_Object_verbose_flag==1)
@@ -1533,8 +1619,6 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
         }
     }
 }
-
-
 
 
 void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector) 

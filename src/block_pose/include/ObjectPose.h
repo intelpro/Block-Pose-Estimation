@@ -82,6 +82,7 @@ class ObjectPose{
         std::vector<Point> _RectPoints = std::vector<Point>(4);
         // Projected image 
         cv::Mat Total_Projected_image;
+        cv::Mat Projected_image_for_debug;
         cv::Mat _Projected_image;
 
       protected:
