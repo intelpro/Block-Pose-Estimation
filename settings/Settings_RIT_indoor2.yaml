@@ -26,7 +26,7 @@ DepthMapFactor: 1000
 #--------------------------------------------------------------------------------------------
 
 Crop.xmin: 0
-Crop.xmax: 520
+Crop.xmax: 500
 Crop.ymin: 0
 Crop.ymax: 480
 
@@ -35,8 +35,8 @@ Crop.ymax: 480
 #--------------------------------------------------------------------------------------------
 
 # Image show paramter
-SystemHandler.imshowHSV: 0
-SystemHandler.imshowSegImg: 0
+SystemHandler.imshowHSV: 1
+SystemHandler.imshowSegImg: 1
 SystemHandler.imshowDepthImg: 1
 SystemHandler.ColorDebug: 1
 Red_color.imshow: 1
@@ -74,7 +74,7 @@ Pose.TestIndigo: 1
 # Red color(lower)
 Red_color.lower_value_0_0: 0
 Red_color.lower_value_0_1: 3
-Red_color.lower_value_1_0: 160
+Red_color.lower_value_1_0: 180
 Red_color.lower_value_1_1: 250
 Red_color.lower_value_2_0: 70
 Red_color.lower_value_2_1: 150
@@ -82,7 +82,7 @@ Red_color.lower_value_2_1: 150
 # Red color(upper)
 Red_color.upper_value_0_0: 175
 Red_color.upper_value_0_1: 180
-Red_color.upper_value_1_0: 160
+Red_color.upper_value_1_0: 180
 Red_color.upper_value_1_1: 250
 Red_color.upper_value_2_0: 70
 Red_color.upper_value_2_1: 150

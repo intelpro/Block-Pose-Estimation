@@ -102,7 +102,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<uint8_t>(y,x) == 255)
+                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -126,7 +126,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<uint8_t>(y,x) == 255)
+                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -150,7 +150,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<uint8_t>(y,x) == 255)
+                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -174,7 +174,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<uint8_t>(y,x) == 255)
+                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -198,7 +198,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<uint8_t>(y,x) == 255)
+                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -222,7 +222,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<uint8_t>(y,x) == 255)
+                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -246,7 +246,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for(int x=0; x < width; x++)
                 {
-                    if(Mask[i].at<uint8_t>(y,x) == 255)
+                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
                     {
                         pcl::PointXYZRGB point; 
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];

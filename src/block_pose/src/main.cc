@@ -340,7 +340,7 @@ void SystemHandler::Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original
     waitKey(2);
 }
 
-void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector)
+void SystemHandler::ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Mask_vector)
 {
 
     Mat hsv_image;
@@ -359,11 +359,11 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     addWeighted(lower_red_hue, 1.0, upper_red_hue, 1.0, 0.0, red);
 
     // Threshold for orange color
-    Mat orange = cv::Mat::zeros(480, 640, CV_8UC1);
+    Mat orange;
     inRange(hsv_image, Orange_value1, Orange_value2, orange);
 
     // Threshold for yellow color
-    cv::Mat yellow ;
+    cv::Mat yellow;
     inRange(hsv_image, Yellow_value1, Yellow_value2, yellow);
 
     // Threshold for green color
@@ -377,32 +377,55 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     //inRange(hsv_image, Scalar(102, 70, 20), Scalar(130, 200, 60), blue);
 
     // Threshold for purple color. the hue for purple is the same as red. Only difference is value.
-    Mat lower_purple, upper_purple, purple;
+    Mat lower_purple;
+    Mat upper_purple;
+    Mat purple(height, width, CV_8UC1);
     inRange(hsv_image, lower_Indigo_value1, lower_Indigo_value2, purple);
     //inRange(hsv_image, upper_Indigo_value1, upper_Indigo_value2, upper_purple);
     //addWeighted(lower_purple, 1.0, upper_purple, 1.0, 0.0, purple);
+    //
 
    // Threshold for brown color. the hue for brown is the same as red and orange. Only difference is value.
-    Mat lower_brown, upper_brown, brown;
+    Mat lower_brown(height, width, CV_8UC1);
+    Mat upper_brown(height, width, CV_8UC1);
+    Mat brown(height, width, CV_8UC1);
     inRange(hsv_image, upper_Brown_value1, upper_Brown_value2, upper_brown);
     inRange(hsv_image, lower_Brown_value1, lower_Brown_value2, lower_brown);
     addWeighted(lower_brown, 1.0, upper_brown, 1.0, 0.0, brown);
 
+    for(int y=0; y < red.cols; y++)
+    {
+        for(int x=0; x < red.rows; x++)
+        {
+            if(orange.at<uint8_t>(y,x) == 255)
+                red.at<uint8_t>(y,x) = 0; 
+        }
+    }
+
+    for(int y=0; y < orange.cols; y++)
+    {
+        for(int x=0; x < orange.rows; x++)
+        {
+            if(red.at<uint8_t>(y,x) == 255)
+                orange.at<uint8_t>(y,x) = 0; 
+        }
+    }
+    
     // morphological opening (remove small objects from the foreground)
-    erode(red, red, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
-    dilate(red, red, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
+    erode(red, red, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    dilate(red, red, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
     // morphological closing (fill small holes in the foreground)
-    dilate(red, red, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
-    erode(red, red, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+    dilate(red, red, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(red, red, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
                             
     // morphological opening (remove small objects from the foreground)
     erode(orange, orange, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
     dilate(orange, orange, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
     // morphological closing (fill small holes in the foreground)
-    dilate(orange, orange, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
-    erode(orange, orange, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+    dilate(orange, orange, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(orange, orange, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
     // morphological opening (remove small objects from the foreground)
     erode(yellow, yellow, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
@@ -444,54 +467,70 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     dilate(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
     erode(brown, brown, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
-    cv::Mat display_window = cv::Mat::zeros(480, 640, CV_8UC3);
+    cv::Mat red_new = cv::Mat::zeros(height, width, CV_8UC3);
+    cv::Mat orange_new = cv::Mat::zeros(height, width, CV_8UC3);
+    cv::Mat yellow_new = cv::Mat::zeros(height, width, CV_8UC3);
+    cv::Mat green_new = cv::Mat::zeros(height, width, CV_8UC3);
+    cv::Mat blue_new = cv::Mat::zeros(height, width, CV_8UC3);
+    cv::Mat brown_new = cv::Mat::zeros(height, width, CV_8UC3);
+    cv::Mat purple_new = cv::Mat::zeros(height, width, CV_8UC3);
+
+    convert_crop2image(red, RGB_image, red_new, "red");
+    convert_crop2image(orange, RGB_image, orange_new, "orange");
+    convert_crop2image(yellow, RGB_image, yellow_new, "yellow");
+    convert_crop2image(green, RGB_image, green_new, "green");
+    convert_crop2image(blue, RGB_image, blue_new , "blue");
+    convert_crop2image(brown, RGB_image, brown_new, "brown");
+    convert_crop2image(purple, RGB_image, purple_new, "purple");
+
+    cv::Mat display_window = cv::Mat::zeros(height, width, CV_8UC3);
     for(int y=0; y < display_window.rows; y++)
     {
         for(int x=0; x < display_window.cols; x++)
         {
-            if(red.at<uchar>(y,x) == 255 && Red_imshow_flag==1)
+            if(red_new.at<Vec3b>(y,x)[0] == 255 && Red_imshow_flag==1)
             {
                 display_window.at<Vec3b>(y,x)[0] = 0;
                 display_window.at<Vec3b>(y,x)[1] = 0;
                 display_window.at<Vec3b>(y,x)[2] = 255;
             }
 
-            if(orange.at<uchar>(y,x) == 255 && Orange_imshow_flag==1)
+            if(orange_new.at<Vec3b>(y,x)[0] == 255 && Orange_imshow_flag==1)
             {
                 display_window.at<Vec3b>(y,x)[0] = 0;
                 display_window.at<Vec3b>(y,x)[1] = 165;
                 display_window.at<Vec3b>(y,x)[2] = 255;
             }
 
-            if(yellow.at<uchar>(y,x) == 255 && Yellow_imshow_flag==1)
+            if(yellow_new.at<Vec3b>(y,x)[0] == 255 && Yellow_imshow_flag==1)
             {
                 display_window.at<Vec3b>(y,x)[0] = 0;
                 display_window.at<Vec3b>(y,x)[1] = 255;
                 display_window.at<Vec3b>(y,x)[2] = 255;
             }
 
-            if(green.at<uchar>(y,x) == 255 && Green_imshow_flag==1)
+            if(green_new.at<Vec3b>(y,x)[0] == 255 && Green_imshow_flag==1)
             {
                 display_window.at<Vec3b>(y,x)[0] = 0;
                 display_window.at<Vec3b>(y,x)[1] = 255;
                 display_window.at<Vec3b>(y,x)[2] = 0;
             }
 
-            if(blue.at<uchar>(y,x) == 255 && Blue_imshow_flag==1)
+            if(blue_new.at<Vec3b>(y,x)[0] == 255 && Blue_imshow_flag==1)
             {
                 display_window.at<Vec3b>(y,x)[0] = 255;
                 display_window.at<Vec3b>(y,x)[1] = 0;
                 display_window.at<Vec3b>(y,x)[2] = 0;
             }
 
-            if(brown.at<uchar>(y,x) == 255 && Brown_imshow_flag==1)
+            if(brown_new.at<Vec3b>(y,x)[0] == 255 && Brown_imshow_flag==1)
             {
                 display_window.at<Vec3b>(y,x)[0] = 50;
                 display_window.at<Vec3b>(y,x)[1] = 60;
                 display_window.at<Vec3b>(y,x)[2] = 72;
             }
 
-            if(purple.at<uchar>(y,x) == 255 && Indigo_imshow_flag==1)
+            if(purple_new.at<Vec3b>(y,x)[0] == 255 && Indigo_imshow_flag==1)
             {
                 display_window.at<Vec3b>(y,x)[0] = 100;
                 display_window.at<Vec3b>(y,x)[1] = 50;
@@ -501,12 +540,122 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     }
 
 
-    Mask_vector[0] = red.clone();
-    Mask_vector[1] = yellow.clone();
-    Mask_vector[2] = green.clone();
-    Mask_vector[3] = blue.clone();
-    Mask_vector[4] = brown.clone();
-    Mask_vector[5] = orange.clone();
-    Mask_vector[6] = purple.clone();
+    Mask_vector[0] = red_new.clone();
+    Mask_vector[1] = yellow_new.clone();
+    Mask_vector[2] = green_new.clone();
+    Mask_vector[3] = blue_new.clone();
+    Mask_vector[4] = brown_new.clone();
+    Mask_vector[5] = orange_new.clone();
+    Mask_vector[6] = purple_new.clone();
     Mask_vector[7] = display_window.clone();
+}
+
+void SystemHandler::convert_crop2image(cv::Mat ref_image, cv::Mat imRGB_in, cv::Mat& output, std::string color_string)
+{
+    Mat hsv_image_in;
+    cvtColor(imRGB_in, hsv_image_in, COLOR_BGR2HSV); // convert BGR2HSV
+	Rect rect = boundingRect(ref_image);
+	Point pt1, pt2;
+	pt1.x = rect.x;
+	pt1.y = rect.y;
+	pt2.x = rect.x + rect.width;
+	pt2.y = rect.y + rect.height;
+	// Draws the rect in the original image and show it
+	// rectangle(red, pt1, pt2, CV_RGB(255,255,255), 1);
+    int thresh_patch = 30;
+    int y_lower = pt1.y-thresh_patch;
+    int y_higher = pt2.y+thresh_patch;
+    int x_lower = pt1.x-thresh_patch;
+    int x_higher = pt2.x+thresh_patch;
+    if(y_higher > height)
+        y_higher = height;
+    if(x_higher > width)
+        x_higher = width;
+    if(y_lower < 0)
+        y_lower = 0;
+    if(x_lower < 0)
+        x_lower = 0;
+    
+    cv::Mat part(y_higher - y_lower, x_higher-x_lower, CV_8UC3);
+    for(int y=0; y<height; y++)
+    {
+        for(int x=0; x<width; x++)
+        {
+            if(y >= y_lower && y < y_higher && x >= x_lower && x < x_higher)
+            {
+                part.at<Vec3b>(y-y_lower,x-x_lower)[0] = hsv_image_in.at<Vec3b>(y,x)[0];
+                part.at<Vec3b>(y-y_lower,x-x_lower)[1] = hsv_image_in.at<Vec3b>(y,x)[1];
+                part.at<Vec3b>(y-y_lower,x-x_lower)[2] = hsv_image_in.at<Vec3b>(y,x)[2];
+            }
+        }
+    }
+
+    Mat lower_hue2;
+    Mat upper_hue2;
+    if(color_string=="red")
+    {
+        inRange(part, lower_Red_value1, lower_Red_value2, lower_hue2);
+        inRange(part, upper_Red_value1, upper_Red_value2, upper_hue2);
+    }
+    else if(color_string=="orange")
+    {
+        inRange(part, Orange_value1, Orange_value2, lower_hue2);
+    }
+    else if(color_string=="yellow")
+    {
+        inRange(part, Yellow_value1, Yellow_value2, lower_hue2);
+    }
+    else if(color_string=="green")
+    {
+        inRange(part, Green_value1, Green_value2, lower_hue2);
+    }
+    else if(color_string=="blue")
+    {
+        inRange(part, Blue_value1, Blue_value2, lower_hue2);
+    }
+    else if(color_string=="purple")
+    {
+        inRange(part, lower_Indigo_value1, lower_Indigo_value2, lower_hue2);
+    }
+    else if(color_string=="brown")
+    {
+        inRange(part, upper_Brown_value1, upper_Brown_value2, lower_hue2);
+        inRange(part, lower_Brown_value1, lower_Brown_value2, upper_hue2);
+    }
+
+    cv::Mat part_result;
+    part_result = lower_hue2 + upper_hue2;
+    /*
+    if(part.rows >0 && part.cols>0)
+    {
+        imshow("red2", part);
+        waitKey(2);
+        imshow("red2", part_result);
+        waitKey(2);
+    }
+    */
+
+    for(int y=0; y<part_result.rows; y++)
+    {
+        for(int x=0; x<part_result.cols; x++)
+        {
+            if(part_result.at<uint8_t>(y,x)==255)
+            {
+                if(y+y_lower < height && x+x_lower < width)
+                {
+                    output.at<Vec3b>(y+y_lower, x+x_lower)[0]=255;
+                    output.at<Vec3b>(y+y_lower, x+x_lower)[1]=255;
+                    output.at<Vec3b>(y+y_lower, x+x_lower)[2]=255;
+                }
+            }
+        }
+    }
+    // cv::imshow("After", output);
+    // waitKey(2);
+    erode(output, output, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    dilate(output, output, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+
+    // morphological closing (fill small holes in the foreground)
+    dilate(output, output, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(output, output, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 }

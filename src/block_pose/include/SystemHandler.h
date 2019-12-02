@@ -204,8 +204,9 @@ public:
     void preprocess_image(cv::Mat& image_RGB);
     void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
     void Publish_Message();
-    void ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
+    void ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Mask_vector);
     void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
+    void convert_crop2image(cv::Mat ref_image, cv::Mat hsv_image_in, cv::Mat& output, std::string color_string);
 
 private:
     // hyper parameter
