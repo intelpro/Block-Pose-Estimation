@@ -238,6 +238,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
                     }
                 }
             }
+            cv::imshow("orange_maks", Mask[i]);
         }
 
         if(i==6) // Indigo
@@ -402,6 +403,8 @@ void ObjectPose::ProjectedCloudToImagePlane()
         if(y < height && x < width && y > 0 && x > 0)
             _Projected_image.at<uint8_t>(y, x) = 255; 
     }
+    if(color_string=="orange")
+        cv::imshow("orange", _Projected_image);
     fitRectangle(_Projected_image);
 }
 

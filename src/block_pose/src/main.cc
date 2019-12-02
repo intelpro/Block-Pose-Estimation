@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 }
 
 
-void SystemHandler::preprocess_image(cv::Mat& imRGB, cv::Mat& imDepth)
+void SystemHandler::preprocess_image(cv::Mat& imRGB)
 {
     imRGB_processed = imRGB.clone(); 
     for (int y=0; y<height; y++)
@@ -27,7 +27,6 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB, cv::Mat& imDepth)
                 imRGB_processed.at<Vec3b>(y,x)[0] = 0; 
                 imRGB_processed.at<Vec3b>(y,x)[1] = 0; 
                 imRGB_processed.at<Vec3b>(y,x)[2] = 0; 
-                //imDepth_processed.at<uint16_t>(y,x) = 0; 
             }
             else{
             }
@@ -37,11 +36,12 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB, cv::Mat& imDepth)
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
+    cv::imshow("depth", 1000*image_Depth);
     std::vector<cv::Mat> Total_mask(8);
     clock_t start, end;
 
-    cv::Mat pCloud(height, width, CV_32FC3);
-    cv::Mat pCloud_inlier(height, width, CV_32FC3);
+    cv::Mat pCloud = cv::Mat::zeros(height, width, CV_32FC3);
+    cv::Mat pCloud_inlier = cv::Mat::zeros(height, width, CV_32FC3);
 
     start = clock();
     cv::Mat pointCloud = PlaneFinder->Depth2pcd(image_Depth);
@@ -56,7 +56,6 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
             pCloud_outlier.at<cv::Vec3f>(y,x) = pointCloud.at<cv::Vec3f>(y,x) - pCloud_inlier.at<cv::Vec3f>(y,x);
         }
     }
-
     cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
     PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
 
@@ -364,11 +363,11 @@ void SystemHandler::ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& M
     addWeighted(lower_red_hue, 1.0, upper_red_hue, 1.0, 0.0, red);
 
     // Threshold for orange color
-    Mat orange;
+    Mat orange = cv::Mat::zeros(480, 640, CV_8UC1);
     inRange(hsv_image, Orange_value1, Orange_value2, orange);
 
     // Threshold for yellow color
-    cv::Mat yellow = cv::Mat::zeros(640, 480, CV_8UC1);
+    cv::Mat yellow ;
     inRange(hsv_image, Yellow_value1, Yellow_value2, yellow);
 
     // Threshold for green color
