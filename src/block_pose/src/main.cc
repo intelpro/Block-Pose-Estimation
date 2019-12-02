@@ -1,7 +1,6 @@
 #include <DominantPlane.h>
 #include <ObjectPose.h>
 #include <SystemHandler.h>
-
 using namespace std;
 using namespace cv;
 
@@ -28,15 +27,12 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
                 imRGB_processed.at<Vec3b>(y,x)[1] = 0; 
                 imRGB_processed.at<Vec3b>(y,x)[2] = 0; 
             }
-            else{
-            }
         }
     }
 }
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
-    cv::imshow("depth", 1000*image_Depth);
     std::vector<cv::Mat> Total_mask(8);
     clock_t start, end;
 

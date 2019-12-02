@@ -37,7 +37,7 @@ Crop.ymax: 480
 # Image show paramter
 SystemHandler.imshowHSV: 0
 SystemHandler.imshowSegImg: 0
-SystemHandler.imshowDepthImg: 0
+SystemHandler.imshowDepthImg: 1
 SystemHandler.ColorDebug: 1
 Red_color.imshow: 1
 Yellow_color.imshow: 1

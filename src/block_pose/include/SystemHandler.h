@@ -153,7 +153,7 @@ public:
         pub_Indigo = nh.advertise<block_pose::IndigoBlock>("/block_info/Indigo", 100);
         // image declear
         imRGB = cv::Mat::zeros(height, width, CV_8UC3);
-        imDepth = cv::Mat::zeros(height, width, CV_8UC3);
+        imDepth = cv::Mat::zeros(height, width, CV_16UC1);
         //Topic you want to subscribe
         sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
         sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
@@ -189,7 +189,7 @@ public:
 			} 
 			else if(Frame_count%6 == 0)
             {
-                preprocess_image(imRGB, imDepth);
+                preprocess_image(imRGB);
                 Run_pipeline(imRGB_processed, imDepth);
                 Publish_Message();
             }
@@ -201,7 +201,7 @@ public:
 		}
 	}
 
-    void preprocess_image(cv::Mat& image_RGB, cv::Mat& image_Depth);
+    void preprocess_image(cv::Mat& image_RGB);
     void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
     void Publish_Message();
     void ColorSegmenation(cv::Mat& RGB_image, std::vector<cv::Mat>& Mask_vector);
