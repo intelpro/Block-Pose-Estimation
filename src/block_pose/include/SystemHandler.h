@@ -30,6 +30,13 @@ class SystemHandler
 {
 public:
 
+    template <class T1, class T2, class Pred = std::less<T2> >
+    struct sort_pair_second {
+        bool operator()(const std::pair<T1,T2>&left, const std::pair<T1,T2>&right) {
+            Pred p;
+            return p(left.second, right.second);
+            }
+    };
     SystemHandler(const string &strConfig)
     {
         cv::FileStorage fconfig(strConfig.c_str(), cv::FileStorage::READ);
@@ -55,6 +62,9 @@ public:
         // Plane Finder parameters
         Distance_theshold = fconfig["Plane.DistanceThresh"];
         max_iter = fconfig["Plane.Maxiter"];
+        // for pre-processing image
+        imRGB_processed = cv::Mat::zeros(cv::Size(height, width), CV_64FC1);
+        int cnt_preprocessing = 0;
         // Crop parameters
         Crop_x_min = fconfig["Crop.xmin"];
         Crop_x_max = fconfig["Crop.xmax"];
@@ -167,6 +177,7 @@ public:
         {
             cv_ptrRGB = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
             imRGB = cv_ptrRGB->image;
+            preprocess_image(imRGB);
         }
         catch (cv_bridge::Exception& e)
         {
@@ -179,21 +190,46 @@ public:
 	{
 		Frame_count++;
         cv_bridge::CvImagePtr cv_ptrD;
-		try 
-		{
+            try 
+            {
+                cv_ptrD = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
+                imDepth = cv_ptrD->image;
+                if (imRGB.empty() || imDepth.empty()) {
+                    cerr << endl << "Failed to load image at: " << endl;
+                    return;
+                } 
+                else if(Frame_count%6 == 0)
+                {
+                    preprocess_image(imRGB);
+                    Run_pipeline(imRGB_processed, imDepth);
+                    Publish_Message();
+                }
+            }
+            /*
 			cv_ptrD = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
 			imDepth = cv_ptrD->image;
 			if (imRGB.empty() || imDepth.empty()) {
 				cerr << endl << "Failed to load image at: " << endl;
 				return;
 			} 
-			else if(Frame_count%6 == 0)
+			else if(cnt_preprocessing == 10)
             {
-                preprocess_image(imRGB);
-                Run_pipeline(imRGB_processed, imDepth);
-                Publish_Message();
+                cnt_preprocessing = 0;
+                cv::imshow("imRGB_processed", imRGB_processed);
+                waitKey(2);
+                cv::Mat imRGB_processed2 = cv::Mat::zeros(height, width, CV_8UC3);
+                for(int y=0; y < height; y++)
+                {
+                    for(int x=0; x<width; x++)
+                    {
+                    }
+                }
+                imRGB_processed = imRGB_processed;
+                Run_pipeline(imRGB, imDepth);
+                // Publish_Message();
+                imRGB_processed = cv::Mat::zeros(height, width, CV_8UC3);
             }
-		}
+            */
 		catch (cv_bridge::Exception& e)
 		{
 			ROS_ERROR("cv_bridge exception: %s", e.what());
@@ -206,7 +242,9 @@ public:
     void Publish_Message();
     void ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Mask_vector);
     void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
-    void convert_crop2image(cv::Mat ref_image, cv::Mat hsv_image_in, cv::Mat& output, std::string color_string);
+    void ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& Object_mask);
+    void Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_Objmask, std::vector<cv::Mat>& Object_mask);
+    void get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<cv::Mat>& output_mask);
 
 private:
     // hyper parameter
@@ -238,6 +276,8 @@ private:
     int HSVImgShow_flag;
     int ColorDebug_flag;
     int DepthImgShow_flag;
+    // Processing image count 
+    int cnt_preprocessing;
     // color parameter
     cv::Scalar lower_Red_value1;
     cv::Scalar lower_Red_value2;

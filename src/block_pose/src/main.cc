@@ -1,6 +1,7 @@
 #include <DominantPlane.h>
 #include <ObjectPose.h>
 #include <SystemHandler.h>
+#include <opencv2/imgproc/imgproc.hpp>
 using namespace std;
 using namespace cv;
 
@@ -12,7 +13,6 @@ int main(int argc, char** argv)
     ros::spin();
     return 0;
 }
-
 
 void SystemHandler::preprocess_image(cv::Mat& imRGB)
 {
@@ -31,15 +31,32 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
     }
 }
 
+/*
+void SystemHandler::preprocess_image(cv::Mat& imRGB)
+{
+    cnt_preprocessing++;
+    for (int y=0; y<height; y++)
+    {
+        for(int x=0; x < width; x++)
+        {
+            //imRGB_processed.at<Vec3f>(y,x)[0] += float(imRGB.at<Vec3b>(y,x)[1]);
+            //imRGB_processed.at<Vec3f>(y,x)[1] += float(imRGB.at<Vec3b>(y,x)[2]);
+            //imRGB_processed.at<Vec3f>(y,x)[2] += float(imRGB.at<Vec3b>(y,x)[2]);
+        }
+    }
+}
+*/
+
+
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
-    std::vector<cv::Mat> Total_mask(8);
-    clock_t start, end;
+    std::vector<cv::Mat> Mask_vector(8);
+    std::vector<cv::Mat> Mask_vector_refined(8);
+    std::vector<cv::Mat> Unknown_Objmask(7);
 
     cv::Mat pCloud = cv::Mat::zeros(height, width, CV_32FC3);
     cv::Mat pCloud_inlier = cv::Mat::zeros(height, width, CV_32FC3);
 
-    start = clock();
     cv::Mat pointCloud = PlaneFinder->Depth2pcd(image_Depth);
     cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3);
     Plane::Plane_model best_plane = PlaneFinder->RunRansac(pCloud_inlier);
@@ -50,15 +67,21 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         for(int x = 0; x < width; x++)
         {
             pCloud_outlier.at<cv::Vec3f>(y,x) = pointCloud.at<cv::Vec3f>(y,x) - pCloud_inlier.at<cv::Vec3f>(y,x);
+            if(imDepth.at<uint16_t>(y,x) == 0)
+                pCloud_outlier.at<cv::Vec3f>(y,x) = 0;
         }
     }
     cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
     PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
 
-    end = clock();
-    double result = (double)(end - start)/CLOCKS_PER_SEC;
-	Show_Results(pCloud_outlier, imRGB, imRGB_processed, "seg_image");
-    ColorSegmenation(image_RGB, Total_mask);
+    cv::Mat masked_image = imRGB_processed.clone();
+	Show_Results(pcd_object, imRGB, masked_image, "seg_image");
+    ExtractObjectMask(masked_image, Unknown_Objmask);
+    Identify_Object(imRGB, Unknown_Objmask, Mask_vector);
+    get_cleanMask(Mask_vector, Mask_vector_refined);
+
+    cv::Mat total_mask = Mask_vector_refined[0] + Mask_vector_refined[1] + Mask_vector_refined[2] +
+                         Mask_vector_refined[3] + Mask_vector_refined[4] + Mask_vector_refined[5]+ Mask_vector_refined[6];
 
     if(DepthImgShow_flag==1)
     {
@@ -74,11 +97,411 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 
     if(ColorDebug_flag==1)
     {
-        cv::hconcat(imColorDebug, Total_mask[7], imColorDebug);
+        cv::hconcat(imColorDebug, Mask_vector_refined[7], imColorDebug);
         cv::imshow("Color_debug", imColorDebug);
         waitKey(2);
     }
-    PoseFinder->Accumulate_PointCloud(pCloud_outlier, Total_mask);
+    PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
+}
+
+void SystemHandler::ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& Object_mask)
+{
+    Mat imGray;
+    cvtColor(image_RGB, imGray, COLOR_BGR2GRAY); // convert BGR2HSV
+
+    // morphological opening (remove small objects from the foreground)
+    erode(imGray, imGray, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+    dilate(imGray, imGray, getStructuringElement(MORPH_ELLIPSE, Size(5,5)));
+
+    int data_cnt = 0;
+    std::vector<pair<int, int>> pixel_pos;
+    for(int y=0; y<height; y++)
+    {
+        for(int x=0; x<width; x++)
+        {
+            if(imGray.at<uint8_t>(y,x)!=0)
+            {
+                data_cnt++;
+                pixel_pos.push_back(make_pair(int(y), int(x)));
+            }
+        }
+    }
+    Mat p = Mat::zeros(data_cnt, 2, CV_32F);
+    for(int i=0; i<data_cnt; i++) {
+        p.at<float>(i,0) = std::get<0>(pixel_pos[i]);
+        p.at<float>(i,1) = std::get<1>(pixel_pos[i]);
+    }
+
+    int K = 7;
+    Mat bestLabels, centers, clustered;
+    cv::kmeans(p, K, bestLabels,
+            TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 100, 1), 3, KMEANS_PP_CENTERS, centers);
+
+    int colors[K];
+    for(int i=0; i<K; i++) {
+        colors[i] = 255/(i+1);
+    }
+
+
+    cv::Mat object1 = cv::Mat::zeros(height, width, CV_8UC1);
+    cv::Mat object2 = cv::Mat::zeros(height, width, CV_8UC1);
+    cv::Mat object3 = cv::Mat::zeros(height, width, CV_8UC1);
+    cv::Mat object4 = cv::Mat::zeros(height, width, CV_8UC1);
+    cv::Mat object5 = cv::Mat::zeros(height, width, CV_8UC1);
+    cv::Mat object6 = cv::Mat::zeros(height, width, CV_8UC1);
+    cv::Mat object7 = cv::Mat::zeros(height, width, CV_8UC1);
+
+    for(int i=0; i < data_cnt; i++)
+    {
+        int y = std::get<0>(pixel_pos[i]);
+        int x = std::get<1>(pixel_pos[i]);
+        if(bestLabels.at<int>(i)==0)
+            object1.at<uint8_t>(y,x) = 255;
+        else if(bestLabels.at<int>(i)==1)
+            object2.at<uint8_t>(y,x) = 255;
+        else if(bestLabels.at<int>(i)==2)
+            object3.at<uint8_t>(y,x) = 255;
+        else if(bestLabels.at<int>(i)==3)
+            object4.at<uint8_t>(y,x) = 255;
+        else if(bestLabels.at<int>(i)==4)
+            object5.at<uint8_t>(y,x) = 255;
+        else if(bestLabels.at<int>(i)==5)
+            object6.at<uint8_t>(y,x) = 255;
+        else if(bestLabels.at<int>(i)==6)
+            object7.at<uint8_t>(y,x) = 255;
+    }
+
+    Object_mask[0] = object1.clone();
+    Object_mask[1] = object2.clone();
+    Object_mask[2] = object3.clone();
+    Object_mask[3] = object4.clone();
+    Object_mask[4] = object5.clone();
+    Object_mask[5] = object6.clone();
+    Object_mask[6] = object7.clone();
+}
+
+void SystemHandler::get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<cv::Mat>& output_mask)
+{
+
+    cv::Mat display_window = cv::Mat::zeros(height, width, CV_8UC3);
+    for(int i=0; i<object_Mask.size()-1; i++)
+    {
+        cv::Mat hsv_image;
+        cvtColor(imRGB_processed, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
+        std::string color_string;
+        if(i==0)
+            color_string = "red";
+        else if(i==1)
+            color_string = "yellow";
+        else if(i==2)
+            color_string = "green";
+        else if(i==3)
+            color_string = "blue";
+        else if(i==4)
+            color_string = "brown";
+        else if(i==5)
+            color_string = "orange";
+        else if(i==6)
+            color_string = "purple";
+        Rect rect = boundingRect(object_Mask[i]);
+        Point pt1, pt2;
+        pt1.x = rect.x;
+        pt1.y = rect.y;
+        pt2.x = rect.x + rect.width;
+        pt2.y = rect.y + rect.height;
+        // Draws the rect in the original image and show it
+        // rectangle(red, pt1, pt2, CV_RGB(255,255,255), 1);
+        int thresh_patch = 5;
+        int y_lower = pt1.y-thresh_patch;
+        int y_higher = pt2.y+thresh_patch;
+        int x_lower = pt1.x-thresh_patch;
+        int x_higher = pt2.x+thresh_patch;
+        if(y_higher > height)
+            y_higher = height;
+        if(x_higher > width)
+            x_higher = width;
+        if(y_lower < 0)
+            y_lower = 0;
+        if(x_lower < 0)
+            x_lower = 0;
+        
+        cv::Mat part(y_higher - y_lower, x_higher-x_lower, CV_8UC3);
+
+        for(int y=0; y<height; y++)
+        {
+            for(int x=0; x<width; x++)
+            {
+                if(y >= y_lower && y < y_higher && x >= x_lower && x < x_higher)
+                {
+                    part.at<Vec3b>(y-y_lower,x-x_lower)[0] = hsv_image.at<Vec3b>(y,x)[0];
+                    part.at<Vec3b>(y-y_lower,x-x_lower)[1] = hsv_image.at<Vec3b>(y,x)[1];
+                    part.at<Vec3b>(y-y_lower,x-x_lower)[2] = hsv_image.at<Vec3b>(y,x)[2];
+                }
+            }
+        }
+
+        Mat lower_hue2;
+        Mat upper_hue2;
+        if(color_string=="red")
+        {
+            inRange(part, lower_Red_value1, lower_Red_value2, lower_hue2);
+            inRange(part, upper_Red_value1, upper_Red_value2, upper_hue2);
+        }
+        else if(color_string=="orange")
+        {
+            inRange(part, Orange_value1, Orange_value2, lower_hue2);
+        }
+        else if(color_string=="yellow")
+        {
+            inRange(part, Yellow_value1, Yellow_value2, lower_hue2);
+        }
+        else if(color_string=="green")
+        {
+            inRange(part, Green_value1, Green_value2, lower_hue2);
+        }
+        else if(color_string=="blue")
+        {
+            inRange(part, Blue_value1, Blue_value2, lower_hue2);
+        }
+        else if(color_string=="purple")
+        {
+            inRange(part, lower_Indigo_value1, lower_Indigo_value2, lower_hue2);
+        }
+        else if(color_string=="brown")
+        {
+            inRange(part, upper_Brown_value1, upper_Brown_value2, lower_hue2);
+            inRange(part, lower_Brown_value1, lower_Brown_value2, upper_hue2);
+        }
+
+        cv::Mat part_result;
+        part_result = lower_hue2 + upper_hue2;
+        cv::Mat result = cv::Mat::zeros(height, width, CV_8UC1);
+
+        for(int y=0; y<part_result.rows; y++)
+        {
+            for(int x=0; x<part_result.cols; x++)
+            {
+                if(part_result.at<uint8_t>(y,x)==255)
+                {
+                    if(y+y_lower < height && x+x_lower < width)
+                    {
+                        result.at<uint8_t>(y+y_lower, x+x_lower)=255;
+                    }
+                }
+            }
+        }
+
+        erode(result, result, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+        dilate(result, result, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+
+        // morphological closing (fill small holes in the foreground)
+        dilate(result, result, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+        erode(result, result, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+
+        output_mask[i] = result;
+
+        for(int y=0; y < height; y++)
+        {
+            for(int x=0; x < width; x++)
+            {
+                if(i == 0 && result.at<uint8_t>(y,x) == 255 && Red_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 0;
+                    display_window.at<Vec3b>(y,x)[1] = 0;
+                    display_window.at<Vec3b>(y,x)[2] = 255;
+                }
+                if(i == 5 && result.at<uint8_t>(y,x) == 255 && Orange_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 0;
+                    display_window.at<Vec3b>(y,x)[1] = 165;
+                    display_window.at<Vec3b>(y,x)[2] = 255;
+                }
+
+                if(i == 4 && result.at<uint8_t>(y,x) == 255 && Brown_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 50;
+                    display_window.at<Vec3b>(y,x)[1] = 60;
+                    display_window.at<Vec3b>(y,x)[2] = 72;
+                }
+
+                if(i == 1 & result.at<uint8_t>(y,x) == 255 && Yellow_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 0;
+                    display_window.at<Vec3b>(y,x)[1] = 255;
+                    display_window.at<Vec3b>(y,x)[2] = 255;
+                }
+
+                if(i==2 && result.at<uint8_t>(y,x) == 255 && Green_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 0;
+                    display_window.at<Vec3b>(y,x)[1] = 255;
+                    display_window.at<Vec3b>(y,x)[2] = 0;
+                }
+
+                if(i==3 && result.at<uint8_t>(y,x) == 255 && Blue_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 255;
+                    display_window.at<Vec3b>(y,x)[1] = 0;
+                    display_window.at<Vec3b>(y,x)[2] = 0;
+                }
+
+                if(i==6 && result.at<uint8_t>(y,x) == 255 && Indigo_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 100;
+                    display_window.at<Vec3b>(y,x)[1] = 50;
+                    display_window.at<Vec3b>(y,x)[2] = 40;
+                }
+            }
+        }
+    }
+    output_mask[7] = display_window.clone();
+}
+void SystemHandler::Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_Objmask, std::vector<cv::Mat>& Object_mask)
+{
+
+    Mat hsv_image;
+    cvtColor(imRGB_processed, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
+    imshow("HSV_image", hsv_image);
+    std::vector<std::pair<float, float>> hue_vec;
+    for(int i = 0; i < Unknown_Objmask.size(); i++)
+    {
+        float total_h = 0;
+        int cnt = 0;
+        for(int y=0; y < height; y++)
+        {
+            for(int x=0; x < width; x++)
+            {
+                if(Unknown_Objmask[i].at<uint8_t>(y,x) == 255)
+                {
+                    if(hsv_image.at<Vec3b>(y,x)[0] < 160)
+                    {
+                        total_h += hsv_image.at<Vec3b>(y,x)[0];
+                        cnt ++;
+                    }
+                    else
+                    {
+                        total_h += hsv_image.at<Vec3b>(y,x)[0] - 180;
+                        cnt ++;
+                    }
+                }
+            }
+        }
+        float avg = total_h/cnt;
+        hue_vec.push_back(make_pair(float(i), avg));
+        // cout << std::to_string(i) <<  " mask average: " << avg << endl;
+    }
+
+    std::sort(hue_vec.begin(), hue_vec.end(), sort_pair_second<float, float>());
+    /*
+    for(int i = 0; i < hue_vec.size(); i++)
+    {
+        cout << "index: " << std::get<0>(hue_vec[i]) << endl;
+        cout << "avg: " << std::get<1>(hue_vec[i]) << endl;
+    }
+    */
+
+
+    float avg_r_arr[2];
+    for(int i = 0; i < 2; i++)
+    {
+        float total_r = 0;
+        int cnt = 0;
+        for(int y=0; y < height; y++)
+        {
+            for(int x=0; x < width; x++)
+            {
+                if(Unknown_Objmask[std::get<0>(hue_vec[i])].at<uint8_t>(y,x)==255)
+                {
+                    total_r += imRGB.at<Vec3b>(y,x)[2];
+                    cnt++;
+                }
+            }
+        }
+        float avg_r = total_r/cnt;
+        avg_r_arr[i] = avg_r;
+    }
+    int red_index, orange_index;
+    if(avg_r_arr[0] < avg_r_arr[1]) 
+    {
+        red_index = std::get<0>(hue_vec[0]);
+        orange_index = std::get<0>(hue_vec[1]);
+    }
+    else
+    {
+        cout << "switched" << endl;
+        red_index = std::get<0>(hue_vec[1]);
+        orange_index = std::get<0>(hue_vec[0]);
+    }
+
+    cv::Mat red_new = Unknown_Objmask[red_index].clone();
+    cv::Mat orange_new = Unknown_Objmask[orange_index].clone();
+    cv::Mat brown_new = Unknown_Objmask[std::get<0>(hue_vec[2])].clone();
+    cv::Mat yellow_new = Unknown_Objmask[std::get<0>(hue_vec[3])].clone();
+    cv::Mat green_new = Unknown_Objmask[std::get<0>(hue_vec[4])].clone();
+    cv::Mat blue_new = Unknown_Objmask[std::get<0>(hue_vec[5])].clone();
+    cv::Mat purple_new = Unknown_Objmask[std::get<0>(hue_vec[6])].clone();
+    cv::Mat display_window = cv::Mat::zeros(height, width, CV_8UC3);
+    for(int y=0; y < height; y++)
+    {
+        for(int x=0; x < width; x++)
+        {
+            if(red_new.at<uint8_t>(y,x) == 255 && Red_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 0;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
+            if(orange_new.at<uint8_t>(y,x) == 255 && Orange_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 165;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
+
+            if(brown_new.at<uint8_t>(y,x) == 255 && Brown_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 50;
+                display_window.at<Vec3b>(y,x)[1] = 60;
+                display_window.at<Vec3b>(y,x)[2] = 72;
+            }
+
+            if(yellow_new.at<uint8_t>(y,x) == 255 && Yellow_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 255;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
+
+            if(green_new.at<uint8_t>(y,x) == 255 && Green_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 255;
+                display_window.at<Vec3b>(y,x)[2] = 0;
+            }
+
+            if(blue_new.at<uint8_t>(y,x) == 255 && Blue_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 255;
+                display_window.at<Vec3b>(y,x)[1] = 0;
+                display_window.at<Vec3b>(y,x)[2] = 0;
+            }
+
+            if(purple_new.at<uint8_t>(y,x) == 255 && Indigo_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 100;
+                display_window.at<Vec3b>(y,x)[1] = 50;
+                display_window.at<Vec3b>(y,x)[2] = 40;
+            }
+        }
+    }
+    Object_mask[0] = red_new.clone();
+    Object_mask[1] = yellow_new.clone();
+    Object_mask[2] = green_new.clone();
+    Object_mask[3] = blue_new.clone();
+    Object_mask[4] = brown_new.clone();
+    Object_mask[5] = orange_new.clone();
+    Object_mask[6] = purple_new.clone();
+    Object_mask[7] = display_window.clone();
 }
 
 void SystemHandler::Publish_Message()
@@ -324,25 +747,29 @@ void SystemHandler::Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original
     for (int y = 0; y < RGB_image.rows; y++)
     {
         for(int x = 0; x < RGB_image.cols; x++) {
-
             if (pointCloud.at<cv::Vec3f>(y, x)[0] == 0 && pointCloud.at<cv::Vec3f>(y, x)[1] == 0 && pointCloud.at<cv::Vec3f>(y, x)[2] == 0) {
-                RGB_image.at<Vec3b>(y, x)[0] = 0;
-                RGB_image.at<Vec3b>(y, x)[1] = 0;
-                RGB_image.at<Vec3b>(y, x)[2] = 0;
+                RGB_masked.at<Vec3b>(y, x)[0] = 0;
+                RGB_masked.at<Vec3b>(y, x)[1] = 0;
+                RGB_masked.at<Vec3b>(y, x)[2] = 0;
+            }
+            if(imDepth.at<uint16_t>(y,x)==0)
+            {
+                RGB_masked.at<Vec3b>(y, x)[0] = 0;
+                RGB_masked.at<Vec3b>(y, x)[1] = 0;
+                RGB_masked.at<Vec3b>(y, x)[2] = 0;
             }
         }
 
     }
     if(ColorDebug_flag==1)
-        imColorDebug = RGB_masked.clone();
+        imColorDebug = RGB_image.clone();
     if(SegImgShow_flag)
-        imshow("RGB_image_seg", RGB_image);
+        imshow("RGB_image_seg", RGB_masked);
     waitKey(2);
 }
 
 void SystemHandler::ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Mask_vector)
 {
-
     Mat hsv_image;
     cvtColor(RGB_image, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
     if(HSVImgShow_flag)
@@ -494,15 +921,6 @@ void SystemHandler::ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Ma
         }
     }
 
-
-    convert_crop2image(red, RGB_image, red_new, "red");
-    convert_crop2image(orange, RGB_image, orange_new, "orange");
-    convert_crop2image(yellow, RGB_image, yellow_new, "yellow");
-    convert_crop2image(green, RGB_image, green_new, "green");
-    convert_crop2image(blue, RGB_image, blue_new , "blue");
-    convert_crop2image(brown, RGB_image, brown_new, "brown");
-    convert_crop2image(purple, RGB_image, purple_new, "purple");
-
     cv::Mat display_window = cv::Mat::zeros(height, width, CV_8UC3);
     for(int y=0; y < display_window.rows; y++)
     {
@@ -570,112 +988,4 @@ void SystemHandler::ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Ma
     Mask_vector[7] = display_window.clone();
 }
 
-void SystemHandler::convert_crop2image(cv::Mat ref_image, cv::Mat imRGB_in, cv::Mat& output, std::string color_string)
-{
-    Mat hsv_image_in;
-    cvtColor(imRGB_in, hsv_image_in, COLOR_BGR2HSV); // convert BGR2HSV
-	Rect rect = boundingRect(ref_image);
-	Point pt1, pt2;
-	pt1.x = rect.x;
-	pt1.y = rect.y;
-	pt2.x = rect.x + rect.width;
-	pt2.y = rect.y + rect.height;
-	// Draws the rect in the original image and show it
-	// rectangle(red, pt1, pt2, CV_RGB(255,255,255), 1);
-    int thresh_patch = 30;
-    int y_lower = pt1.y-thresh_patch;
-    int y_higher = pt2.y+thresh_patch;
-    int x_lower = pt1.x-thresh_patch;
-    int x_higher = pt2.x+thresh_patch;
-    if(y_higher > height)
-        y_higher = height;
-    if(x_higher > width)
-        x_higher = width;
-    if(y_lower < 0)
-        y_lower = 0;
-    if(x_lower < 0)
-        x_lower = 0;
-    
-    cv::Mat part(y_higher - y_lower, x_higher-x_lower, CV_8UC3);
-    for(int y=0; y<height; y++)
-    {
-        for(int x=0; x<width; x++)
-        {
-            if(y >= y_lower && y < y_higher && x >= x_lower && x < x_higher)
-            {
-                part.at<Vec3b>(y-y_lower,x-x_lower)[0] = hsv_image_in.at<Vec3b>(y,x)[0];
-                part.at<Vec3b>(y-y_lower,x-x_lower)[1] = hsv_image_in.at<Vec3b>(y,x)[1];
-                part.at<Vec3b>(y-y_lower,x-x_lower)[2] = hsv_image_in.at<Vec3b>(y,x)[2];
-            }
-        }
-    }
 
-    Mat lower_hue2;
-    Mat upper_hue2;
-    if(color_string=="red")
-    {
-        inRange(part, lower_Red_value1, lower_Red_value2, lower_hue2);
-        inRange(part, upper_Red_value1, upper_Red_value2, upper_hue2);
-    }
-    else if(color_string=="orange")
-    {
-        inRange(part, Orange_value1, Orange_value2, lower_hue2);
-    }
-    else if(color_string=="yellow")
-    {
-        inRange(part, Yellow_value1, Yellow_value2, lower_hue2);
-    }
-    else if(color_string=="green")
-    {
-        inRange(part, Green_value1, Green_value2, lower_hue2);
-    }
-    else if(color_string=="blue")
-    {
-        inRange(part, Blue_value1, Blue_value2, lower_hue2);
-    }
-    else if(color_string=="purple")
-    {
-        inRange(part, lower_Indigo_value1, lower_Indigo_value2, lower_hue2);
-    }
-    else if(color_string=="brown")
-    {
-        inRange(part, upper_Brown_value1, upper_Brown_value2, lower_hue2);
-        inRange(part, lower_Brown_value1, lower_Brown_value2, upper_hue2);
-    }
-
-    cv::Mat part_result;
-    part_result = lower_hue2 + upper_hue2;
-    /*
-    if(part.rows >0 && part.cols>0)
-    {
-        imshow("red2", part);
-        waitKey(2);
-        imshow("red2", part_result);
-        waitKey(2);
-    }
-    */
-
-    for(int y=0; y<part_result.rows; y++)
-    {
-        for(int x=0; x<part_result.cols; x++)
-        {
-            if(part_result.at<uint8_t>(y,x)==255)
-            {
-                if(y+y_lower < height && x+x_lower < width)
-                {
-                    output.at<Vec3b>(y+y_lower, x+x_lower)[0]=255;
-                    output.at<Vec3b>(y+y_lower, x+x_lower)[1]=255;
-                    output.at<Vec3b>(y+y_lower, x+x_lower)[2]=255;
-                }
-            }
-        }
-    }
-    // cv::imshow("After", output);
-    // waitKey(2);
-    erode(output, output, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    dilate(output, output, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-
-    // morphological closing (fill small holes in the foreground)
-    dilate(output, output, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    erode(output, output, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-}

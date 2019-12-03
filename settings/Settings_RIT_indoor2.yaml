@@ -26,7 +26,7 @@ DepthMapFactor: 1000
 #--------------------------------------------------------------------------------------------
 
 Crop.xmin: 0
-Crop.xmax: 500
+Crop.xmax: 530
 Crop.ymin: 0
 Crop.ymax: 480
 
@@ -37,7 +37,7 @@ Crop.ymax: 480
 # Image show paramter
 SystemHandler.imshowHSV: 1
 SystemHandler.imshowSegImg: 1
-SystemHandler.imshowDepthImg: 1
+SystemHandler.imshowDepthImg: 0
 SystemHandler.ColorDebug: 1
 Red_color.imshow: 1
 Yellow_color.imshow: 1
@@ -73,54 +73,53 @@ Pose.TestIndigo: 1
 #--------------------------------------------------------------------------------------------
 # Red color(lower)
 Red_color.lower_value_0_0: 0
-Red_color.lower_value_0_1: 3
-Red_color.lower_value_1_0: 180
-Red_color.lower_value_1_1: 250
-Red_color.lower_value_2_0: 70
+Red_color.lower_value_0_1: 5
+Red_color.lower_value_1_0: 200
+Red_color.lower_value_1_1: 255
+Red_color.lower_value_2_0: 0
 Red_color.lower_value_2_1: 150
-
 # Red color(upper)
 Red_color.upper_value_0_0: 175
 Red_color.upper_value_0_1: 180
-Red_color.upper_value_1_0: 180
-Red_color.upper_value_1_1: 250
-Red_color.upper_value_2_0: 70
+Red_color.upper_value_1_0: 200
+Red_color.upper_value_1_1: 255
+Red_color.upper_value_2_0: 0
 Red_color.upper_value_2_1: 150
 # Orange color
-Orange_color.value_0_0: 2
+Orange_color.value_0_0: 0
 Orange_color.value_0_1: 10
-Orange_color.value_1_0: 190
+Orange_color.value_1_0: 180
 Orange_color.value_1_1: 255
-Orange_color.value_2_0: 100
+Orange_color.value_2_0: 0
 Orange_color.value_2_1: 200
 # Yellow color
-Yellow_color.value_0_0: 15
-Yellow_color.value_0_1: 40
-Yellow_color.value_1_0: 130
+Yellow_color.value_0_0: 10
+Yellow_color.value_0_1: 60
+Yellow_color.value_1_0: 50
 Yellow_color.value_1_1: 255
-Yellow_color.value_2_0: 150
+Yellow_color.value_2_0: 0
 Yellow_color.value_2_1: 200
 # Green color
 Green_color.value_0_0: 15
 Green_color.value_0_1: 80
-Green_color.value_1_0: 130
-Green_color.value_1_1: 200
-Green_color.value_2_0: 50
-Green_color.value_2_1: 100
+Green_color.value_1_0: 100
+Green_color.value_1_1: 255
+Green_color.value_2_0: 0
+Green_color.value_2_1: 200
 # Blue color
-Blue_color.value_0_0: 90
-Blue_color.value_0_1: 150
-Blue_color.value_1_0: 200
+Blue_color.value_0_0: 80
+Blue_color.value_0_1: 160
+Blue_color.value_1_0: 100
 Blue_color.value_1_1: 255
-Blue_color.value_2_0: 10
-Blue_color.value_2_1: 100
+Blue_color.value_2_0: 0
+Blue_color.value_2_1: 200
 # Indigo color(lower)
 Indigo_color.lower_value_0_0: 80
-Indigo_color.lower_value_1_0: 80
-Indigo_color.lower_value_2_0: 20
 Indigo_color.lower_value_0_1: 170
-Indigo_color.lower_value_1_1: 180
-Indigo_color.lower_value_2_1: 100
+Indigo_color.lower_value_1_0: 80
+Indigo_color.lower_value_1_1: 200
+Indigo_color.lower_value_2_0: 0
+Indigo_color.lower_value_2_1: 200
 Indigo_color.upper_value_0_0: 0
 Indigo_color.upper_value_1_0: 0
 Indigo_color.upper_value_2_0: 0
@@ -128,15 +127,15 @@ Indigo_color.upper_value_0_1: 0
 Indigo_color.upper_value_1_1: 0
 Indigo_color.upper_value_2_1: 0
 # Brown color
-Brown_color.lower_value_0_0: 0
-Brown_color.lower_value_1_0: 30
-Brown_color.lower_value_2_0: 15
+Brown_color.lower_value_0_0: 5
 Brown_color.lower_value_0_1: 30
+Brown_color.lower_value_1_0: 30
 Brown_color.lower_value_1_1: 210
-Brown_color.lower_value_2_1: 75
+Brown_color.lower_value_2_0: 0
+Brown_color.lower_value_2_1: 200
 Brown_color.upper_value_0_0: 160
-Brown_color.upper_value_1_0: 30
-Brown_color.upper_value_2_0: 15
 Brown_color.upper_value_0_1: 179
+Brown_color.upper_value_1_0: 30
 Brown_color.upper_value_1_1: 210
-Brown_color.upper_value_2_1: 75
+Brown_color.upper_value_2_0: 0
+Brown_color.upper_value_2_1: 200

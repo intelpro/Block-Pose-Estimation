@@ -102,7 +102,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
+                    if(Mask[i].at<uint8_t>(y,x) == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -126,7 +126,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
+                    if(Mask[i].at<uint8_t>(y,x) == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -150,7 +150,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
+                    if(Mask[i].at<uint8_t>(y,x) == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -174,7 +174,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
+                    if(Mask[i].at<uint8_t>(y,x) == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -198,7 +198,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
+                    if(Mask[i].at<uint8_t>(y,x) == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -222,7 +222,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for( int x = 0; x < width; x++ )
                 {
-                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
+                    if(Mask[i].at<uint8_t>(y,x) == 255)
                     {
                         pcl::PointXYZRGB point;
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -246,7 +246,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             {
                 for(int x=0; x < width; x++)
                 {
-                    if(Mask[i].at<Vec3b>(y,x)[0] == 255)
+                    if(Mask[i].at<uint8_t>(y,x) == 255)
                     {
                         pcl::PointXYZRGB point; 
                         point.x = pcd_outlier.at<cv::Vec3f>(y,x)[0];
@@ -285,7 +285,6 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
 
         if(Test_Individual_flag==1)
         {
-            cout << "size of yellow cloud: " << yellow_cloud.size() << endl;
             if(Test_red_flag==1)
                 ProjectToDominantPlane(red_cloud, "red");
             if(Test_yellow_flag==1)
@@ -417,8 +416,8 @@ void ObjectPose::fitRectangle(cv::Mat projected_image)
     // filling small hole due to occlusion
     if(color_string=="red")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(30,30)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(30,30)));
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
     }
     else if(color_string=="blue")
     {
@@ -437,13 +436,13 @@ void ObjectPose::fitRectangle(cv::Mat projected_image)
     }
     else if(color_string=="brown")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
     }
     else if(color_string=="yellow")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
     }
     else if(color_string=="Indigo")
     {
@@ -498,7 +497,10 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
     else if(color_string=="yellow")
         max_length = FindBlockHeight(yellow_cloud, a, b, c, d);
     else if(color_string=="orange")
+    {
         max_length = FindBlockHeight(orange_cloud, a, b, c, d);
+        cout << "orange size: " << orange_cloud.size() << endl;
+    }
     else if(color_string=="brown")
         max_length = FindBlockHeight(brown_cloud, a, b, c, d);
     else if(color_string=="Indigo")
@@ -590,15 +592,16 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
             max_height = dist_temp;
     }
 
+    if(color_string=="orange")
+        cout << "orange height: " << max_height << endl;
+
     // Discretize max height
     if(max_height > Unit_Cube_L-dist_thresh & max_height < Unit_Cube_L+dist_thresh)
         max_height = Unit_Cube_L+0.001;
     else if(max_height > 2*Unit_Cube_L - dist_thresh & max_height < 2*Unit_Cube_L + dist_thresh)
         max_height = 2*Unit_Cube_L+0.003;
-    else if(max_height > 3*Unit_Cube_L - dist_thresh & max_height < 3*Unit_Cube_L + dist_thresh)
+    else if(max_height > 3*Unit_Cube_L - dist_thresh & max_height < 3*Unit_Cube_L + 3*dist_thresh)
         max_height = 3*Unit_Cube_L+0.004;
-    else if(max_height > 4*Unit_Cube_L - dist_thresh & max_height < 4*Unit_Cube_L + dist_thresh)
-        max_height = 4*Unit_Cube_L+0.005;
     else
         max_height = 0; 
     return max_height;
