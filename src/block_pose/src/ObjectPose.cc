@@ -499,7 +499,6 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
     else if(color_string=="orange")
     {
         max_length = FindBlockHeight(orange_cloud, a, b, c, d);
-        cout << "orange size: " << orange_cloud.size() << endl;
     }
     else if(color_string=="brown")
         max_length = FindBlockHeight(brown_cloud, a, b, c, d);
@@ -592,9 +591,6 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
             max_height = dist_temp;
     }
 
-    if(color_string=="orange")
-        cout << "orange height: " << max_height << endl;
-
     // Discretize max height
     if(max_height > Unit_Cube_L-dist_thresh & max_height < Unit_Cube_L+dist_thresh)
         max_height = Unit_Cube_L+0.001;
@@ -604,6 +600,7 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
         max_height = 3*Unit_Cube_L+0.004;
     else
         max_height = 0; 
+
     return max_height;
 }
 
