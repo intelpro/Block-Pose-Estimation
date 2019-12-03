@@ -393,23 +393,24 @@ void SystemHandler::ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Ma
     inRange(hsv_image, lower_Brown_value1, lower_Brown_value2, lower_brown);
     addWeighted(lower_brown, 1.0, upper_brown, 1.0, 0.0, brown);
 
-    for(int y=0; y < red.cols; y++)
+    for(int y=0; y < red.rows; y++)
     {
-        for(int x=0; x < red.rows; x++)
+        for(int x=0; x < red.cols; x++)
         {
             if(orange.at<uint8_t>(y,x) == 255)
                 red.at<uint8_t>(y,x) = 0; 
         }
     }
 
-    for(int y=0; y < orange.cols; y++)
+    for(int y=0; y < orange.rows; y++)
     {
-        for(int x=0; x < orange.rows; x++)
+        for(int x=0; x < orange.cols; x++)
         {
             if(red.at<uint8_t>(y,x) == 255)
                 orange.at<uint8_t>(y,x) = 0; 
         }
     }
+
     
     // morphological opening (remove small objects from the foreground)
     erode(red, red, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
@@ -474,6 +475,25 @@ void SystemHandler::ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Ma
     cv::Mat blue_new = cv::Mat::zeros(height, width, CV_8UC3);
     cv::Mat brown_new = cv::Mat::zeros(height, width, CV_8UC3);
     cv::Mat purple_new = cv::Mat::zeros(height, width, CV_8UC3);
+
+    for(int y=0; y < red.rows; y++)
+    {
+        for(int x=0; x < red.cols; x++)
+        {
+            if(orange.at<uint8_t>(y,x) == 255)
+                red.at<uint8_t>(y,x) = 0; 
+        }
+    }
+
+    for(int y=0; y < orange.rows; y++)
+    {
+        for(int x=0; x < orange.cols; x++)
+        {
+            if(red.at<uint8_t>(y,x) == 255)
+                orange.at<uint8_t>(y,x) = 0; 
+        }
+    }
+
 
     convert_crop2image(red, RGB_image, red_new, "red");
     convert_crop2image(orange, RGB_image, orange_new, "orange");
