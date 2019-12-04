@@ -320,11 +320,26 @@ void SystemHandler::get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<
                     display_window.at<Vec3b>(y,x)[1] = 0;
                     display_window.at<Vec3b>(y,x)[2] = 255;
                 }
-                if(i == 5 && result.at<uint8_t>(y,x) == 255 && Orange_imshow_flag==1)
+
+                if(i == 1 & result.at<uint8_t>(y,x) == 255 && Yellow_imshow_flag==1)
                 {
                     display_window.at<Vec3b>(y,x)[0] = 0;
-                    display_window.at<Vec3b>(y,x)[1] = 165;
+                    display_window.at<Vec3b>(y,x)[1] = 255;
                     display_window.at<Vec3b>(y,x)[2] = 255;
+                }
+
+                if(i == 2 && result.at<uint8_t>(y,x) == 255 && Green_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 0;
+                    display_window.at<Vec3b>(y,x)[1] = 255;
+                    display_window.at<Vec3b>(y,x)[2] = 0;
+                }
+
+                if(i == 3 && result.at<uint8_t>(y,x) == 255 && Blue_imshow_flag==1)
+                {
+                    display_window.at<Vec3b>(y,x)[0] = 255;
+                    display_window.at<Vec3b>(y,x)[1] = 0;
+                    display_window.at<Vec3b>(y,x)[2] = 0;
                 }
 
                 if(i == 4 && result.at<uint8_t>(y,x) == 255 && Brown_imshow_flag==1)
@@ -334,28 +349,14 @@ void SystemHandler::get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<
                     display_window.at<Vec3b>(y,x)[2] = 72;
                 }
 
-                if(i == 1 & result.at<uint8_t>(y,x) == 255 && Yellow_imshow_flag==1)
+                if(i == 5 && result.at<uint8_t>(y,x) == 255 && Orange_imshow_flag==1)
                 {
                     display_window.at<Vec3b>(y,x)[0] = 0;
-                    display_window.at<Vec3b>(y,x)[1] = 255;
+                    display_window.at<Vec3b>(y,x)[1] = 165;
                     display_window.at<Vec3b>(y,x)[2] = 255;
                 }
 
-                if(i==2 && result.at<uint8_t>(y,x) == 255 && Green_imshow_flag==1)
-                {
-                    display_window.at<Vec3b>(y,x)[0] = 0;
-                    display_window.at<Vec3b>(y,x)[1] = 255;
-                    display_window.at<Vec3b>(y,x)[2] = 0;
-                }
-
-                if(i==3 && result.at<uint8_t>(y,x) == 255 && Blue_imshow_flag==1)
-                {
-                    display_window.at<Vec3b>(y,x)[0] = 255;
-                    display_window.at<Vec3b>(y,x)[1] = 0;
-                    display_window.at<Vec3b>(y,x)[2] = 0;
-                }
-
-                if(i==6 && result.at<uint8_t>(y,x) == 255 && Indigo_imshow_flag==1)
+                if(i == 6 && result.at<uint8_t>(y,x) == 255 && Indigo_imshow_flag==1)
                 {
                     display_window.at<Vec3b>(y,x)[0] = 100;
                     display_window.at<Vec3b>(y,x)[1] = 50;
