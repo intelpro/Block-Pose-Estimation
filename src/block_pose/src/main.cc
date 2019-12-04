@@ -16,16 +16,24 @@ int main(int argc, char** argv)
 
 void SystemHandler::preprocess_image(cv::Mat& imRGB)
 {
-    imRGB_processed = imRGB.clone(); 
+    cnt_preprocessing++;
     for (int y=0; y<height; y++)
     {
         for(int x=0; x < width; x++)
         {
             if(!(x>Crop_x_min && x<Crop_x_max && y>Crop_y_min && y<Crop_y_max))
             {
-                imRGB_processed.at<Vec3b>(y,x)[0] = 0; 
-                imRGB_processed.at<Vec3b>(y,x)[1] = 0; 
-                imRGB_processed.at<Vec3b>(y,x)[2] = 0; 
+                imRGB_processed2.at<Vec3f>(y,x)[0] = 0; 
+                imRGB_processed2.at<Vec3f>(y,x)[1] = 0; 
+                imRGB_processed2.at<Vec3f>(y,x)[2] = 0; 
+            }
+            else{
+                if(MeanImg_flag==1) 
+                {
+                    imRGB_processed2.at<Vec3f>(y,x)[0] += imRGB.at<Vec3b>(y,x)[0];
+                    imRGB_processed2.at<Vec3f>(y,x)[1] += imRGB.at<Vec3b>(y,x)[1];
+                    imRGB_processed2.at<Vec3f>(y,x)[2] += imRGB.at<Vec3b>(y,x)[2];
+                }
             }
         }
     }
@@ -50,6 +58,7 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
+    cv::imshow("input_image", image_RGB);
     std::vector<cv::Mat> Mask_vector(8);
     std::vector<cv::Mat> Mask_vector_refined(8);
     std::vector<cv::Mat> Unknown_Objmask(7);
@@ -71,13 +80,14 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
                 pCloud_outlier.at<cv::Vec3f>(y,x) = 0;
         }
     }
+
     cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
     PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
 
     cv::Mat masked_image = imRGB_processed.clone();
-	Show_Results(pcd_object, imRGB, masked_image, "seg_image");
+	Show_Results(pcd_object, imRGB_processed, masked_image, "seg_image");
     ExtractObjectMask(masked_image, Unknown_Objmask);
-    Identify_Object(imRGB, Unknown_Objmask, Mask_vector);
+    Identify_Object(imRGB_processed, Unknown_Objmask, Mask_vector);
     get_cleanMask(Mask_vector, Mask_vector_refined);
 
     cv::Mat total_mask = Mask_vector_refined[0] + Mask_vector_refined[1] + Mask_vector_refined[2] +

@@ -39,6 +39,7 @@ SystemHandler.imshowHSV: 1
 SystemHandler.imshowSegImg: 1
 SystemHandler.imshowDepthImg: 0
 SystemHandler.ColorDebug: 1
+SystemHandler.UseMeanImage: 1
 Red_color.imshow: 1
 Yellow_color.imshow: 1
 Green_color.imshow: 1
@@ -93,12 +94,12 @@ Orange_color.value_1_1: 255
 Orange_color.value_2_0: 0
 Orange_color.value_2_1: 200
 # Yellow color
-Yellow_color.value_0_0: 10
-Yellow_color.value_0_1: 60
-Yellow_color.value_1_0: 50
+Yellow_color.value_0_0: 5
+Yellow_color.value_0_1: 80
+Yellow_color.value_1_0: 100
 Yellow_color.value_1_1: 255
 Yellow_color.value_2_0: 0
-Yellow_color.value_2_1: 200
+Yellow_color.value_2_1: 255
 # Green color
 Green_color.value_0_0: 15
 Green_color.value_0_1: 80

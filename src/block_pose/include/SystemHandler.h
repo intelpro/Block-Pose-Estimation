@@ -37,6 +37,7 @@ public:
             return p(left.second, right.second);
             }
     };
+
     SystemHandler(const string &strConfig)
     {
         cv::FileStorage fconfig(strConfig.c_str(), cv::FileStorage::READ);
@@ -63,8 +64,11 @@ public:
         Distance_theshold = fconfig["Plane.DistanceThresh"];
         max_iter = fconfig["Plane.Maxiter"];
         // for pre-processing image
-        imRGB_processed = cv::Mat::zeros(cv::Size(height, width), CV_64FC1);
-        int cnt_preprocessing = 0;
+        MeanImg_flag = fconfig["SystemHandler.UseMeanImage"]; 
+        imRGB_processed = cv::Mat::zeros(height, width, CV_8UC3);
+        cnt_preprocessing = 0;
+        I = cv::Mat::zeros(height, width, CV_8UC3);
+        imRGB_processed2 = cv::Mat::zeros(height, width, CV_64FC3);
         // Crop parameters
         Crop_x_min = fconfig["Crop.xmin"];
         Crop_x_max = fconfig["Crop.xmax"];
@@ -177,7 +181,6 @@ public:
         {
             cv_ptrRGB = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
             imRGB = cv_ptrRGB->image;
-            preprocess_image(imRGB);
         }
         catch (cv_bridge::Exception& e)
         {
@@ -194,15 +197,32 @@ public:
             {
                 cv_ptrD = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
                 imDepth = cv_ptrD->image;
+                preprocess_image(imRGB);
                 if (imRGB.empty() || imDepth.empty()) {
                     cerr << endl << "Failed to load image at: " << endl;
                     return;
                 } 
+
                 else if(Frame_count%6 == 0)
                 {
-                    preprocess_image(imRGB);
+                    if(MeanImg_flag==1)
+                    {
+                        for(int y=0; y < height; y++)
+                        {
+                            for(int x=0; x<width; x++)
+                            {
+                                I.at<Vec3b>(y,x)[0] = int(imRGB_processed2.at<Vec3f>(y,x)[0]/cnt_preprocessing);
+                                I.at<Vec3b>(y,x)[1] = int(imRGB_processed2.at<Vec3f>(y,x)[1]/cnt_preprocessing);
+                                I.at<Vec3b>(y,x)[2] = int(imRGB_processed2.at<Vec3f>(y,x)[2]/cnt_preprocessing);
+                            }
+                        }
+                        imRGB_processed = I.clone();
+                    }
                     Run_pipeline(imRGB_processed, imDepth);
                     Publish_Message();
+                    cnt_preprocessing = 0;
+                    imRGB_processed2 = cv::Mat::zeros(height, width, CV_64FC3);
+                    I = cv::Mat::zeros(height, width, CV_8UC3);
                 }
             }
             /*
@@ -217,13 +237,7 @@ public:
                 cnt_preprocessing = 0;
                 cv::imshow("imRGB_processed", imRGB_processed);
                 waitKey(2);
-                cv::Mat imRGB_processed2 = cv::Mat::zeros(height, width, CV_8UC3);
-                for(int y=0; y < height; y++)
-                {
-                    for(int x=0; x<width; x++)
-                    {
-                    }
-                }
+
                 imRGB_processed = imRGB_processed;
                 Run_pipeline(imRGB, imDepth);
                 // Publish_Message();
@@ -278,6 +292,7 @@ private:
     int DepthImgShow_flag;
     // Processing image count 
     int cnt_preprocessing;
+    int MeanImg_flag;
     // color parameter
     cv::Scalar lower_Red_value1;
     cv::Scalar lower_Red_value2;
@@ -324,6 +339,8 @@ private:
     cv::Mat imRGB;
 	cv::Mat imDepth;
     cv::Mat imRGB_processed;
+    cv::Mat imRGB_processed2;
+    cv::Mat I;
     // Image for Color debug
     cv::Mat imColorDebug;
     // Plane and pose object
