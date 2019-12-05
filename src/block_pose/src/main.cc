@@ -58,7 +58,6 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
-    cv::imshow("input_image", image_RGB);
     std::vector<cv::Mat> Mask_vector(8);
     std::vector<cv::Mat> Mask_vector_refined(8);
     std::vector<cv::Mat> Unknown_Objmask(7);
@@ -85,7 +84,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
     PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
 
     cv::Mat masked_image = imRGB_processed.clone();
-	Show_Results(pcd_object, imRGB_processed, masked_image, "seg_image");
+	Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
     ExtractObjectMask(masked_image, Unknown_Objmask);
     Identify_Object(imRGB_processed, Unknown_Objmask, Mask_vector);
     get_cleanMask(Mask_vector, Mask_vector_refined);
@@ -374,10 +373,10 @@ void SystemHandler::Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_
     cvtColor(imRGB_processed, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
     imshow("HSV_image", hsv_image);
     std::vector<std::pair<float, float>> hue_vec;
+	std::vector<int> size_vector(Unknown_Objmask.size());
     for(int i = 0; i < Unknown_Objmask.size(); i++)
     {
-        float total_h = 0;
-        int cnt = 0;
+        std::vector<int> hue_value;
         for(int y=0; y < height; y++)
         {
             for(int x=0; x < width; x++)
@@ -385,32 +384,24 @@ void SystemHandler::Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_
                 if(Unknown_Objmask[i].at<uint8_t>(y,x) == 255)
                 {
                     if(hsv_image.at<Vec3b>(y,x)[0] < 160)
-                    {
-                        total_h += hsv_image.at<Vec3b>(y,x)[0];
-                        cnt ++;
-                    }
+                        hue_value.push_back(hsv_image.at<Vec3b>(y,x)[0]);
                     else
-                    {
-                        total_h += hsv_image.at<Vec3b>(y,x)[0] - 180;
-                        cnt ++;
-                    }
+                        hue_value.push_back(hsv_image.at<Vec3b>(y,x)[0] - 180);
                 }
             }
         }
-        float avg = total_h/cnt;
-        hue_vec.push_back(make_pair(float(i), avg));
-        // cout << std::to_string(i) <<  " mask average: " << avg << endl;
+        std::sort(hue_value.begin(), hue_value.end());
+        float median = hue_value[hue_value.size() / 2];
+        hue_vec.push_back(make_pair(float(i), median));
     }
-
     std::sort(hue_vec.begin(), hue_vec.end(), sort_pair_second<float, float>());
+
     /*
     for(int i = 0; i < hue_vec.size(); i++)
     {
         cout << "index: " << std::get<0>(hue_vec[i]) << endl;
         cout << "avg: " << std::get<1>(hue_vec[i]) << endl;
     }
-    */
-
 
     float avg_r_arr[2];
     for(int i = 0; i < 2; i++)
@@ -431,21 +422,10 @@ void SystemHandler::Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_
         float avg_r = total_r/cnt;
         avg_r_arr[i] = avg_r;
     }
-    int red_index, orange_index;
-    if(avg_r_arr[0] < avg_r_arr[1]) 
-    {
-        red_index = std::get<0>(hue_vec[0]);
-        orange_index = std::get<0>(hue_vec[1]);
-    }
-    else
-    {
-        cout << "switched" << endl;
-        red_index = std::get<0>(hue_vec[1]);
-        orange_index = std::get<0>(hue_vec[0]);
-    }
+    */
 
-    cv::Mat red_new = Unknown_Objmask[red_index].clone();
-    cv::Mat orange_new = Unknown_Objmask[orange_index].clone();
+    cv::Mat red_new = Unknown_Objmask[std::get<0>(hue_vec[0])];
+    cv::Mat orange_new = Unknown_Objmask[std::get<0>(hue_vec[1])];
     cv::Mat brown_new = Unknown_Objmask[std::get<0>(hue_vec[2])].clone();
     cv::Mat yellow_new = Unknown_Objmask[std::get<0>(hue_vec[3])].clone();
     cv::Mat green_new = Unknown_Objmask[std::get<0>(hue_vec[4])].clone();

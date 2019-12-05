@@ -25,8 +25,8 @@ DepthMapFactor: 1000
 # Crop Parameter
 #--------------------------------------------------------------------------------------------
 
-Crop.xmin: 0
-Crop.xmax: 530
+Crop.xmin: 100
+Crop.xmax: 640
 Crop.ymin: 0
 Crop.ymax: 480
 
@@ -49,14 +49,14 @@ Brown_color.imshow: 1
 Indigo_color.imshow: 1
 # Dominant Plane Threshold
 Plane.DistanceThresh: 0.005
-Plane.Maxiter: 100
+Plane.Maxiter: 200
 
 # Object Pose Paramter
-Pose.CloudAccumIter: 3
+Pose.CloudAccumIter: 5
 Pose.GridUnitLength: 0.025
 Pose.ThresholdForOccGrid: 0.0125
 # Object Debug Test Paramter
-Pose.DebugObject3D: 0
+Pose.DebugObject3D: 1
 Pose.Test_AllBlock: 0
 Pose.Test_IndividualBlock: 1
 Pose.DebugObjectImshow: 1
@@ -68,6 +68,15 @@ Pose.TestOrange: 1
 Pose.TestBlue: 1
 Pose.TestBrown: 1
 Pose.TestIndigo: 1
+# Dominant plane space Image dilate parmeter 
+Pose.RedDilate: 10
+Pose.YellowDilate: 15
+Pose.GreenDilate: 10 
+Pose.OrangeDilate: 20
+Pose.BlueDilate: 20
+Pose.BrownDilate: 15
+Pose.IndigoDilate: 10
+
 
 #--------------------------------------------------------------------------------------------
 # Color space Paramter
@@ -75,17 +84,17 @@ Pose.TestIndigo: 1
 # Red color(lower)
 Red_color.lower_value_0_0: 0
 Red_color.lower_value_0_1: 5
-Red_color.lower_value_1_0: 200
+Red_color.lower_value_1_0: 180
 Red_color.lower_value_1_1: 255
 Red_color.lower_value_2_0: 0
-Red_color.lower_value_2_1: 150
+Red_color.lower_value_2_1: 170
 # Red color(upper)
 Red_color.upper_value_0_0: 175
 Red_color.upper_value_0_1: 180
-Red_color.upper_value_1_0: 200
+Red_color.upper_value_1_0: 180
 Red_color.upper_value_1_1: 255
 Red_color.upper_value_2_0: 0
-Red_color.upper_value_2_1: 150
+Red_color.upper_value_2_1: 170
 # Orange color
 Orange_color.value_0_0: 0
 Orange_color.value_0_1: 10

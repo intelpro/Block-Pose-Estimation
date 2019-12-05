@@ -31,7 +31,8 @@ class ObjectPose{
         void CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector);
         void ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, std::string _color_string);
         void ProjectedCloudToImagePlane();
-        void fitRectangle(cv::Mat image);
+        void fitRectangle(cv::Mat image, std::vector<pair<int, int>> pixel_position);
+        void PostProcessProjectedImage(cv::Mat& projected_image, std::vector<pair<int, int>> pos_vector);
         void BackProjectToDominatPlane(std::vector<Point> Rect_points);
         float FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, float a, float b, float c, float d);
         float FindBlockMeanHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, float a, float b, float c, float d);
@@ -102,6 +103,14 @@ class ObjectPose{
         int Test_brown_flag;
         int Test_orange_flag;
         int Test_indigo_flag;
+        // dilate constant 
+        int Red_dilate;
+        int Yellow_dilate;
+        int Green_dilate;
+        int Blue_dilate;
+        int Brown_dilate;
+        int Orange_dilate;
+        int Indigo_dilate;
         // Debug flag
         int Debug_Object_imshow;
         int Debug_Object_verbose_flag;

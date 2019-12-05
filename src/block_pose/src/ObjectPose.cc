@@ -74,6 +74,14 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     Test_brown_flag = fconfig["Pose.TestBrown"];
     Test_orange_flag = fconfig["Pose.TestOrange"];
     Test_indigo_flag = fconfig["Pose.TestIndigo"];
+    // Dilated constant
+    Red_dilate = fconfig["Pose.RedDilate"];
+    Yellow_dilate = fconfig["Pose.YellowDilate"];
+    Green_dilate = fconfig["Pose.GreenDilate"];
+    Blue_dilate = fconfig["Pose.BlueDilate"];
+    Brown_dilate = fconfig["Pose.BrownDilate"];
+    Orange_dilate = fconfig["Pose.OrangeDilate"];
+    Indigo_dilate = fconfig["Pose.IndigoDilate"];
     // Debug Object
     Debug_Object_imshow = fconfig["Pose.DebugObjectImshow"];
     Debug_Object_verbose_flag = fconfig["Pose.DebugObjectVerbose"];
@@ -87,6 +95,13 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     cout << "Test Blue:" << Test_blue_flag << endl;
     cout << "Test Brown:" << Test_brown_flag << endl;
     cout << "Test Indigo:" << Test_indigo_flag << endl;
+    cout << "Red Dilate:" << Red_dilate << endl;
+    cout << "Yellow Dilate:" << Yellow_dilate << endl;
+    cout << "Green Dialte:" << Green_dilate << endl;
+    cout << "Orange Dilate:" << Orange_dilate << endl;
+    cout << "Blue Dilate:" << Blue_dilate << endl;
+    cout << "Brown Dilate:" << Brown_dilate << endl;
+    cout << "Indigo Dilate:" << Indigo_dilate << endl;
     cout << "DEBUG IMSHOW FLAG: " << Debug_Object_imshow << endl;
     cout << "DEBUG VERBOSE FLAG: " << Debug_Object_verbose_flag << endl;
 }
@@ -388,6 +403,7 @@ void ObjectPose::ProjectToDominantPlane(pcl::PointCloud<pcl::PointXYZRGB> in_clo
 void ObjectPose::ProjectedCloudToImagePlane()
 {
     _Projected_image = cv::Mat::zeros(height, width, CV_8UC1);
+    std::vector<pair<int, int>> pixel_position;
     for (int i =0; i < projected_cloud.size(); i++)
     {
         int x, y;
@@ -398,14 +414,15 @@ void ObjectPose::ProjectedCloudToImagePlane()
         float Z = temp_cloud.z; 
         y = cy + fy*Y/Z;
         x = cx + fx*X/Z;
+        pixel_position.push_back(make_pair(x,y));
         if(y < height && x < width && y > 0 && x > 0)
             _Projected_image.at<uint8_t>(y, x) = 255; 
     }
-    fitRectangle(_Projected_image);
+    fitRectangle(_Projected_image, pixel_position);
 }
 
 
-void ObjectPose::fitRectangle(cv::Mat projected_image)
+void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int>> pixel_position)
 {
     RNG rng(12345);
     int thresh = 0.1;
@@ -416,38 +433,45 @@ void ObjectPose::fitRectangle(cv::Mat projected_image)
     // filling small hole due to occlusion
     if(color_string=="red")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate,Red_dilate)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate,Red_dilate)));
     }
     else if(color_string=="blue")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate,Blue_dilate)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate,Blue_dilate)));
     }
     else if(color_string=="green")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        // cv::imshow("green_projected_image", projected_image);
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate, Green_dilate)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate, Green_dilate)));
+        // PostProcessProjectedImage(projected_image, pixel_position);
+        // cv::imshow("green_projected_image_after", projected_image);
+
     }
     else if(color_string=="orange")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(40,40)));
+        // cv::imshow("orange_projected_image", projected_image);
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate,Orange_dilate)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate,Orange_dilate)));
     }
     else if(color_string=="brown")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate,Brown_dilate)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate,Brown_dilate)));
     }
     else if(color_string=="yellow")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+        // cv::imshow("yellow_projected_image", projected_image);
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate,Yellow_dilate)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate,Yellow_dilate)));
+        // cv::imshow("yellow_projected_image_after", projected_image);
     }
     else if(color_string=="Indigo")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate,Indigo_dilate)));
+        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate,Indigo_dilate)));
     }
 
     Canny(projected_image, canny_output, thresh, thresh*10, 3);
@@ -480,6 +504,40 @@ void ObjectPose::fitRectangle(cv::Mat projected_image)
     BackProjectToDominatPlane(RectPoints);
 }
 
+void ObjectPose::PostProcessProjectedImage(cv::Mat& projected_image, std::vector<pair<int, int>> pos_vector)
+{
+    int size_vector = pos_vector.size();
+    int x_temp1, y_temp1, x_temp2, y_temp2;
+    float slope; 
+    int max_x, min_x, min_y, max_y; 
+    for(int i = 0; i < 10000; i++)
+    {
+        int RandIndex1 = rand() % size_vector; 
+        int RandIndex2 = rand() % size_vector; 
+        x_temp1 = std::get<0>(pos_vector[RandIndex1]);
+        y_temp1 = std::get<1>(pos_vector[RandIndex1]);
+        x_temp2 = std::get<0>(pos_vector[RandIndex2]); 
+        y_temp2 = std::get<1>(pos_vector[RandIndex2]);
+        if (y_temp1 != y_temp2)
+        {
+            slope = (x_temp2 - x_temp1) / (y_temp2 - y_temp1);
+            max_x = std::max(x_temp1, x_temp2);
+            max_y = std::max(y_temp1, y_temp2);
+            min_x = std::min(x_temp1, x_temp2);
+            min_y = std::min(y_temp1, y_temp2);
+            int length = max_y - min_y;
+            if(std::abs(slope) > 0.1) 
+            {
+                for(float y = min_y; y < min_y + length;  y++)
+                {
+                    float x = slope*(y-y_temp1) + x_temp1;
+                    projected_image.at<uint8_t>(y,x) = 255; 
+                }
+            }
+        }
+    }
+}
+
 void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
 {
     float a = best_plane.a; 
@@ -506,6 +564,7 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
         max_length = FindBlockHeight(Indigo_cloud, a, b, c, d);
 
     std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> BB_points; 
+    cout << "max length: " << max_length << endl;
     for (int i = 0; i < Rect_points.size(); i++)
     {
         float x = Rect_points[i].x;
@@ -593,11 +652,11 @@ float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, fl
 
     // Discretize max height
     if(max_height > Unit_Cube_L-dist_thresh & max_height < Unit_Cube_L+dist_thresh)
-        max_height = Unit_Cube_L+0.001;
+        max_height = Unit_Cube_L;
     else if(max_height > 2*Unit_Cube_L - dist_thresh & max_height < 2*Unit_Cube_L + dist_thresh)
-        max_height = 2*Unit_Cube_L+0.003;
+        max_height = 2*Unit_Cube_L;
     else if(max_height > 3*Unit_Cube_L - dist_thresh & max_height < 3*Unit_Cube_L + 3*dist_thresh)
-        max_height = 3*Unit_Cube_L+0.004;
+        max_height = 3*Unit_Cube_L;
     else
         max_height = 0; 
 
@@ -772,7 +831,7 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
     std::vector<int> occ_grid(Grid_tot_size);
     for(int i = 0; i<Grid_tot_size; i++)
     {
-        if(Grid_pcd_cnt[i] > ref_cloud.size()/(3*Grid_tot_size))
+        if(Grid_pcd_cnt[i] > ref_cloud.size()/(2*Grid_tot_size))
             occ_grid[i] = 1; 
         else 
             occ_grid[i] = 0; 
@@ -793,9 +852,37 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
         if(occ_grid[i]==1)
             occ_cnt++;
     }
+    /*
+    ************* Pose procsseing of yellow block occ grid **************
+    0 1 2 3 4 5    0 1 2 3 4 5 
+    1 1 1 1 1 1 -> 0 1 1 1 0 1 
+    1 1 1 1 1 0 -> 1 1 1 0 1 0 
+    1 1 0 1 1 1 -> 0 1 0 1 1 1
+     */
+    if(color_string=="yellow")
+    {
+        // case 1
+        if(Grid_tot_size==6 && occ_cnt==6)
+        {
+            occ_grid[0] = 0;
+            occ_grid[4] = 0;
+        }
+
+        // case 2
+        if(Grid_tot_size==6 && occ_cnt==5)
+        {
+            // case 2 - 1
+            if(occ_grid[5]==0)
+                occ_grid[3]=0;
+            // case 2 - 2
+            else if(occ_grid[2]==0)
+                occ_grid[0]=0;
+        }
+    }
 
     /*
-    ************* Pose procsseing of green block occ grid **************
+    ************* Post procsseing of green block occ grid **************
+    0 1 2 3 4 5    0 1 2 3 4 5 
     1 1 1 1 1 0 -> 0 1 1 1 1 0 
     1 0 1 1 1 1 -> 1 0 1 1 0 1
      */
@@ -803,58 +890,136 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
     {
         if(Grid_tot_size==6 && occ_cnt==5)
         {
+            // case 1
             if(occ_grid[1]==0)
                 occ_grid[4]=0;
-            if(occ_grid[5]==0)
+            // case 2
+            else if(occ_grid[5]==0)
                 occ_grid[1]=0;
         }
     }
 
     /* 
     ************* Post procsseing of blue block occ grid **************
-    0 1 2 3 4 5 6 7    0 1 2 3 4 5 6 7
-    0 0 1 1 1 0 1 1 -> 0 0 0 1 1 0 1 1 
-    1 1 0 0 1 1 1 0 -> 0 1 0 0 1 1 1 0
-    1 1 1 1 0 0 1 0 -> 0 1 1 1 0 0 1 0
-    1 1 1 1 1 0 0 0 -> 1 1 0 1 1 0 0 0 
+    0 1 2 3 4 5 6 7     0 1 2 3 4 5 6 7
+    0 0 1 1 1 0 1 1 ->  0 0 0 1 1 0 1 1
+    0 0 1 0 1 1 1 1 ->  0 0 1 0 0 1 1 1 
+    1 0 1 1 0 0 1 1 ->  1 0 1 1 0 0 0 1
+    1 1 1 1 1 0 0 0 ->  1 1 0 1 1 0 0 0
+    1 1 1 0 1 1 0 0 ->  1 1 1 0 0 1 0 0 
+    1 1 1 1 0 0 1 0 ->  0 1 1 1 0 0 1 0
+    1 1 0 0 1 1 1 0 ->  0 1 0 0 1 1 1 0
     */
     if(color_string=="blue")
     {
         if(Grid_tot_size==8 && occ_cnt==5)
         {
+            // case 1
             if(occ_grid[0]==0 && occ_grid[1]==0 && occ_grid[5]==0)
                 occ_grid[2]=0;
-            if(occ_grid[2]==0 && occ_grid[3]==0 && occ_grid[7]==0)
-                occ_grid[0]=0;
-            if(occ_grid[4]==0 && occ_grid[5]==0 && occ_grid[7]==0)
-                occ_grid[0]=0;
-            if(occ_grid[5]==0 && occ_grid[6]==0 && occ_grid[7]==0)
+            // case 2
+            else if(occ_grid[0]==0 && occ_grid[1]==0 && occ_grid[3]==0)
+                occ_grid[4]=0;
+            // case 3
+            else if(occ_grid[1]==0 && occ_grid[4]==0 && occ_grid[5]==0)
+                occ_grid[6]=0;
+            // case 4
+            else if(occ_grid[5]==0 && occ_grid[6]==0 && occ_grid[7]==0)
                 occ_grid[2]=0;
+            // case 5
+            else if(occ_grid[3]==0 && occ_grid[6]==0 && occ_grid[7]==0)
+                occ_grid[4]=0;
+            // case 7 
+            else if(occ_grid[4]==0 && occ_grid[5]==0 && occ_grid[7]==0)
+                occ_grid[0]=0;
+            // case 8 
+            else if(occ_grid[2]==0 && occ_grid[3]==0 && occ_grid[7]==0)
+                occ_grid[0]=0;
         }
     }
+
     /* 
     ************* Post procsseing of brown block occ grid **************
-    0 1 2 3 4 5 6 7    0 1 2 3 4 5 6 7
-    1 1 1 1 0 0 1 0 -> 0 1 1 1 0 0 1 0 
-    1 1 0 0 1 1 1 0 -> 0 1 0 0 1 1 1 0 
-    0 0 1 0 1 1 1 1 -> 0 0 1 0 0 1 1 1
-    1 1 1 1 1 0 0 0 -> 1 1 0 1 1 0 0 0
+         0 1 2 3 4 5 6 7    0 1 2 3 4 5 6 7
+    1    1 1 1 1 0 0 1 0 -> 0 1 1 1 0 0 1 0 
+    2    1 1 0 0 1 1 1 0 -> 0 1 0 0 1 1 1 0
+    3    1 1 1 1 1 0 0 0 -> 1 1 0 1 1 0 0 0
+    4    1 1 1 0 1 1 0 0 -> 1 1 1 0 0 1 0 0
+    5    1 0 0 0 1 1 1 1 -> 1 0 0 0 1 1 0 1
+    6    1 0 1 1 0 0 1 1 -> 1 0 1 1 0 0 0 1 
+    7    0 0 1 0 1 1 1 1 -> 0 0 1 0 0 1 1 1
+    8    0 0 1 1 1 0 1 1 -> 0 0 1 0 0 1 1 1 
     */
-
     if(color_string=="brown")
     {
         if(Grid_tot_size==8 && occ_cnt==5)
         {
-            if(occ_grid[0]==0 && occ_grid[4]==0 && occ_grid[5]==0)
+            // case 1
+            if(occ_grid[4]==0 && occ_grid[5]==0 && occ_grid[7]==0)
                 occ_grid[0]=0;
-            if(occ_grid[2]==0 && occ_grid[3]==0 && occ_grid[7]==0)
+            // case 2
+            else if(occ_grid[2]==0 && occ_grid[3]==0 && occ_grid[7]==0)
                 occ_grid[0]=0;
-            if(occ_grid[0]==0 && occ_grid[1]==0 && occ_grid[3]==0)
-                occ_grid[0]=0;
-            if(occ_grid[5]==0 && occ_grid[6]==0 && occ_grid[7]==0)
-                occ_grid[0]=0;
+            // case 3
+            else if(occ_grid[5]==0 && occ_grid[6]==0 && occ_grid[7]==0)
+                occ_grid[2]=0;
+            // case 4
+            else if(occ_grid[3]==0 && occ_grid[6]==0 && occ_grid[7]==0)
+                occ_grid[4]=0;
+            // case 5
+            else if(occ_grid[1]==0 && occ_grid[4]==0 && occ_grid[5]==0)
+                occ_grid[6]=0;
+            // case 6
+            else if(occ_grid[1]==0 && occ_grid[4]==0 && occ_grid[5]==0)
+                occ_grid[6]=0;
+            // case 7
+            else if(occ_grid[0]==0 && occ_grid[1]==0 && occ_grid[3]==0)
+                occ_grid[4]=0;
+            // case 8
+            else if(occ_grid[0]==0 && occ_grid[1]==0 && occ_grid[5]==0)
+                occ_grid[3]=0;
         }
     }
+
+    /* 
+    ************* Post procsseing of Indigo block occ grid **************
+    0 1 2 3 4 5 6 7     0 1 2 3 4 5 6 7
+    0 0 1 1 1 1 1 1 ->  0 0 0 1 0 1 1 1
+    1 1 0 0 1 1 1 1 ->  0 1 0 0 1 1 0 1
+    1 1 1 1 0 0 1 1 ->  0 1 1 1 0 0 0 1
+    1 1 1 1 1 1 0 0 ->  1 1 0 1 0 1 0 0
+    */
+    if(color_string=="Indigo")
+    {
+        if(Grid_tot_size==8 && occ_cnt==6)
+        {
+            // case 1
+            if(occ_grid[0]==0 && occ_grid[1]==0)
+            {
+                occ_grid[2] = 0; 
+                occ_grid[4] = 0; 
+            }
+            // case 2
+            else if(occ_grid[2]==0 && occ_grid[3]==0)
+            {
+                occ_grid[0] = 0;
+                occ_grid[6] = 0;
+            }
+            // case 3
+            else if(occ_grid[4]==0 && occ_grid[5]==0)
+            {
+                occ_grid[0] = 0;
+                occ_grid[6] = 0;
+            }
+            // case 4
+            else if(occ_grid[6]==0 && occ_grid[7]==0)
+            {
+                occ_grid[2] = 0;
+                occ_grid[4] = 0;
+            }
+        }
+    }
+
     CheckOccGridWithKnownShape(Grid_size, occ_grid);
 }
 
@@ -1054,57 +1219,58 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
 
 
        if((Grid_size[0]==3 & Grid_size[1]==2 & Grid_size[2]==1) || (Grid_size[0]==2 & Grid_size[1]==3 & Grid_size[2]==1)
-           || (Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2))
-       {
-           int tot_occ_grid_cnt=0;
-           for(int i = 0; i < 6; i++)
-               tot_occ_grid_cnt+=occ_grid[i];
-
-           if(tot_occ_grid_cnt==4)
+           || (Grid_size[0]==1 & Grid_size[1]==3 & Grid_size[2]==2) || (Grid_size[0]==3 & Grid_size[1]==1 & Grid_size[2]==2) || 
+              (Grid_size[0]==1 & Grid_size[1]==2 & Grid_size[2]==3) || (Grid_size[0]==2 & Grid_size[1]==1 & Grid_size[2]==3))
            {
-                if(Debug_Object_verbose_flag==1)
-                {
-                    cout << "yellow block detected" << endl;
-                    cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
-                    cout << "Occ grid: " ;
-                    for(int i=0; i<Grid_size[0]*Grid_size[1]*Grid_size[2]; i++)
-                        cout << occ_grid[i] << " " ;
-                    cout << endl;
-                }
-                yellow_Grid = Grid_size;
-                yellow_occ_Grid = occ_grid;
-                BB_info_yellow.clear();
-                for(int k = 0; k < BBinfo_temp.size(); k++)
-                {
-                    pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
-                    pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
-                    BB_info_yellow.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
-                    BB_info_yellow.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
-                }
-                Block_center_temp.clear();
-                Block_center_yellow.clear();
-                GenerateRealSyntheticCloud(yellow_Grid, yellow_occ_Grid, BBinfo_temp);
-                for(int l = 0; l < Block_center_temp.size(); l++)
-                {
-                    pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
-                    Block_center_yellow.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
-                }
-                Red_RectPoints = _RectPoints;
-                for(int y = 0; y < height; y++)
-                {
-                    for(int x = 0; x < width; x++)
+               int tot_occ_grid_cnt=0;
+               for(int i = 0; i < 6; i++)
+                   tot_occ_grid_cnt+=occ_grid[i];
+
+               if(tot_occ_grid_cnt==4)
+               {
+                    if(Debug_Object_verbose_flag==1)
                     {
-                        if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                        cout << "yellow block detected" << endl;
+                        cout << "Grid size: " << Grid_size[0] << " " << Grid_size[1] << " " << Grid_size[2] << endl;
+                        cout << "Occ grid: " ;
+                        for(int i=0; i<Grid_size[0]*Grid_size[1]*Grid_size[2]; i++)
+                            cout << occ_grid[i] << " " ;
+                        cout << endl;
+                    }
+                    yellow_Grid = Grid_size;
+                    yellow_occ_Grid = occ_grid;
+                    BB_info_yellow.clear();
+                    for(int k = 0; k < BBinfo_temp.size(); k++)
+                    {
+                        pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+                        pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+                        BB_info_yellow.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+                        BB_info_yellow.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+                    }
+                    Block_center_temp.clear();
+                    Block_center_yellow.clear();
+                    GenerateRealSyntheticCloud(yellow_Grid, yellow_occ_Grid, BBinfo_temp);
+                    for(int l = 0; l < Block_center_temp.size(); l++)
+                    {
+                        pcl::PointXYZRGB point_temp3 = Block_center_temp[l];
+                        Block_center_yellow.push_back(Point3D{point_temp3.x, point_temp3.y, point_temp3.z});
+                    }
+                    Red_RectPoints = _RectPoints;
+                    for(int y = 0; y < height; y++)
+                    {
+                        for(int x = 0; x < width; x++)
                         {
-                            Total_Projected_image.at<Vec3b>(y, x)[0] = 0;
-                            Total_Projected_image.at<Vec3b>(y, x)[1] = 255;
-                            Total_Projected_image.at<Vec3b>(y, x)[2] = 255;
+                            if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                            {
+                                Total_Projected_image.at<Vec3b>(y, x)[0] = 0;
+                                Total_Projected_image.at<Vec3b>(y, x)[1] = 255;
+                                Total_Projected_image.at<Vec3b>(y, x)[2] = 255;
+                            }
                         }
                     }
-                }
-                for ( int j = 0; j < 4; j++ )
-                    line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
-           }
+                    for ( int j = 0; j < 4; j++ )
+                        line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+               }
            else
            {
                 if(Debug_Object_verbose_flag==1)
