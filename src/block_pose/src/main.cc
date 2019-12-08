@@ -39,21 +39,6 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
     }
 }
 
-/*
-void SystemHandler::preprocess_image(cv::Mat& imRGB)
-{
-    cnt_preprocessing++;
-    for (int y=0; y<height; y++)
-    {
-        for(int x=0; x < width; x++)
-        {
-            //imRGB_processed.at<Vec3f>(y,x)[0] += float(imRGB.at<Vec3b>(y,x)[1]);
-            //imRGB_processed.at<Vec3f>(y,x)[1] += float(imRGB.at<Vec3b>(y,x)[2]);
-            //imRGB_processed.at<Vec3f>(y,x)[2] += float(imRGB.at<Vec3b>(y,x)[2]);
-        }
-    }
-}
-*/
 
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
