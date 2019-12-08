@@ -56,7 +56,7 @@ Pose.CloudAccumIter: 5
 Pose.GridUnitLength: 0.025
 Pose.ThresholdForOccGrid: 0.0125
 # Object Debug Test Paramter
-Pose.DebugObject3D: 1
+Pose.DebugObject3D: 0
 Pose.Test_AllBlock: 0
 Pose.Test_IndividualBlock: 1
 Pose.DebugObjectImshow: 1
@@ -69,13 +69,13 @@ Pose.TestBlue: 1
 Pose.TestBrown: 1
 Pose.TestIndigo: 1
 # Dominant plane space Image dilate parmeter 
-Pose.RedDilate: 10
-Pose.YellowDilate: 15
-Pose.GreenDilate: 10 
-Pose.OrangeDilate: 20
-Pose.BlueDilate: 20
-Pose.BrownDilate: 15
-Pose.IndigoDilate: 10
+Pose.RedDilate: 25
+Pose.YellowDilate: 25
+Pose.GreenDilate: 25 
+Pose.OrangeDilate: 40
+Pose.BlueDilate: 25
+Pose.BrownDilate: 25
+Pose.IndigoDilate: 25
 
 
 #--------------------------------------------------------------------------------------------

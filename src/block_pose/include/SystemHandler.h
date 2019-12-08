@@ -22,6 +22,7 @@
 #include <block_pose/OrangeBlock.h>
 #include <block_pose/IndigoBlock.h>
 #include <geometry_msgs/Point.h>
+#include <std_msgs/Bool.h>
 
 namespace enc = sensor_msgs::image_encodings;
 static int Frame_count = 0;
@@ -40,6 +41,7 @@ public:
 
     SystemHandler(const string &strConfig)
     {
+        system_mode = false;
         cv::FileStorage fconfig(strConfig.c_str(), cv::FileStorage::READ);
         if(!fconfig.isOpened())
         {
@@ -171,7 +173,13 @@ public:
         //Topic you want to subscribe
         sub_color = nh.subscribe("/camera/color/image_raw", 100, &SystemHandler::ImageCallback, this);
         sub_depth = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 100, &SystemHandler::DepthCallback, this);
+        sub_goal = nh.subscribe("/mainhandler/goal_watch", 100, &SystemHandler::Goalcallback, this);
 	}
+
+    void Goalcallback(const std_msgs::Bool msg)
+    {
+        system_mode = msg.data;
+    }
 
 	void ImageCallback(const sensor_msgs::ImageConstPtr& msg)
 	{
@@ -261,6 +269,7 @@ public:
     void get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<cv::Mat>& output_mask);
 
 private:
+    bool system_mode;
     // hyper parameter
     float fx;
     float fy;
@@ -319,6 +328,7 @@ private:
     // Subscriber
     ros::Subscriber sub_color;
     ros::Subscriber sub_depth;
+    ros::Subscriber sub_goal;
     // Publisher
     ros::Publisher pub_red;
     ros::Publisher pub_yellow;

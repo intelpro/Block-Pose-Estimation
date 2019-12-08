@@ -62,6 +62,7 @@ find_package(OpenCV 3.0)
    OrangeBlock.msg
    IndigoBlock.msg
    GreenBlock.msg
+   Block.msg
  )
 
 ## Generate services in the 'srv' folder

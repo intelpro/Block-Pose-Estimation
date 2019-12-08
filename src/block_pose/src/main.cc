@@ -58,59 +58,63 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
-    std::vector<cv::Mat> Mask_vector(8);
-    std::vector<cv::Mat> Mask_vector_refined(8);
-    std::vector<cv::Mat> Unknown_Objmask(7);
-
-    cv::Mat pCloud = cv::Mat::zeros(height, width, CV_32FC3);
-    cv::Mat pCloud_inlier = cv::Mat::zeros(height, width, CV_32FC3);
-
-    cv::Mat pointCloud = PlaneFinder->Depth2pcd(image_Depth);
-    cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3);
-    Plane::Plane_model best_plane = PlaneFinder->RunRansac(pCloud_inlier);
-    cv::Mat pCloud_outlier = cv::Mat::zeros(height, width, CV_32FC3);
-
-    for (int y=0; y<height; y++)
+    if(system_mode==1)
     {
-        for(int x = 0; x < width; x++)
+        std::vector<cv::Mat> Mask_vector(8);
+        std::vector<cv::Mat> Mask_vector_refined(8);
+        std::vector<cv::Mat> Unknown_Objmask(7);
+
+        cv::Mat pCloud = cv::Mat::zeros(height, width, CV_32FC3);
+        cv::Mat pCloud_inlier = cv::Mat::zeros(height, width, CV_32FC3);
+
+        cv::Mat pointCloud = PlaneFinder->Depth2pcd(image_Depth);
+        cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3);
+        Plane::Plane_model best_plane = PlaneFinder->RunRansac(pCloud_inlier);
+        cv::Mat pCloud_outlier = cv::Mat::zeros(height, width, CV_32FC3);
+
+        for (int y=0; y<height; y++)
         {
-            pCloud_outlier.at<cv::Vec3f>(y,x) = pointCloud.at<cv::Vec3f>(y,x) - pCloud_inlier.at<cv::Vec3f>(y,x);
-            if(imDepth.at<uint16_t>(y,x) == 0)
-                pCloud_outlier.at<cv::Vec3f>(y,x) = 0;
+            for(int x = 0; x < width; x++)
+            {
+                pCloud_outlier.at<cv::Vec3f>(y,x) = pointCloud.at<cv::Vec3f>(y,x) - pCloud_inlier.at<cv::Vec3f>(y,x);
+                if(imDepth.at<uint16_t>(y,x) == 0)
+                    pCloud_outlier.at<cv::Vec3f>(y,x) = 0;
+            }
         }
+
+        cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
+        PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
+
+        cv::Mat masked_image = imRGB_processed.clone();
+        Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
+        ExtractObjectMask(masked_image, Unknown_Objmask);
+        Identify_Object(imRGB_processed, Unknown_Objmask, Mask_vector);
+        get_cleanMask(Mask_vector, Mask_vector_refined);
+
+        cv::Mat total_mask = Mask_vector_refined[0] + Mask_vector_refined[1] + Mask_vector_refined[2] +
+                            Mask_vector_refined[3] + Mask_vector_refined[4] + Mask_vector_refined[5]+ Mask_vector_refined[6];
+
+        if(DepthImgShow_flag==1)
+        {
+            double min;
+            double max;
+            cv::minMaxIdx(imDepth, &min, &max);
+            cv::Mat adjMap;
+            cv::convertScaleAbs(imDepth, adjMap, 255/0.01);
+            cv::Mat falseColorsMap;
+            cv::imshow("Depth image", adjMap);
+            waitKey(2);
+        }
+
+        if(ColorDebug_flag==1)
+        {
+            cv::hconcat(imColorDebug, Mask_vector_refined[7], imColorDebug);
+            cv::imshow("Color_debug", imColorDebug);
+            waitKey(2);
+        }
+        PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 
-    cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
-    PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
-
-    cv::Mat masked_image = imRGB_processed.clone();
-	Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
-    ExtractObjectMask(masked_image, Unknown_Objmask);
-    Identify_Object(imRGB_processed, Unknown_Objmask, Mask_vector);
-    get_cleanMask(Mask_vector, Mask_vector_refined);
-
-    cv::Mat total_mask = Mask_vector_refined[0] + Mask_vector_refined[1] + Mask_vector_refined[2] +
-                         Mask_vector_refined[3] + Mask_vector_refined[4] + Mask_vector_refined[5]+ Mask_vector_refined[6];
-
-    if(DepthImgShow_flag==1)
-    {
-        double min;
-        double max;
-        cv::minMaxIdx(imDepth, &min, &max);
-        cv::Mat adjMap;
-        cv::convertScaleAbs(imDepth, adjMap, 255/0.01);
-        cv::Mat falseColorsMap;
-        cv::imshow("Depth image", adjMap);
-        waitKey(2);
-    }
-
-    if(ColorDebug_flag==1)
-    {
-        cv::hconcat(imColorDebug, Mask_vector_refined[7], imColorDebug);
-        cv::imshow("Color_debug", imColorDebug);
-        waitKey(2);
-    }
-    PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
 }
 
 void SystemHandler::ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& Object_mask)
