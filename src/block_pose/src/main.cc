@@ -217,7 +217,72 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB)
     cvtColor(image_RGB, gray_image, COLOR_BGR2GRAY); // convert BGR2GRAY
 
     int data_cnt = 0;
-    std::vector<pair<float, float>> pixel_pos;
+ //   std::vector<pair<float, float>> kmeans_vec;
+    std::vector<pair<int, int>> pixel_pos;
+
+    int cx=320;
+    int cy=240;
+    int bx=10;
+    int by=10;
+    int sx=cx, sy=cy;
+    bool check_flg=false;
+    while(!check_flg) {
+        check_flg=false;
+        for(int i=cy-by; i<=cy+by; i++)
+            for(int j=cx-bx; j<=cx+bx; j++){
+                if(gray_image.at<uint8_t>(i, j)!=0){
+                    sx=j;
+                    sy=i;
+                    check_flg=true;
+                }
+        }
+        bx+=10;
+        by+=10;
+    }
+
+    int x=sx; 
+    int y=sy;
+    pixel_pos.push_back(make_pair(y,x));
+    cv::Mat object = cv::Mat::zeros(height, width, CV_8UC1);
+    int count=0;
+    int count1=1;
+    while(count!=count1)
+    {
+        y=std::get<0>(pixel_pos[count]);
+        x=std::get<1>(pixel_pos[count]);
+        if(gray_image.at<uint8_t>(y+1,x)!=0){
+            if(object.at<uint8_t>(y+1,x) != 255){
+                pixel_pos.push_back(make_pair(y+1,x));
+                object.at<uint8_t>(y+1,x) = 255;
+                count1++;
+            }
+        }
+        if(gray_image.at<uint8_t>(y,x-1)!=0){
+            if(object.at<uint8_t>(y,x-1) != 255){
+                pixel_pos.push_back(make_pair(y,x-1));
+                object.at<uint8_t>(y,x-1) = 255;
+                count1++;
+            }
+        }        
+        if(gray_image.at<uint8_t>(y-1,x)!=0){
+            if(object.at<uint8_t>(y-1,x) != 255) {
+                pixel_pos.push_back(make_pair(y-1,x));
+                object.at<uint8_t>(y-1,x) = 255;
+                count1++;
+                }
+        }
+        if(gray_image.at<uint8_t>(y,x+1)!=0){
+             if(object.at<uint8_t>(y,x+1) != 255) {
+                pixel_pos.push_back(make_pair(y,x+1));
+                object.at<uint8_t>(y,x+1) = 255;
+                count1++;    
+             }
+        }
+        count++;       
+    }
+
+
+ /*
     for(int y=0; y<height; y++)
     {
         for(int x=0; x<width; x++)
@@ -226,16 +291,18 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB)
             {
                 data_cnt++;
                 float dist = std::sqrt(std::pow(y-240,2) + std::pow(x-320,2));
-                float hue = 0.1*float(hsv_image.at<Vec3b>(y,x)[0]);
-                pixel_pos.push_back(make_pair(dist,hue));
+                float hue = 10*float(hsv_image.at<Vec3b>(y,x)[0]);
+                kmeans_vec.push_back(make_pair(dist,hue));
+                pixel_pos.push_back(make_pair(y,x));
             }
         }
     }
 
+
     Mat p = Mat::zeros(data_cnt, 2, CV_32F);
     for(int i=0; i<data_cnt; i++) {
-        p.at<float>(i,0) = std::get<0>(pixel_pos[i]);
-        p.at<float>(i,1) = std::get<1>(pixel_pos[i]);
+        p.at<float>(i,0) = std::get<0>(kmeans_vec[i]);
+        p.at<float>(i,1) = std::get<1>(kmeans_vec[i]);
     }
 
     int K = 2;
@@ -251,6 +318,7 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB)
         if(bestLabels.at<int>(i)==0)
             object.at<uint8_t>(y,x) = 255;
     }
+    */
 
     cv::imshow("mask", object);
 }
