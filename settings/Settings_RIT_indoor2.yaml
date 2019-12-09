@@ -26,8 +26,8 @@ DepthMapFactor: 1000
 #--------------------------------------------------------------------------------------------
 
 Crop.xmin: 100
-Crop.xmax: 640
-Crop.ymin: 0
+Crop.xmax: 550
+Crop.ymin: 40
 Crop.ymax: 480
 
 #--------------------------------------------------------------------------------------------
@@ -69,13 +69,13 @@ Pose.TestBlue: 1
 Pose.TestBrown: 1
 Pose.TestIndigo: 1
 # Dominant plane space Image dilate parmeter 
-Pose.RedDilate: 25
-Pose.YellowDilate: 25
-Pose.GreenDilate: 25 
+Pose.RedDilate: 30
+Pose.YellowDilate: 40
+Pose.GreenDilate: 30 
 Pose.OrangeDilate: 40
-Pose.BlueDilate: 25
-Pose.BrownDilate: 25
-Pose.IndigoDilate: 25
+Pose.BlueDilate: 40
+Pose.BrownDilate: 30
+Pose.IndigoDilate: 30
 
 
 #--------------------------------------------------------------------------------------------
@@ -117,8 +117,8 @@ Green_color.value_1_1: 255
 Green_color.value_2_0: 0
 Green_color.value_2_1: 200
 # Blue color
-Blue_color.value_0_0: 80
-Blue_color.value_0_1: 160
+Blue_color.value_0_0: 70
+Blue_color.value_0_1: 130
 Blue_color.value_1_0: 100
 Blue_color.value_1_1: 255
 Blue_color.value_2_0: 0
