@@ -100,6 +100,38 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 
+    else if(system_mode==2)
+    {
+        std::vector<cv::Mat> Mask_vector(8);
+        std::vector<cv::Mat> Mask_vector_refined(8);
+        std::vector<cv::Mat> Unknown_Objmask(7);
+
+        cv::Mat pCloud = cv::Mat::zeros(height, width, CV_32FC3);
+        cv::Mat pCloud_inlier = cv::Mat::zeros(height, width, CV_32FC3);
+
+        cv::Mat pointCloud = PlaneFinder->Depth2pcd(image_Depth);
+        cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3);
+        Plane::Plane_model best_plane = PlaneFinder->RunRansac(pCloud_inlier);
+        cv::Mat pCloud_outlier = cv::Mat::zeros(height, width, CV_32FC3);
+
+        for (int y=0; y<height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                pCloud_outlier.at<cv::Vec3f>(y,x) = pointCloud.at<cv::Vec3f>(y,x) - pCloud_inlier.at<cv::Vec3f>(y,x);
+                if(imDepth.at<uint16_t>(y,x) == 0)
+                    pCloud_outlier.at<cv::Vec3f>(y,x) = 0;
+            }
+        }
+
+        cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
+        PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
+
+        cv::Mat masked_image = imRGB_processed.clone();
+        Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
+
+        ExtractObjectMask2(masked_image);
+    }
 }
 
 void SystemHandler::ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& Object_mask)
@@ -177,6 +209,52 @@ void SystemHandler::ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& O
     Object_mask[5] = object6.clone();
     Object_mask[6] = object7.clone();
 }
+
+void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB)
+{
+    Mat hsv_image, gray_image;
+    cvtColor(image_RGB, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
+    cvtColor(image_RGB, gray_image, COLOR_BGR2GRAY); // convert BGR2GRAY
+
+    int data_cnt = 0;
+    std::vector<pair<float, float>> pixel_pos;
+    for(int y=0; y<height; y++)
+    {
+        for(int x=0; x<width; x++)
+        {
+            if(gray_image.at<uint8_t>(y,x)!=0)
+            {
+                data_cnt++;
+                float dist = std::sqrt(std::pow(y-240,2) + std::pow(x-320,2));
+                float hue = 0.1*float(hsv_image.at<Vec3b>(y,x)[0]);
+                pixel_pos.push_back(make_pair(dist,hue));
+            }
+        }
+    }
+
+    Mat p = Mat::zeros(data_cnt, 2, CV_32F);
+    for(int i=0; i<data_cnt; i++) {
+        p.at<float>(i,0) = std::get<0>(pixel_pos[i]);
+        p.at<float>(i,1) = std::get<1>(pixel_pos[i]);
+    }
+
+    int K = 2;
+    Mat bestLabels, centers, clustered;
+    cv::kmeans(p, K, bestLabels, TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 100, 1), 3, KMEANS_PP_CENTERS, centers);
+
+    cv::Mat object = cv::Mat::zeros(height, width, CV_8UC1);
+
+    for(int i=0; i < data_cnt; i++)
+    {
+        int y = std::get<0>(pixel_pos[i]);
+        int x = std::get<1>(pixel_pos[i]);
+        if(bestLabels.at<int>(i)==0)
+            object.at<uint8_t>(y,x) = 255;
+    }
+
+    cv::imshow("mask", object);
+}
+
 
 void SystemHandler::get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<cv::Mat>& output_mask)
 {

@@ -23,6 +23,7 @@
 #include <block_pose/IndigoBlock.h>
 #include <geometry_msgs/Point.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Int32.h>
 
 namespace enc = sensor_msgs::image_encodings;
 static int Frame_count = 0;
@@ -41,7 +42,7 @@ public:
 
     SystemHandler(const string &strConfig)
     {
-        system_mode = false;
+        system_mode = 0;
         cv::FileStorage fconfig(strConfig.c_str(), cv::FileStorage::READ);
         if(!fconfig.isOpened())
         {
@@ -176,7 +177,7 @@ public:
         sub_goal = nh.subscribe("/mainhandler/goal_watch", 100, &SystemHandler::Goalcallback, this);
 	}
 
-    void Goalcallback(const std_msgs::Bool msg)
+    void Goalcallback(const std_msgs::Int32 msg)
     {
         system_mode = msg.data;
     }
@@ -265,11 +266,12 @@ public:
     void ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Mask_vector);
     void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
     void ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& Object_mask);
+    void ExtractObjectMask2(cv::Mat image_RGB);
     void Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_Objmask, std::vector<cv::Mat>& Object_mask);
     void get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<cv::Mat>& output_mask);
 
 private:
-    bool system_mode;
+    int system_mode;
     // hyper parameter
     float fx;
     float fy;
