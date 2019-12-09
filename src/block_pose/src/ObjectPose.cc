@@ -895,7 +895,7 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
                 occ_grid[4]=0;
             // case 2
             else if(occ_grid[5]==0)
-                occ_grid[1]=0;
+                occ_grid[0]=0;
         }
     }
 
@@ -903,7 +903,8 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
     ************* Post procsseing of blue block occ grid **************
     0 1 2 3 4 5 6 7     0 1 2 3 4 5 6 7
     0 0 1 1 1 0 1 1 ->  0 0 0 1 1 0 1 1
-    0 0 1 0 1 1 1 1 ->  0 0 1 0 0 1 1 1 
+    0 0 1 0 1 1 1 1 ->  0 0 1 0 0 1 1 1
+    1 0 0 0 1 1 1 1 ->  1 0 0 0 1 1 0 1 
     1 0 1 1 0 0 1 1 ->  1 0 1 1 0 0 0 1
     1 1 1 1 1 0 0 0 ->  1 1 0 1 1 0 0 0
     1 1 1 0 1 1 0 0 ->  1 1 1 0 0 1 0 0 
@@ -928,6 +929,9 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
                 occ_grid[2]=0;
             // case 5
             else if(occ_grid[3]==0 && occ_grid[6]==0 && occ_grid[7]==0)
+                occ_grid[4]=0;
+            // case 6 
+            else if(occ_grid[1]==0 && occ_grid[2]==0 && occ_grid[3]==0)
                 occ_grid[4]=0;
             // case 7 
             else if(occ_grid[4]==0 && occ_grid[5]==0 && occ_grid[7]==0)
