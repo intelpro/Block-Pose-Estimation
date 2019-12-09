@@ -42,7 +42,7 @@ public:
 
     SystemHandler(const string &strConfig)
     {
-        system_mode = 0;
+        system_mode = 10;
         cv::FileStorage fconfig(strConfig.c_str(), cv::FileStorage::READ);
         if(!fconfig.isOpened())
         {
@@ -266,9 +266,10 @@ public:
     void ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Mask_vector);
     void Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name);
     void ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& Object_mask);
-    void ExtractObjectMask2(cv::Mat image_RGB);
+    void ExtractObjectMask2(cv::Mat image_RGB, cv::Mat& object);
     void Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_Objmask, std::vector<cv::Mat>& Object_mask);
     void get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<cv::Mat>& output_mask);
+    void getOutputMask(std::vector<cv::Mat>& output_mask, cv::Mat object_Mask, int color_info);
 
 private:
     int system_mode;

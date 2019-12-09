@@ -85,14 +85,6 @@ class ObjectPose{
         cv::Mat Total_Projected_image;
         cv::Mat Projected_image_for_debug;
         cv::Mat _Projected_image;
-
-      protected:
-        int Accum_iter; 
-        int Accum_idx; 
-        int height; 
-        int width; 
-        int index; 
-        int box_flag;
         // flag for test
         int Test_all_flag;
         int Test_Individual_flag;
@@ -103,6 +95,14 @@ class ObjectPose{
         int Test_brown_flag;
         int Test_orange_flag;
         int Test_indigo_flag;
+
+      protected:
+        int Accum_iter; 
+        int Accum_idx; 
+        int height; 
+        int width; 
+        int index; 
+        int box_flag;
         // dilate constant 
         int Red_dilate;
         int Yellow_dilate;

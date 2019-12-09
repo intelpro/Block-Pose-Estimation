@@ -43,7 +43,7 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
-    if(system_mode==1)
+    if(system_mode==10)
     {
         std::vector<cv::Mat> Mask_vector(8);
         std::vector<cv::Mat> Mask_vector_refined(8);
@@ -100,14 +100,90 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 
-    else if(system_mode==2)
+    else if(system_mode!=10)
     {
-        std::vector<cv::Mat> Mask_vector(8);
-        std::vector<cv::Mat> Mask_vector_refined(8);
-        std::vector<cv::Mat> Unknown_Objmask(7);
+        if(system_mode==0)
+        {
+            PoseFinder->Test_red_flag = 1;
+            PoseFinder->Test_yellow_flag = 0;
+            PoseFinder->Test_green_flag = 0;
+            PoseFinder->Test_blue_flag = 0;
+            PoseFinder->Test_brown_flag = 0;
+            PoseFinder->Test_orange_flag = 0;
+            PoseFinder->Test_indigo_flag = 0;
+        }
+
+        else if(system_mode==1)
+        {
+            PoseFinder->Test_red_flag = 0;
+            PoseFinder->Test_brown_flag = 1;
+            PoseFinder->Test_indigo_flag = 0;
+            PoseFinder->Test_yellow_flag = 0;
+            PoseFinder->Test_green_flag = 0;
+            PoseFinder->Test_blue_flag = 0;
+            PoseFinder->Test_orange_flag = 0;
+        }
+
+        else if(system_mode==2)
+        {
+            PoseFinder->Test_red_flag = 0;
+            PoseFinder->Test_brown_flag = 0; 
+            PoseFinder->Test_indigo_flag = 1;
+            PoseFinder->Test_yellow_flag = 0;
+            PoseFinder->Test_green_flag = 0;
+            PoseFinder->Test_blue_flag = 0;
+            PoseFinder->Test_orange_flag = 0;
+        }
+
+        else if(system_mode==3)
+        {
+            PoseFinder->Test_red_flag = 0;
+            PoseFinder->Test_brown_flag = 0; 
+            PoseFinder->Test_indigo_flag = 0;
+            PoseFinder->Test_yellow_flag = 1;
+            PoseFinder->Test_green_flag = 0;
+            PoseFinder->Test_blue_flag = 0;
+            PoseFinder->Test_orange_flag = 0;
+        }
+
+        else if(system_mode==4)
+        {
+            PoseFinder->Test_red_flag = 0;
+            PoseFinder->Test_brown_flag = 0; 
+            PoseFinder->Test_indigo_flag = 0;
+            PoseFinder->Test_yellow_flag = 0;
+            PoseFinder->Test_green_flag = 1;
+            PoseFinder->Test_blue_flag = 0;
+            PoseFinder->Test_orange_flag = 0;
+        }
+
+        else if(system_mode==5)
+        {
+            PoseFinder->Test_red_flag = 0;
+            PoseFinder->Test_brown_flag = 0; 
+            PoseFinder->Test_indigo_flag = 0;
+            PoseFinder->Test_yellow_flag = 0;
+            PoseFinder->Test_green_flag = 0;
+            PoseFinder->Test_blue_flag = 1;
+            PoseFinder->Test_orange_flag = 0;
+        }
+
+        else if(system_mode==6)
+        {
+            PoseFinder->Test_red_flag = 0;
+            PoseFinder->Test_brown_flag = 0; 
+            PoseFinder->Test_indigo_flag = 0;
+            PoseFinder->Test_yellow_flag = 0;
+            PoseFinder->Test_green_flag = 0;
+            PoseFinder->Test_blue_flag = 0;
+            PoseFinder->Test_orange_flag = 1;
+        }
+
+        cv::Mat object_mask = cv::Mat::zeros(height, width, CV_8UC1);
 
         cv::Mat pCloud = cv::Mat::zeros(height, width, CV_32FC3);
         cv::Mat pCloud_inlier = cv::Mat::zeros(height, width, CV_32FC3);
+        std::vector<cv::Mat> Mask_vector_refined(8);
 
         cv::Mat pointCloud = PlaneFinder->Depth2pcd(image_Depth);
         cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3);
@@ -129,8 +205,9 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 
         cv::Mat masked_image = imRGB_processed.clone();
         Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
-
-        ExtractObjectMask2(masked_image);
+        ExtractObjectMask2(masked_image, object_mask);
+        getOutputMask(Mask_vector_refined, object_mask, system_mode);
+        PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 }
 
@@ -148,8 +225,7 @@ void SystemHandler::ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& O
     for(int y=0; y<height; y++)
     {
         for(int x=0; x<width; x++)
-        {
-            if(imGray.at<uint8_t>(y,x)!=0)
+        { if(imGray.at<uint8_t>(y,x)!=0)
             {
                 data_cnt++;
                 pixel_pos.push_back(make_pair(int(y), int(x)));
@@ -210,15 +286,18 @@ void SystemHandler::ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& O
     Object_mask[6] = object7.clone();
 }
 
-void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB)
+void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB, cv::Mat& object)
 {
     Mat hsv_image, gray_image;
     cvtColor(image_RGB, hsv_image, COLOR_BGR2HSV); // convert BGR2HSV
     cvtColor(image_RGB, gray_image, COLOR_BGR2GRAY); // convert BGR2GRAY
 
     int data_cnt = 0;
- //   std::vector<pair<float, float>> kmeans_vec;
     std::vector<pair<int, int>> pixel_pos;
+
+    // morphological opening (remove small objects from the foreground)
+    erode(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    dilate(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
 
     int cx=320;
     int cy=240;
@@ -243,7 +322,6 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB)
     int x=sx; 
     int y=sy;
     pixel_pos.push_back(make_pair(y,x));
-    cv::Mat object = cv::Mat::zeros(height, width, CV_8UC1);
     int count=0;
     int count1=1;
     while(count!=count1)
@@ -281,48 +359,99 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB)
         count++;       
     }
 
-
- /*
-    for(int y=0; y<height; y++)
-    {
-        for(int x=0; x<width; x++)
-        {
-            if(gray_image.at<uint8_t>(y,x)!=0)
-            {
-                data_cnt++;
-                float dist = std::sqrt(std::pow(y-240,2) + std::pow(x-320,2));
-                float hue = 10*float(hsv_image.at<Vec3b>(y,x)[0]);
-                kmeans_vec.push_back(make_pair(dist,hue));
-                pixel_pos.push_back(make_pair(y,x));
-            }
-        }
-    }
-
-
-    Mat p = Mat::zeros(data_cnt, 2, CV_32F);
-    for(int i=0; i<data_cnt; i++) {
-        p.at<float>(i,0) = std::get<0>(kmeans_vec[i]);
-        p.at<float>(i,1) = std::get<1>(kmeans_vec[i]);
-    }
-
-    int K = 2;
-    Mat bestLabels, centers, clustered;
-    cv::kmeans(p, K, bestLabels, TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 100, 1), 3, KMEANS_PP_CENTERS, centers);
-
-    cv::Mat object = cv::Mat::zeros(height, width, CV_8UC1);
-
-    for(int i=0; i < data_cnt; i++)
-    {
-        int y = std::get<0>(pixel_pos[i]);
-        int x = std::get<1>(pixel_pos[i]);
-        if(bestLabels.at<int>(i)==0)
-            object.at<uint8_t>(y,x) = 255;
-    }
-    */
-
     cv::imshow("mask", object);
 }
 
+void SystemHandler::getOutputMask(std::vector<cv::Mat>& output_mask, cv::Mat object_Mask, int color_info)
+{
+    cv::Mat display_window = cv::Mat::zeros(height, width, CV_8UC3);
+    int index = 0;
+    if(color_info==0) // red
+        index = 0;
+    else if(color_info==1) // brown
+        index = 4;
+    else if(color_info==2) // purple
+        index = 6;
+    else if(color_info==3) // yellow
+        index = 1;
+    else if(color_info==4) // green
+        index = 2;
+    else if(color_info==5) // blue
+        index = 3;
+    else if(color_info==6) // orange
+        index = 5;
+    for(int i=0; i<output_mask.size()-1; i++)
+    {
+        cv::Mat temp_mask = cv::Mat::zeros(height, width, CV_8UC1);
+        if(index==i)
+            output_mask[i] = object_Mask.clone();
+        else
+            output_mask[i] = temp_mask.clone();
+    }
+
+    dilate(object_Mask, object_Mask, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    erode(object_Mask, object_Mask, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+
+    // morphological closing (fill small holes in the foreground)
+    erode(object_Mask, object_Mask, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    dilate(object_Mask, object_Mask, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+
+    for(int y=0; y < height; y++)
+    {
+        for(int x=0; x < width; x++)
+        {
+            if(index == 0 && object_Mask.at<uint8_t>(y,x) == 255 && Red_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 0;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
+
+            if(index == 1 & object_Mask.at<uint8_t>(y,x) == 255 && Yellow_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 255;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
+
+            if(index == 2 && object_Mask.at<uint8_t>(y,x) == 255 && Green_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 255;
+                display_window.at<Vec3b>(y,x)[2] = 0;
+            }
+
+            if(index == 3 && object_Mask.at<uint8_t>(y,x) == 255 && Blue_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 255;
+                display_window.at<Vec3b>(y,x)[1] = 0;
+                display_window.at<Vec3b>(y,x)[2] = 0;
+            }
+
+            if(index == 4 && object_Mask.at<uint8_t>(y,x) == 255 && Brown_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 50;
+                display_window.at<Vec3b>(y,x)[1] = 60;
+                display_window.at<Vec3b>(y,x)[2] = 72;
+            }
+
+            if(index == 5 && object_Mask.at<uint8_t>(y,x) == 255 && Orange_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 0;
+                display_window.at<Vec3b>(y,x)[1] = 165;
+                display_window.at<Vec3b>(y,x)[2] = 255;
+            }
+
+            if(index == 6 && object_Mask.at<uint8_t>(y,x) == 255 && Indigo_imshow_flag==1)
+            {
+                display_window.at<Vec3b>(y,x)[0] = 100;
+                display_window.at<Vec3b>(y,x)[1] = 50;
+                display_window.at<Vec3b>(y,x)[2] = 40;
+            }
+        }
+    }
+    output_mask[7] = display_window.clone();
+}
 
 void SystemHandler::get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<cv::Mat>& output_mask)
 {
