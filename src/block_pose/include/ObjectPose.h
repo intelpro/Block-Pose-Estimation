@@ -43,6 +43,7 @@ class ObjectPose{
         void SetIndividualMode(int color_info);
         void Save_BBinfo();
         void ClearVariable();
+        void CloudClear();
         // Occupany grid size
         std::vector<int> red_Grid;
         std::vector<int> yellow_Grid;

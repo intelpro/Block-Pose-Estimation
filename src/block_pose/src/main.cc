@@ -123,6 +123,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         PoseFinder->Test_all_flag = 0;
         PoseFinder->SetIndividualMode(system_mode);
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
+        PoseFinder->CloudClear();
     }
 
     if(DepthImgShow_flag==1 && system_mode!=7)
@@ -1043,7 +1044,6 @@ void SystemHandler::Publish_Message()
     Indigo_msg.Occupancy_Grid.clear();
     Indigo_msg.BB_Points.clear();
     Indigo_msg.Block_center_Points.clear();
-    PoseFinder->ClearVariable();
 }
 
 void SystemHandler::Show_Results(cv::Mat& pointCloud, cv::Mat RGB_image_original, cv::Mat RGB_masked, std::string window_name)

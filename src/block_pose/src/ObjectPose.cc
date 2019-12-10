@@ -2211,6 +2211,16 @@ void ObjectPose::Save_BBinfo()
     }
 }
 
+void ObjectPose::CloudClear()
+{
+    red_cloud.clear();
+    yellow_cloud.clear();
+    green_cloud.clear();
+    blue_cloud.clear();
+    brown_cloud.clear();
+    orange_cloud.clear();
+    Indigo_cloud.clear();
+}
 
 void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector) 
 {
@@ -2259,13 +2269,6 @@ void ObjectPose::CloudView(pcl::PointCloud<pcl::PointXYZRGB>::Ptr in_cloud, std:
 
 void ObjectPose::ClearVariable()
 {
-    red_cloud.clear();
-    yellow_cloud.clear();
-    green_cloud.clear();
-    blue_cloud.clear();
-    brown_cloud.clear();
-    orange_cloud.clear();
-    Indigo_cloud.clear();
     BBinfo_temp.clear();
     red_Grid.clear();
     yellow_Grid.clear();
