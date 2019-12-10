@@ -32,6 +32,8 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     best_plane = plane->cur_best_plane;
     box_flag=0;
     cv::Mat _Projected_image = cv::Mat::zeros(height, width, CV_8UC1);
+    // system mode(1 for all color, 0 for individual color)
+    system_mode = 1; 
     // initilaize Grid vector
     std::vector<int> red_Grid(3);
     std::vector<int> yellow_Grid(3);
@@ -104,6 +106,103 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     cout << "Indigo Dilate:" << Indigo_dilate << endl;
     cout << "DEBUG IMSHOW FLAG: " << Debug_Object_imshow << endl;
     cout << "DEBUG VERBOSE FLAG: " << Debug_Object_verbose_flag << endl;
+}
+
+void ObjectPose::SetIndividualMode(int color_info)
+{
+    if(color_info==10)
+        system_mode = 1; // all color_mode
+    else  
+        system_mode = 0; // individual color mode
+
+    if(color_info==0) // red
+    {
+        Test_red_flag = 1;
+        Test_brown_flag = 0;
+        Test_indigo_flag = 0;
+        Test_yellow_flag = 0;
+        Test_green_flag = 0;
+        Test_blue_flag = 0;
+        Test_orange_flag = 0;
+    }
+
+    else if(color_info==1) // brown
+    {
+        Test_red_flag = 0;
+        Test_brown_flag = 1;
+        Test_indigo_flag = 0;
+        Test_yellow_flag = 0;
+        Test_green_flag = 0;
+        Test_blue_flag = 0;
+        Test_orange_flag = 0;
+    }
+
+    else if(color_info==1) // brown
+    {
+        Test_red_flag = 0;
+        Test_brown_flag = 1;
+        Test_indigo_flag = 0;
+        Test_yellow_flag = 0;
+        Test_green_flag = 0;
+        Test_blue_flag = 0;
+        Test_orange_flag = 0;
+    }
+
+    else if(color_info==2) // Indigo
+    {
+        Test_red_flag = 0;
+        Test_brown_flag = 0;
+        Test_indigo_flag = 1;
+        Test_yellow_flag = 0;
+        Test_green_flag = 0;
+        Test_blue_flag = 0;
+        Test_orange_flag = 0;
+    }
+
+    else if(color_info==3) // yellow
+    {
+        Test_red_flag = 0;
+        Test_brown_flag = 0;
+        Test_indigo_flag = 0;
+        Test_yellow_flag = 1;
+        Test_green_flag = 0;
+        Test_blue_flag = 0;
+        Test_orange_flag = 0;
+    }
+
+    else if(color_info==4) // green
+    {
+        Test_red_flag = 0;
+        Test_brown_flag = 0;
+        Test_indigo_flag = 0;
+        Test_yellow_flag = 0;
+        Test_green_flag = 1;
+        Test_blue_flag = 0;
+        Test_orange_flag = 0;
+    }
+
+    else if(color_info==5) // blue
+    {
+        Test_red_flag = 0;
+        Test_brown_flag = 0;
+        Test_indigo_flag = 0;
+        Test_yellow_flag = 0;
+        Test_green_flag = 0;
+        Test_blue_flag = 1;
+        Test_orange_flag = 0;
+    }
+
+    else if(color_info==6) // orange
+    {
+        Test_red_flag = 0;
+        Test_brown_flag = 0;
+        Test_indigo_flag = 0;
+        Test_yellow_flag = 0;
+        Test_green_flag = 0;
+        Test_blue_flag = 0;
+        Test_orange_flag = 1;
+    }
+
 }
 
 void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat> &Mask)
@@ -289,6 +388,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
     {
         if(Test_all_flag==1)
         {
+            cout << "-------------------- Object Detction Only Mode --------------------" << endl;
             ProjectToDominantPlane(red_cloud, "red");
             ProjectToDominantPlane(yellow_cloud, "yellow");
             ProjectToDominantPlane(green_cloud, "green");
@@ -555,16 +655,13 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
     else if(color_string=="yellow")
         max_length = FindBlockHeight(yellow_cloud, a, b, c, d);
     else if(color_string=="orange")
-    {
         max_length = FindBlockHeight(orange_cloud, a, b, c, d);
-    }
     else if(color_string=="brown")
         max_length = FindBlockHeight(brown_cloud, a, b, c, d);
     else if(color_string=="Indigo")
         max_length = FindBlockHeight(Indigo_cloud, a, b, c, d);
 
     std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> BB_points; 
-    cout << "max length: " << max_length << endl;
     for (int i = 0; i < Rect_points.size(); i++)
     {
         float x = Rect_points[i].x;
@@ -587,6 +684,10 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
     }
 
     BBinfo_temp = BB_points;
+    if(system_mode == 0) // individual pose estimation
+        FindOccGrid(BB_points, max_length);
+    else if(system_mode==1)
+        Save_BBinfo();
     if(Debug_Object_3D==1)
     {
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr Cloud_for_viewer(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -634,7 +735,6 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
         // Find Occupancy Grid
 
     }
-    FindOccGrid(BB_points, max_length);
 }
 
 float ObjectPose::FindBlockHeight(pcl::PointCloud<pcl::PointXYZRGB> in_cloud, float a, float b, float c, float d)
@@ -1800,6 +1900,314 @@ void ObjectPose::CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vec
                 cout << endl;
             }
         }
+    }
+}
+
+void ObjectPose::Save_BBinfo()
+{
+    RNG rng(12345);
+    int min_x =std::numeric_limits<int>::max();
+    int min_y =std::numeric_limits<int>::max();
+    int max_x = 0; 
+    int max_y = 0; 
+    Scalar color = Scalar( rng.uniform(0, 256), rng.uniform(0,256), rng.uniform(0,256) );
+    for ( int j = 0; j < 4; j++ )
+    {
+        if(max_x < _RectPoints.at(j).x)
+            max_x = _RectPoints.at(j).x;
+        if(min_x > _RectPoints.at(j).x)
+            min_x = _RectPoints.at(j).x;
+        if(max_y < _RectPoints.at(j).y)
+            max_y = _RectPoints.at(j).y;
+        if(min_y > _RectPoints.at(j).y)
+            min_y = _RectPoints.at(j).y;
+    }
+
+    if(color_string=="red")
+	{
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 255;
+            }
+        }
+
+        BB_info_red.clear();
+        for(int k = 0; k < BBinfo_temp.size(); k++)
+        {
+            pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+            pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+            BB_info_red.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+            BB_info_red.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+        }
+
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+            Block_center_temp.clear();
+            Block_center_red.clear();
+            for(int y = 0; y < height; y++)
+            {
+                for(int x = 0; x < width; x++)
+                {
+                    if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                        Total_Projected_image.at<Vec3b>(y, x)[2] = 255;
+                }
+            }
+            for ( int j = 0; j < 4; j++ )
+                line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+    }
+
+    if(color_string=="yellow")
+    {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 0;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 255;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 255;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
+        BB_info_yellow.clear();
+        for(int k = 0; k < BBinfo_temp.size(); k++)
+        {
+            pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+            pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+            BB_info_yellow.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+            BB_info_yellow.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+        }
+
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Total_Projected_image.at<Vec3b>(y, x)[0] = 0;
+                    Total_Projected_image.at<Vec3b>(y, x)[1] = 255;
+                    Total_Projected_image.at<Vec3b>(y, x)[2] = 255;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+    }
+
+    if(color_string=="blue")
+    {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 255;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 0;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 0;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+        
+        BB_info_blue.clear();
+        for(int k = 0; k < BBinfo_temp.size(); k++)
+        {
+            pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+            pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+            BB_info_blue.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+            BB_info_blue.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+        }
+
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Total_Projected_image.at<Vec3b>(y, x)[0] = 255;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+    }
+
+    if(color_string=="brown")
+    {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 51;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 60;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 72;
+                }
+            }
+        }
+
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
+        BB_info_brown.clear();
+        for(int k = 0; k < BBinfo_temp.size(); k++)
+        {
+            pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+            pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+            BB_info_brown.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+            BB_info_brown.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+        }
+
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Total_Projected_image.at<Vec3b>(y, x)[0] = 51;
+                    Total_Projected_image.at<Vec3b>(y, x)[1] = 60;
+                    Total_Projected_image.at<Vec3b>(y, x)[2] = 72;
+                }
+            }
+        }
+
+        for ( int j = 0; j < 4; j++ )
+            line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+    }
+
+    if(color_string=="green")
+    {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 255;
+                }
+            }
+        }
+
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
+        BB_info_green.clear();
+        for(int k = 0; k < BBinfo_temp.size(); k++)
+        {
+            pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+            pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+            BB_info_green.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+            BB_info_green.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+        }
+
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Total_Projected_image.at<Vec3b>(y, x)[1] = 255;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+    }
+
+    if(color_string=="orange")
+    {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 0;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 165;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 255;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
+
+        BB_info_orange.clear();
+        for(int k = 0; k < BBinfo_temp.size(); k++)
+        {
+            pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+            pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+            BB_info_orange.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+            BB_info_orange.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+        }
+
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Total_Projected_image.at<Vec3b>(y, x)[0] = 0;
+                    Total_Projected_image.at<Vec3b>(y, x)[1] = 165;
+                    Total_Projected_image.at<Vec3b>(y, x)[2] = 255;
+                }
+            }
+        }
+        for(int j = 0; j < 4; j++)
+            line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+    }
+
+
+    if(color_string=="Indigo")
+    {
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Projected_image_for_debug.at<Vec3b>(y, x)[0] = 100;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[1] = 50;
+                    Projected_image_for_debug.at<Vec3b>(y, x)[2] = 40;
+                }
+            }
+        }
+        for ( int j = 0; j < 4; j++ )
+            line(Projected_image_for_debug, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
+
+        BB_info_Indigo.clear();
+        for(int k = 0; k < BBinfo_temp.size(); k++)
+        {
+            pcl::PointXYZRGB point_temp1 = std::get<0>(BBinfo_temp[k]);
+            pcl::PointXYZRGB point_temp2 = std::get<1>(BBinfo_temp[k]);
+            BB_info_Indigo.push_back(Point3D{point_temp1.x, point_temp1.y, point_temp1.z});
+            BB_info_Indigo.push_back(Point3D{point_temp2.x, point_temp2.y, point_temp2.z});
+        }
+
+        for(int y = 0; y < height; y++)
+        {
+            for(int x = 0; x < width; x++)
+            {
+                if(_Projected_image.at<uchar>(y,x) == 255 && x < max_x && x > min_x && y < max_y && y > min_y)
+                {
+                    Total_Projected_image.at<Vec3b>(y, x)[0] = 100;
+                    Total_Projected_image.at<Vec3b>(y, x)[1] = 50;
+                    Total_Projected_image.at<Vec3b>(y, x)[2] = 40;
+                }
+            }
+        }
+        for(int j = 0; j < 4; j++)
+            line(Total_Projected_image, _RectPoints.at(j), _RectPoints.at((j+1)%4), color);
     }
 }
 

@@ -25,9 +25,9 @@ DepthMapFactor: 1000
 # Crop Parameter
 #--------------------------------------------------------------------------------------------
 
-Crop.xmin: 100
+Crop.xmin: 120
 Crop.xmax: 550
-Crop.ymin: 40
+Crop.ymin: 00
 Crop.ymax: 480
 
 #--------------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ Pose.RedDilate: 30
 Pose.YellowDilate: 40
 Pose.GreenDilate: 30 
 Pose.OrangeDilate: 40
-Pose.BlueDilate: 40
+Pose.BlueDilate: 20
 Pose.BrownDilate: 30
 Pose.IndigoDilate: 30
 

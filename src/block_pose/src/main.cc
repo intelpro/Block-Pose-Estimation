@@ -43,10 +43,11 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
+    std::vector<cv::Mat> Mask_vector(8);
+    std::vector<cv::Mat> Mask_vector_refined(8);
+
     if(system_mode==10)
     {
-        std::vector<cv::Mat> Mask_vector(8);
-        std::vector<cv::Mat> Mask_vector_refined(8);
         std::vector<cv::Mat> Unknown_Objmask(7);
 
         cv::Mat pCloud = cv::Mat::zeros(height, width, CV_32FC3);
@@ -79,111 +80,16 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         cv::Mat total_mask = Mask_vector_refined[0] + Mask_vector_refined[1] + Mask_vector_refined[2] +
                             Mask_vector_refined[3] + Mask_vector_refined[4] + Mask_vector_refined[5]+ Mask_vector_refined[6];
 
-        if(DepthImgShow_flag==1)
-        {
-            double min;
-            double max;
-            cv::minMaxIdx(imDepth, &min, &max);
-            cv::Mat adjMap;
-            cv::convertScaleAbs(imDepth, adjMap, 255/0.01);
-            cv::Mat falseColorsMap;
-            cv::imshow("Depth image", adjMap);
-            waitKey(2);
-        }
-
-        if(ColorDebug_flag==1)
-        {
-            cv::hconcat(imColorDebug, Mask_vector_refined[7], imColorDebug);
-            cv::imshow("Color_debug", imColorDebug);
-            waitKey(2);
-        }
+        PoseFinder->Test_all_flag = 1;
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 
     else if(system_mode!=10)
     {
-        if(system_mode==0)
-        {
-            PoseFinder->Test_red_flag = 1;
-            PoseFinder->Test_yellow_flag = 0;
-            PoseFinder->Test_green_flag = 0;
-            PoseFinder->Test_blue_flag = 0;
-            PoseFinder->Test_brown_flag = 0;
-            PoseFinder->Test_orange_flag = 0;
-            PoseFinder->Test_indigo_flag = 0;
-        }
-
-        else if(system_mode==1)
-        {
-            PoseFinder->Test_red_flag = 0;
-            PoseFinder->Test_brown_flag = 1;
-            PoseFinder->Test_indigo_flag = 0;
-            PoseFinder->Test_yellow_flag = 0;
-            PoseFinder->Test_green_flag = 0;
-            PoseFinder->Test_blue_flag = 0;
-            PoseFinder->Test_orange_flag = 0;
-        }
-
-        else if(system_mode==2)
-        {
-            PoseFinder->Test_red_flag = 0;
-            PoseFinder->Test_brown_flag = 0; 
-            PoseFinder->Test_indigo_flag = 1;
-            PoseFinder->Test_yellow_flag = 0;
-            PoseFinder->Test_green_flag = 0;
-            PoseFinder->Test_blue_flag = 0;
-            PoseFinder->Test_orange_flag = 0;
-        }
-
-        else if(system_mode==3)
-        {
-            PoseFinder->Test_red_flag = 0;
-            PoseFinder->Test_brown_flag = 0; 
-            PoseFinder->Test_indigo_flag = 0;
-            PoseFinder->Test_yellow_flag = 1;
-            PoseFinder->Test_green_flag = 0;
-            PoseFinder->Test_blue_flag = 0;
-            PoseFinder->Test_orange_flag = 0;
-        }
-
-        else if(system_mode==4)
-        {
-            PoseFinder->Test_red_flag = 0;
-            PoseFinder->Test_brown_flag = 0; 
-            PoseFinder->Test_indigo_flag = 0;
-            PoseFinder->Test_yellow_flag = 0;
-            PoseFinder->Test_green_flag = 1;
-            PoseFinder->Test_blue_flag = 0;
-            PoseFinder->Test_orange_flag = 0;
-        }
-
-        else if(system_mode==5)
-        {
-            PoseFinder->Test_red_flag = 0;
-            PoseFinder->Test_brown_flag = 0; 
-            PoseFinder->Test_indigo_flag = 0;
-            PoseFinder->Test_yellow_flag = 0;
-            PoseFinder->Test_green_flag = 0;
-            PoseFinder->Test_blue_flag = 1;
-            PoseFinder->Test_orange_flag = 0;
-        }
-
-        else if(system_mode==6)
-        {
-            PoseFinder->Test_red_flag = 0;
-            PoseFinder->Test_brown_flag = 0; 
-            PoseFinder->Test_indigo_flag = 0;
-            PoseFinder->Test_yellow_flag = 0;
-            PoseFinder->Test_green_flag = 0;
-            PoseFinder->Test_blue_flag = 0;
-            PoseFinder->Test_orange_flag = 1;
-        }
-
         cv::Mat object_mask = cv::Mat::zeros(height, width, CV_8UC1);
 
         cv::Mat pCloud = cv::Mat::zeros(height, width, CV_32FC3);
         cv::Mat pCloud_inlier = cv::Mat::zeros(height, width, CV_32FC3);
-        std::vector<cv::Mat> Mask_vector_refined(8);
 
         cv::Mat pointCloud = PlaneFinder->Depth2pcd(image_Depth);
         cv::Mat pcd_outlier = cv::Mat::zeros(height, width, CV_32FC3);
@@ -206,9 +112,33 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         cv::Mat masked_image = imRGB_processed.clone();
         Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
         ExtractObjectMask2(masked_image, object_mask);
-        getOutputMask(Mask_vector_refined, object_mask, system_mode);
+        getOutputMask(Mask_vector, object_mask, system_mode);
+        get_cleanMask(Mask_vector, Mask_vector_refined);
+        PoseFinder->Test_Individual_flag = 1;
+        PoseFinder->Test_all_flag = 0;
+        PoseFinder->SetIndividualMode(system_mode);
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
+
+    if(DepthImgShow_flag==1)
+    {
+        double min;
+        double max;
+        cv::minMaxIdx(imDepth, &min, &max);
+        cv::Mat adjMap;
+        cv::convertScaleAbs(imDepth, adjMap, 255/0.01);
+        cv::Mat falseColorsMap;
+        cv::imshow("Depth image", adjMap);
+        waitKey(2);
+    }
+
+    if(ColorDebug_flag==1)
+    {
+        cv::hconcat(imColorDebug, Mask_vector_refined[7], imColorDebug);
+        cv::imshow("Color_debug", imColorDebug);
+        waitKey(2);
+    }
+
 }
 
 void SystemHandler::ExtractObjectMask(cv::Mat image_RGB, std::vector<cv::Mat>& Object_mask)
@@ -296,8 +226,8 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB, cv::Mat& object)
     std::vector<pair<int, int>> pixel_pos;
 
     // morphological opening (remove small objects from the foreground)
-    erode(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
-    dilate(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(10,10)));
+    dilate(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
+    erode(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
 
     int cx=320;
     int cy=240;
@@ -305,18 +235,32 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB, cv::Mat& object)
     int by=10;
     int sx=cx, sy=cy;
     bool check_flg=false;
-    while(!check_flg) {
+    while(!check_flg)
+    {
+        int lower_y = cy - by;
+        int higher_y = cy + by;
+        int lower_x = cx - bx; 
+        int higher_x = cx + bx;
         check_flg=false;
-        for(int i=cy-by; i<=cy+by; i++)
-            for(int j=cx-bx; j<=cx+bx; j++){
-                if(gray_image.at<uint8_t>(i, j)!=0){
-                    sx=j;
-                    sy=i;
-                    check_flg=true;
+        if(lower_y > 0 && higher_y < height && lower_x > 0 && higher_x < width)
+        {
+            for(int y=lower_y; y<=higher_y; y++)
+            {
+                for(int x=lower_x; x<=higher_x; x++)
+                {
+                    if(gray_image.at<uint8_t>(y, x)!=0)
+                    {
+                        sx=x;
+                        sy=y;
+                        check_flg=true;
+                    }
                 }
+            }
+            bx+=10;
+            by+=10;
         }
-        bx+=10;
-        by+=10;
+        else
+            check_flg = true;
     }
 
     int x=sx; 
@@ -328,37 +272,41 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB, cv::Mat& object)
     {
         y=std::get<0>(pixel_pos[count]);
         x=std::get<1>(pixel_pos[count]);
-        if(gray_image.at<uint8_t>(y+1,x)!=0){
-            if(object.at<uint8_t>(y+1,x) != 255){
-                pixel_pos.push_back(make_pair(y+1,x));
-                object.at<uint8_t>(y+1,x) = 255;
-                count1++;
-            }
-        }
-        if(gray_image.at<uint8_t>(y,x-1)!=0){
-            if(object.at<uint8_t>(y,x-1) != 255){
-                pixel_pos.push_back(make_pair(y,x-1));
-                object.at<uint8_t>(y,x-1) = 255;
-                count1++;
-            }
-        }        
-        if(gray_image.at<uint8_t>(y-1,x)!=0){
-            if(object.at<uint8_t>(y-1,x) != 255) {
-                pixel_pos.push_back(make_pair(y-1,x));
-                object.at<uint8_t>(y-1,x) = 255;
-                count1++;
+        if(x > 0 && x < width && y < height && y > 0)
+        {
+            if(gray_image.at<uint8_t>(y+1,x)!=0){
+                if(object.at<uint8_t>(y+1,x) != 255){
+                    pixel_pos.push_back(make_pair(y+1,x));
+                    object.at<uint8_t>(y+1,x) = 255;
+                    count1++;
                 }
+            }
+            if(gray_image.at<uint8_t>(y,x-1)!=0){
+                if(object.at<uint8_t>(y,x-1) != 255){
+                    pixel_pos.push_back(make_pair(y,x-1));
+                    object.at<uint8_t>(y,x-1) = 255;
+                    count1++;
+                }
+            }        
+            if(gray_image.at<uint8_t>(y-1,x)!=0){
+                if(object.at<uint8_t>(y-1,x) != 255) {
+                    pixel_pos.push_back(make_pair(y-1,x));
+                    object.at<uint8_t>(y-1,x) = 255;
+                    count1++;
+                    }
+            }
+            if(gray_image.at<uint8_t>(y,x+1)!=0){
+                 if(object.at<uint8_t>(y,x+1) != 255) {
+                    pixel_pos.push_back(make_pair(y,x+1));
+                    object.at<uint8_t>(y,x+1) = 255;
+                    count1++;    
+                 }
+            }
         }
-        if(gray_image.at<uint8_t>(y,x+1)!=0){
-             if(object.at<uint8_t>(y,x+1) != 255) {
-                pixel_pos.push_back(make_pair(y,x+1));
-                object.at<uint8_t>(y,x+1) = 255;
-                count1++;    
-             }
-        }
+        else
+            break;
         count++;       
     }
-
     cv::imshow("mask", object);
 }
 
@@ -749,6 +697,7 @@ void SystemHandler::Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_
             }
         }
     }
+
     Object_mask[0] = red_new.clone();
     Object_mask[1] = yellow_new.clone();
     Object_mask[2] = green_new.clone();
@@ -765,196 +714,293 @@ void SystemHandler::Publish_Message()
     std::vector<int> Grid_temp; 
     std::vector<Point3D> BB_Point_temp;
 
-    // red block 
-    Grid_temp = PoseFinder->red_Grid;
-    occ_grid_temp = PoseFinder->red_occ_Grid;
-    BB_Point_temp = PoseFinder->BB_info_red;
-    std::vector<Point3D> Block_center_temp = PoseFinder->Block_center_red;
-    Red_msg.Frame_id = Frame_count;
-    Red_msg.Object_id = 0; 
-    for(int i = 0; i < Grid_temp.size(); i++)
-        Red_msg.Grid_size.push_back(Grid_temp[i]);
-    for(int i = 0; i < occ_grid_temp.size(); i++)
-        Red_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Red_msg.BB_Points.push_back(point);
-    }
-    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Red_msg.Block_center_Points.push_back(point);
-    }
-    pub_red.publish(Red_msg);
+    if(system_mode==10)
+    {
+        // red block 
+        BB_Point_temp = PoseFinder->BB_info_red;
+        Red_msg.Frame_id = Frame_count;
+        Red_msg.Object_id = 0; 
+        for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+            geometry_msgs::Point point;
+            point.x = (*it).x;
+            point.y = (*it).y;
+            point.z = (*it).z;
+            Red_msg.BB_Points.push_back(point);
+        }
+        pub_red.publish(Red_msg);
 
-    // yellow block 
-    Block_center_temp.clear();
-    Grid_temp = PoseFinder->yellow_Grid;
-    occ_grid_temp = PoseFinder->yellow_occ_Grid;
-    BB_Point_temp = PoseFinder->BB_info_yellow;
-    Block_center_temp = PoseFinder->Block_center_yellow;
-    Yellow_msg.Frame_id = Frame_count;
-    Yellow_msg.Object_id = 1;
-    for(int i = 0; i < Grid_temp.size(); i++)
-        Yellow_msg.Grid_size.push_back(Grid_temp[i]);
-    for(int i = 0; i < occ_grid_temp.size(); i++)
-        Yellow_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Yellow_msg.BB_Points.push_back(point);
-    }
-    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Yellow_msg.Block_center_Points.push_back(point);
-    }
-    pub_yellow.publish(Yellow_msg);
+        // yellow block 
+        BB_Point_temp = PoseFinder->BB_info_yellow;
+        Yellow_msg.Frame_id = Frame_count;
+        Yellow_msg.Object_id = 1;
+        for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+            geometry_msgs::Point point;
+            point.x = (*it).x;
+            point.y = (*it).y;
+            point.z = (*it).z;
+            Yellow_msg.BB_Points.push_back(point);
+        }
+        pub_yellow.publish(Yellow_msg);
 
-    // Green block 
-    Grid_temp = PoseFinder->green_Grid;
-    occ_grid_temp = PoseFinder->green_occ_Grid;
-    BB_Point_temp = PoseFinder->BB_info_green;
-    Block_center_temp = PoseFinder->Block_center_green;
-    Green_msg.Frame_id = Frame_count;
-    Green_msg.Object_id = 2;
-    for(int i = 0; i < Grid_temp.size(); i++)
-        Green_msg.Grid_size.push_back(Grid_temp[i]);
-    for(int i = 0; i < occ_grid_temp.size(); i++)
-        Green_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Green_msg.BB_Points.push_back(point);
-    }
-    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Green_msg.Block_center_Points.push_back(point);
-    }
-    pub_green.publish(Green_msg);
+        // Green block 
+        BB_Point_temp = PoseFinder->BB_info_green;
+        Green_msg.Frame_id = Frame_count;
+        Green_msg.Object_id = 2;
+        for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+            geometry_msgs::Point point;
+            point.x = (*it).x;
+            point.y = (*it).y;
+            point.z = (*it).z;
+            Green_msg.BB_Points.push_back(point);
+        }
+        pub_green.publish(Green_msg);
 
 
-    // blue block
-    Grid_temp = PoseFinder->blue_Grid;
-    occ_grid_temp = PoseFinder->blue_occ_Grid;
-    BB_Point_temp = PoseFinder->BB_info_blue;
-    Block_center_temp = PoseFinder->Block_center_blue;
-    Blue_msg.Frame_id = Frame_count;
-    Blue_msg.Object_id = 3;
-    for(int i = 0; i < Grid_temp.size(); i++)
-        Blue_msg.Grid_size.push_back(Grid_temp[i]);
-    for(int i = 0; i < occ_grid_temp.size(); i++)
-        Blue_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Blue_msg.BB_Points.push_back(point);
-    }
-    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Blue_msg.Block_center_Points.push_back(point);
-    }
-    pub_blue.publish(Blue_msg);
+        // blue block
+        BB_Point_temp = PoseFinder->BB_info_blue;
+        Blue_msg.Frame_id = Frame_count;
+        Blue_msg.Object_id = 3;
+        for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+            geometry_msgs::Point point;
+            point.x = (*it).x;
+            point.y = (*it).y;
+            point.z = (*it).z;
+            Blue_msg.BB_Points.push_back(point);
+        }
+        pub_blue.publish(Blue_msg);
 
-    // Brown Block 
-    Grid_temp = PoseFinder->brown_Grid;
-    occ_grid_temp = PoseFinder->brown_occ_Grid;
-    BB_Point_temp = PoseFinder->BB_info_brown;
-    Block_center_temp = PoseFinder->Block_center_brown;
-    Brown_msg.Frame_id = Frame_count;
-    Brown_msg.Object_id = 4;
-    for(int i = 0; i < Grid_temp.size(); i++)
-        Brown_msg.Grid_size.push_back(Grid_temp[i]);
-    for(int i = 0; i < occ_grid_temp.size(); i++)
-        Brown_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Brown_msg.BB_Points.push_back(point);
-    }
-    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Brown_msg.Block_center_Points.push_back(point);
-    }
-    pub_brown.publish(Brown_msg);
+        // Brown Block 
+        BB_Point_temp = PoseFinder->BB_info_brown;
+        Brown_msg.Frame_id = Frame_count;
+        Brown_msg.Object_id = 4;
+        for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+            geometry_msgs::Point point;
+            point.x = (*it).x;
+            point.y = (*it).y;
+            point.z = (*it).z;
+            Brown_msg.BB_Points.push_back(point);
+        }
+        pub_brown.publish(Brown_msg);
 
-    // Orange Block
-    Grid_temp = PoseFinder->orange_Grid;
-    occ_grid_temp = PoseFinder->orange_occ_Grid;
-    BB_Point_temp = PoseFinder->BB_info_orange;
-    Block_center_temp = PoseFinder->Block_center_orange;
-    Orange_msg.Frame_id = Frame_count;
-    Orange_msg.Object_id = 5;
-    for(int i = 0; i < Grid_temp.size(); i++)
-        Orange_msg.Grid_size.push_back(Grid_temp[i]);
-    for(int i = 0; i < occ_grid_temp.size(); i++)
-        Orange_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Orange_msg.BB_Points.push_back(point);
-    }
-    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Orange_msg.Block_center_Points.push_back(point);
-    }
-    pub_orange.publish(Orange_msg);
+        // Orange Block
+        BB_Point_temp = PoseFinder->BB_info_orange;
+        Orange_msg.Frame_id = Frame_count;
+        Orange_msg.Object_id = 5;
+        for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+            geometry_msgs::Point point;
+            point.x = (*it).x;
+            point.y = (*it).y;
+            point.z = (*it).z;
+            Orange_msg.BB_Points.push_back(point);
+        }
+        pub_orange.publish(Orange_msg);
 
-    // Indigo Block
-    Grid_temp = PoseFinder->Indigo_Grid;
-    occ_grid_temp = PoseFinder->Indigo_occ_Grid;
-    BB_Point_temp = PoseFinder->BB_info_Indigo;
-    Block_center_temp = PoseFinder->Block_center_Indigo;
-    Indigo_msg.Frame_id = Frame_count;
-    Indigo_msg.Object_id = 6;
-    for(int i = 0; i < Grid_temp.size(); i++)
-        Indigo_msg.Grid_size.push_back(Grid_temp[i]);
-    for(int i = 0; i < occ_grid_temp.size(); i++)
-        Indigo_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
-    for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Indigo_msg.BB_Points.push_back(point);
+        // Indigo Block
+        BB_Point_temp = PoseFinder->BB_info_Indigo;
+        Indigo_msg.Frame_id = Frame_count;
+        Indigo_msg.Object_id = 6;
+        for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+            geometry_msgs::Point point;
+            point.x = (*it).x;
+            point.y = (*it).y;
+            point.z = (*it).z;
+            Indigo_msg.BB_Points.push_back(point);
+        }
+        pub_Indigo.publish(Indigo_msg);
     }
-    for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
-        geometry_msgs::Point point;
-        point.x = (*it).x;
-        point.y = (*it).y;
-        point.z = (*it).z;
-        Indigo_msg.Block_center_Points.push_back(point);
+    else
+    {
+		// red block 
+		Grid_temp = PoseFinder->red_Grid;
+		occ_grid_temp = PoseFinder->red_occ_Grid;
+		BB_Point_temp = PoseFinder->BB_info_red;
+		std::vector<Point3D> Block_center_temp = PoseFinder->Block_center_red;
+		Red_msg.Frame_id = Frame_count;
+		Red_msg.Object_id = 0; 
+		for(int i = 0; i < Grid_temp.size(); i++)
+			Red_msg.Grid_size.push_back(Grid_temp[i]);
+		for(int i = 0; i < occ_grid_temp.size(); i++)
+			Red_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+		for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Red_msg.BB_Points.push_back(point);
+		}
+		for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Red_msg.Block_center_Points.push_back(point);
+		}
+		pub_red.publish(Red_msg);
+
+		// yellow block 
+		Block_center_temp.clear();
+		Grid_temp = PoseFinder->yellow_Grid;
+		occ_grid_temp = PoseFinder->yellow_occ_Grid;
+		BB_Point_temp = PoseFinder->BB_info_yellow;
+		Block_center_temp = PoseFinder->Block_center_yellow;
+		Yellow_msg.Frame_id = Frame_count;
+		Yellow_msg.Object_id = 1;
+		for(int i = 0; i < Grid_temp.size(); i++)
+			Yellow_msg.Grid_size.push_back(Grid_temp[i]);
+		for(int i = 0; i < occ_grid_temp.size(); i++)
+			Yellow_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+		for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Yellow_msg.BB_Points.push_back(point);
+		}
+		for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Yellow_msg.Block_center_Points.push_back(point);
+		}
+		pub_yellow.publish(Yellow_msg);
+
+		// Green block 
+		Grid_temp = PoseFinder->green_Grid;
+		occ_grid_temp = PoseFinder->green_occ_Grid;
+		BB_Point_temp = PoseFinder->BB_info_green;
+		Block_center_temp = PoseFinder->Block_center_green;
+		Green_msg.Frame_id = Frame_count;
+		Green_msg.Object_id = 2;
+		for(int i = 0; i < Grid_temp.size(); i++)
+			Green_msg.Grid_size.push_back(Grid_temp[i]);
+		for(int i = 0; i < occ_grid_temp.size(); i++)
+			Green_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+		for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Green_msg.BB_Points.push_back(point);
+		}
+		for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Green_msg.Block_center_Points.push_back(point);
+		}
+		pub_green.publish(Green_msg);
+
+
+		// blue block
+		Grid_temp = PoseFinder->blue_Grid;
+		occ_grid_temp = PoseFinder->blue_occ_Grid;
+		BB_Point_temp = PoseFinder->BB_info_blue;
+		Block_center_temp = PoseFinder->Block_center_blue;
+		Blue_msg.Frame_id = Frame_count;
+		Blue_msg.Object_id = 3;
+		for(int i = 0; i < Grid_temp.size(); i++)
+			Blue_msg.Grid_size.push_back(Grid_temp[i]);
+		for(int i = 0; i < occ_grid_temp.size(); i++)
+			Blue_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+		for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Blue_msg.BB_Points.push_back(point);
+		}
+		for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Blue_msg.Block_center_Points.push_back(point);
+		}
+		pub_blue.publish(Blue_msg);
+
+		// Brown Block 
+		Grid_temp = PoseFinder->brown_Grid;
+		occ_grid_temp = PoseFinder->brown_occ_Grid;
+		BB_Point_temp = PoseFinder->BB_info_brown;
+		Block_center_temp = PoseFinder->Block_center_brown;
+		Brown_msg.Frame_id = Frame_count;
+		Brown_msg.Object_id = 4;
+		for(int i = 0; i < Grid_temp.size(); i++)
+			Brown_msg.Grid_size.push_back(Grid_temp[i]);
+		for(int i = 0; i < occ_grid_temp.size(); i++)
+			Brown_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+		for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Brown_msg.BB_Points.push_back(point);
+		}
+		for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Brown_msg.Block_center_Points.push_back(point);
+		}
+		pub_brown.publish(Brown_msg);
+
+		// Orange Block
+		Grid_temp = PoseFinder->orange_Grid;
+		occ_grid_temp = PoseFinder->orange_occ_Grid;
+		BB_Point_temp = PoseFinder->BB_info_orange;
+		Block_center_temp = PoseFinder->Block_center_orange;
+		Orange_msg.Frame_id = Frame_count;
+		Orange_msg.Object_id = 5;
+		for(int i = 0; i < Grid_temp.size(); i++)
+			Orange_msg.Grid_size.push_back(Grid_temp[i]);
+		for(int i = 0; i < occ_grid_temp.size(); i++)
+			Orange_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+		for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Orange_msg.BB_Points.push_back(point);
+		}
+		for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Orange_msg.Block_center_Points.push_back(point);
+		}
+		pub_orange.publish(Orange_msg);
+
+		// Indigo Block
+		Grid_temp = PoseFinder->Indigo_Grid;
+		occ_grid_temp = PoseFinder->Indigo_occ_Grid;
+		BB_Point_temp = PoseFinder->BB_info_Indigo;
+		Block_center_temp = PoseFinder->Block_center_Indigo;
+		Indigo_msg.Frame_id = Frame_count;
+		Indigo_msg.Object_id = 6;
+		for(int i = 0; i < Grid_temp.size(); i++)
+			Indigo_msg.Grid_size.push_back(Grid_temp[i]);
+		for(int i = 0; i < occ_grid_temp.size(); i++)
+			Indigo_msg.Occupancy_Grid.push_back(occ_grid_temp[i]);
+		for (std::vector<Point3D>::iterator it = BB_Point_temp.begin(); it != BB_Point_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Indigo_msg.BB_Points.push_back(point);
+		}
+		for (std::vector<Point3D>::iterator it = Block_center_temp.begin(); it != Block_center_temp.end(); ++it) {
+			geometry_msgs::Point point;
+			point.x = (*it).x;
+			point.y = (*it).y;
+			point.z = (*it).z;
+			Indigo_msg.Block_center_Points.push_back(point);
+		}
+		pub_Indigo.publish(Indigo_msg);
     }
-    pub_Indigo.publish(Indigo_msg);
 
     // clear all object
     // Red message clear

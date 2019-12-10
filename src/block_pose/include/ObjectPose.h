@@ -40,6 +40,8 @@ class ObjectPose{
         void MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector, std::vector<int> Grid_size, pcl::PointCloud<pcl::PointXYZRGB> ref_cloud);
         void CheckOccGridWithKnownShape(std::vector<int> Grid_size, std::vector<int> occ_grid);
         void GenerateRealSyntheticCloud(std::vector<int> Grid_size, std::vector<int> occ_Grid, std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> pos_vector);
+        void SetIndividualMode(int color_info);
+        void Save_BBinfo();
         void ClearVariable();
         // Occupany grid size
         std::vector<int> red_Grid;
@@ -97,6 +99,8 @@ class ObjectPose{
         int Test_indigo_flag;
 
       protected:
+        int system_mode;
+        // hyperparameter
         int Accum_iter; 
         int Accum_idx; 
         int height; 
