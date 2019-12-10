@@ -52,7 +52,7 @@ Plane.DistanceThresh: 0.005
 Plane.Maxiter: 200
 
 # Object Pose Paramter
-Pose.CloudAccumIter: 5
+Pose.CloudAccumIter: 10
 Pose.GridUnitLength: 0.025
 Pose.ThresholdForOccGrid: 0.0125
 # Object Debug Test Paramter

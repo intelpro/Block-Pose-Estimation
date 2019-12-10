@@ -422,6 +422,7 @@ void ObjectPose::Accumulate_PointCloud(cv::Mat &pcd_outlier, std::vector<cv::Mat
             cv::waitKey(2);
         }
         Accum_idx = 0; 
+        CloudClear();
     }
 
 }

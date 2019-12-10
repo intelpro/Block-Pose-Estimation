@@ -123,7 +123,6 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         PoseFinder->Test_all_flag = 0;
         PoseFinder->SetIndividualMode(system_mode);
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
-        PoseFinder->CloudClear();
     }
 
     if(DepthImgShow_flag==1 && system_mode!=7)
