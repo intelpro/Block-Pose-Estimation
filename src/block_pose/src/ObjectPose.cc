@@ -2267,4 +2267,26 @@ void ObjectPose::ClearVariable()
     orange_cloud.clear();
     Indigo_cloud.clear();
     BBinfo_temp.clear();
+    red_Grid.clear();
+    yellow_Grid.clear();
+    green_Grid.clear();
+    blue_Grid.clear();
+    brown_Grid.clear();
+    orange_Grid.clear();
+    Indigo_Grid.clear();
+    red_occ_Grid.clear();
+    yellow_occ_Grid.clear();
+    green_occ_Grid.clear();
+    blue_occ_Grid.clear();
+    brown_occ_Grid.clear();
+    orange_occ_Grid.clear();
+    Indigo_occ_Grid.clear();
+    blue_occ_Grid.clear();
+    Block_center_red.clear();
+    Block_center_yellow.clear();
+    Block_center_green.clear();
+    Block_center_blue.clear();
+    Block_center_brown.clear();
+    Block_center_orange.clear();
+    Block_center_Indigo.clear();
 }

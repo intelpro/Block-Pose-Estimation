@@ -84,6 +84,11 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 
+    else if(system_mode==7)
+    {
+        PoseFinder->ClearVariable();
+    }
+
     else if(system_mode!=10)
     {
         cv::Mat object_mask = cv::Mat::zeros(height, width, CV_8UC1);
@@ -112,15 +117,15 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         cv::Mat masked_image = imRGB_processed.clone();
         Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
         ExtractObjectMask2(masked_image, object_mask);
-        getOutputMask(Mask_vector, object_mask, system_mode);
-        get_cleanMask(Mask_vector, Mask_vector_refined);
+        getOutputMask(Mask_vector_refined, object_mask, system_mode);
+        // get_cleanMask(Mask_vector, Mask_vector_refined);
         PoseFinder->Test_Individual_flag = 1;
         PoseFinder->Test_all_flag = 0;
         PoseFinder->SetIndividualMode(system_mode);
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 
-    if(DepthImgShow_flag==1)
+    if(DepthImgShow_flag==1 && system_mode!=7)
     {
         double min;
         double max;
@@ -132,7 +137,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         waitKey(2);
     }
 
-    if(ColorDebug_flag==1)
+    if(ColorDebug_flag==1 && system_mode!=7)
     {
         cv::hconcat(imColorDebug, Mask_vector_refined[7], imColorDebug);
         cv::imshow("Color_debug", imColorDebug);
@@ -226,8 +231,8 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB, cv::Mat& object)
     std::vector<pair<int, int>> pixel_pos;
 
     // morphological opening (remove small objects from the foreground)
-    dilate(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
-    erode(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(15,15)));
+    dilate(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
+    erode(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
 
     int cx=320;
     int cy=240;
