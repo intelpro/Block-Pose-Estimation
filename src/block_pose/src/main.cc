@@ -40,6 +40,111 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
     }
 }
 
+void SystemHandler::preprocess_depth(cv::Mat& Depth, cv::Mat RGB)
+{
+    cv::Mat depth_map = cv::Mat(height, width, CV_32FC1);
+    cv::Mat r_map = cv::Mat(height, width, CV_32FC1);
+    cv::Mat g_map = cv::Mat(height, width, CV_32FC1);
+    cv::Mat b_map = cv::Mat(height, width, CV_32FC1);
+    cv::Mat depth_map_refined = cv::Mat::zeros(height, width, CV_32FC1);
+ //   cv::Mat depth_map_display = cv::Mat::zeros(height, width, CV_8UC1);
+
+
+    float  vmax=0;
+    for(int y = 0; y < height; y++)
+    {
+        for(int x = 0; x < width; x++)
+        {
+            uint16_t value = Depth.at<uint16_t>(y, x);
+            depth_map.at<float>(y, x) = float(value);
+            if(vmax<value)
+                vmax=value;
+        }
+    }
+    if(vmax>600)
+        vmax=600;
+
+ /*   cv::Mat depth_map_ori_display = cv::Mat(height, width, CV_8UC1);
+
+    for(int y = 0; y < height; y++)
+    {
+       for(int x = 0; x < width; x++)
+       {
+           uint16_t value = Depth.at<uint16_t>(y, x);
+           depth_map_ori_display.at<uint8_t>(y, x) = (uint8_t)(value*255/vmax);
+       }
+    }
+    cv::imshow("origianl", depth_map_ori_display);
+    cv::imshow("RGB", RGB);
+    waitKey(1);
+*/
+    for(int y = 0; y < height; y++)
+    {
+        for(int x = 0; x < width; x++)
+        {
+            uint8_t value_B = RGB.at<Vec3b>(y, x)[0];
+            uint8_t value_G = RGB.at<Vec3b>(y, x)[1];
+            uint8_t value_R = RGB.at<Vec3b>(y, x)[2];
+            r_map.at<float>(y, x) = float(value_R);
+            g_map.at<float>(y, x) = float(value_G);
+            b_map.at<float>(y, x) = float(value_B);
+        }
+    }
+
+    int mask=2;
+    float sig_color = 200;
+    float sig_spatial = 2;
+
+    for(int y = mask; y < height-mask; y++)
+    {
+        for(int x = mask; x < width-mask; x++)
+        {
+            float d_new = 0;
+
+            float value_r = r_map.at<float>(y, x);
+            float value_g = g_map.at<float>(y, x);
+            float value_b = b_map.at<float>(y, x);
+
+            float weight_sum=0;
+            for(int i=-mask; i<=mask; i++)
+                for(int j=-mask; j<=mask; j++)
+                {
+                    if(i==0 && j==0)
+                        continue;
+
+                    float d_v = depth_map.at<float>(y+i, x+j);
+                    if(d_v>0) {
+
+                        float value1_r = r_map.at<float>(y+i, x+j)-value_r;
+                        float value1_g = g_map.at<float>(y+i, x+j)-value_g;
+                        float value1_b = b_map.at<float>(y+i, x+j)-value_b;
+
+                        float value2 = value1_r*value1_r+value1_g*value1_g+value1_b*value1_b; 
+                        if(value2>1200)
+                            continue;
+                        float d = i*i+j*j;
+
+                        float weight = std::exp(-d/sig_spatial-value2/sig_color);
+                        weight_sum+=weight;
+
+                        d_new+=weight*d_v;
+                    }
+                }
+            if(weight_sum>0)
+                d_new/=weight_sum;
+            depth_map_refined.at<float>(y, x) = d_new;
+
+        }
+    }
+
+ //   cv::imshow("refined", depth_map_display);
+
+    for(int y = 0; y < height; y++)
+       for(int x = 0; x < width; x++)
+           Depth.at<uint16_t>(y, x) = (uint16_t)depth_map_refined.at<float>(y, x);
+           
+}
+
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
@@ -118,6 +223,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 
     else if(system_mode==7)
     {
+        PoseFinder->CloudClear();
         PoseFinder->ClearVariable();
     }
 
@@ -231,7 +337,7 @@ void SystemHandler::ExtractObjectMask2(cv::Mat image_RGB, cv::Mat& object)
     dilate(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
     erode(gray_image, gray_image, getStructuringElement(MORPH_ELLIPSE, Size(20,20)));
 
-    int cx=320;
+    int cx=360;
     int cy=240;
     int bx=10;
     int by=10;

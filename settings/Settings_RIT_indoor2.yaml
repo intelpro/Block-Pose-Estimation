@@ -25,9 +25,9 @@ DepthMapFactor: 1000
 # Crop Parameter
 #--------------------------------------------------------------------------------------------
 
-Crop.xmin: 120
-Crop.xmax: 580
-Crop.ymin: 00
+Crop.xmin: 160
+Crop.xmax: 550
+Crop.ymin: 0
 Crop.ymax: 480
 
 #--------------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ Crop.ymax: 480
 SystemHandler.imshowHSV: 0
 SystemHandler.imshowSegImg: 0
 SystemHandler.imshowDepthImg: 1
-SystemHandler.ColorDebug: 0
+SystemHandler.ColorDebug: 1
 SystemHandler.UseMeanImage: 1
 Red_color.imshow: 1
 Yellow_color.imshow: 1
@@ -61,13 +61,13 @@ Pose.Test_AllBlock: 1
 Pose.Test_IndividualBlock: 0
 Pose.DebugObjectImshow: 1
 Pose.DebugObjectVerbose: 1
-Pose.TestRed: 1
+Pose.TestRed: 0
 Pose.TestYellow: 1
-Pose.TestGreen: 1
-Pose.TestOrange: 1
-Pose.TestBlue: 1
-Pose.TestBrown: 1
-Pose.TestIndigo: 1
+Pose.TestGreen: 0
+Pose.TestOrange: 0
+Pose.TestBlue: 0
+Pose.TestBrown: 0
+Pose.TestIndigo: 0
 # Dominant plane space Image dilate parmeter 
 Pose.RedDilate_All: 20
 Pose.YellowDilate_All: 20

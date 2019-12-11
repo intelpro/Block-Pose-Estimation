@@ -42,7 +42,7 @@ public:
 
     SystemHandler(const string &strConfig)
     {
-        system_mode = 10;
+        system_mode = 7;
         cv::FileStorage fconfig(strConfig.c_str(), cv::FileStorage::READ);
         if(!fconfig.isOpened())
         {
@@ -207,11 +207,11 @@ public:
                 cv_ptrD = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
                 imDepth = cv_ptrD->image;
                 preprocess_image(imRGB);
+
                 if (imRGB.empty() || imDepth.empty()) {
                     cerr << endl << "Failed to load image at: " << endl;
                     return;
                 } 
-
                 else if(Frame_count%6 == 0)
                 {
                     if(MeanImg_flag==1)
@@ -227,6 +227,7 @@ public:
                         }
                         imRGB_processed = I.clone();
                     }
+                    // preprocess_depth(imDepth, imRGB);
                     Run_pipeline(imRGB_processed, imDepth);
                     Publish_Message();
                     cnt_preprocessing = 0;
@@ -270,6 +271,7 @@ public:
     void Identify_Object(cv::Mat imRGB, std::vector<cv::Mat> Unknown_Objmask, std::vector<cv::Mat>& Object_mask);
     void get_cleanMask(std::vector<cv::Mat> object_Mask, std::vector<cv::Mat>& output_mask);
     void getOutputMask(std::vector<cv::Mat>& output_mask, cv::Mat object_Mask, int color_info);
+    void preprocess_depth(cv::Mat& Depth, cv::Mat RGB);
 
 private:
     int system_mode;

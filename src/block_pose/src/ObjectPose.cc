@@ -744,6 +744,7 @@ void ObjectPose::BackProjectToDominatPlane(std::vector<cv::Point> Rect_points)
     else if(color_string=="Indigo")
         max_length = FindBlockHeight(Indigo_cloud, a, b, c, d);
 
+    cout << "max length: " << max_length << endl;
     std::vector<pair<pcl::PointXYZRGB, pcl::PointXYZRGB>> BB_points; 
     for (int i = 0; i < Rect_points.size(); i++)
     {
