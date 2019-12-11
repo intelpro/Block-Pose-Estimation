@@ -84,12 +84,7 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 
-    else if(system_mode==7)
-    {
-        PoseFinder->ClearVariable();
-    }
-
-    else if(system_mode!=10)
+    else if(system_mode!=10 || system_mode!=7)
     {
         cv::Mat object_mask = cv::Mat::zeros(height, width, CV_8UC1);
 
@@ -124,6 +119,12 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         PoseFinder->SetIndividualMode(system_mode);
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
+
+    else if(system_mode==7)
+    {
+        PoseFinder->ClearVariable();
+    }
+
 
     if(DepthImgShow_flag==1 && system_mode!=7)
     {
