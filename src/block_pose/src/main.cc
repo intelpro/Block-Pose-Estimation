@@ -40,33 +40,6 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
     }
 }
 
-void SystemHandler::preprocess_depth(cv::Mat& Depth, cv::Mat RGB)
-{
-    cv::Mat depth_map = cv::Mat(height, width, CV_32FC1);
-    cv::Mat gray_map = cv::Mat(height, width, CV_32FC1);
-    Mat imGray;
-    cvtColor(RGB, imGray, COLOR_BGR2GRAY); // convert BGR2HSV
-    for(int y = 0; y < height; y++)
-    {
-        for(int x = 0; x < width; x++)
-        {
-            uint16_t value = Depth.at<uint16_t>(y, x);
-            depth_map.at<float>(y, x) = float(value);
-        }
-    }
-    for(int y = 0; y < height; y++)
-    {
-        for(int x = 0; x < width; x++)
-        {
-            uint8_t value = imGray.at<uint8_t>(y, x);
-            gray_map.at<float>(y, x) = float(value);
-        }
-    }
-
-    cout << depth_map.depth() << " " << gray_map.depth() << endl;
-    cv::ximgproc::jointBilateralFilter(depth_map, gray_map, depth_map, 30, 30, 1);
-}
-
 
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
@@ -97,7 +70,6 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 
         cv::Mat pcd_object = cv::Mat::zeros(height, width, CV_32FC3);
         PlaneFinder->ObjectSegmentation(best_plane, pcd_object);
-        /*
 
         cv::Mat masked_image = imRGB_processed.clone();
         Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
@@ -107,7 +79,6 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 
         // PoseFinder->Test_all_flag = 1;
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
-        */
     }
 
     else if(system_mode!=10 && system_mode!=7)
@@ -138,8 +109,8 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         cv::Mat masked_image = imRGB_processed.clone();
         Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
         ExtractObjectMask2(masked_image, object_mask);
-        getOutputMask(Mask_vector, object_mask, system_mode);
-        get_cleanMask(Mask_vector, Mask_vector_refined);
+        getOutputMask(Mask_vector_refined, object_mask, system_mode);
+        //get_cleanMask(Mask_vector, Mask_vector_refined);
         PoseFinder->Test_Individual_flag = 1;
         PoseFinder->SetIndividualMode(system_mode);
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);

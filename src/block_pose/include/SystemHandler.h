@@ -207,7 +207,6 @@ public:
                 cv_ptrD = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_16UC1);
                 imDepth = cv_ptrD->image;
                 preprocess_image(imRGB);
-                preprocess_depth(imDepth, imRGB);
                 if (imRGB.empty() || imDepth.empty()) {
                     cerr << endl << "Failed to load image at: " << endl;
                     return;
@@ -262,7 +261,6 @@ public:
 	}
 
     void preprocess_image(cv::Mat& image_RGB);
-    void preprocess_depth(cv::Mat& imDepth, cv::Mat imRGB);
     void Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth);
     void Publish_Message();
     void ColorSegmenation(cv::Mat RGB_image, std::vector<cv::Mat>& Mask_vector);

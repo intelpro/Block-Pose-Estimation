@@ -557,6 +557,9 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int
         }
         else if(Test_Individual_flag==1)
         {
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+
             dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate_Individual,Red_dilate_Individual)));
             erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate_Individual,Red_dilate_Individual)));
         }
@@ -570,6 +573,9 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int
         }
         else if(Test_Individual_flag==1)
         {
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+
             dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate_Individual,Blue_dilate_Individual)));
             erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate_Individual,Blue_dilate_Individual)));
         }
@@ -583,6 +589,9 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int
         }
         else if(Test_Individual_flag==1)
         {
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+
             dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate_Individual, Green_dilate_Individual)));
             erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate_Individual, Green_dilate_Individual)));
         }
@@ -596,6 +605,8 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int
         }
         else if(Test_Individual_flag==1)
         {
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
             dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate_Individual,Orange_dilate_Individual)));
             erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate_Individual,Orange_dilate_Individual)));
         }
@@ -609,6 +620,8 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int
         }
         else if(Test_Individual_flag==1)
         {
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
             dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate_Individual,Brown_dilate_Individual)));
             erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate_Individual,Brown_dilate_Individual)));
         }
@@ -622,6 +635,8 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int
         }
         else if(Test_Individual_flag==1)
         {
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
             dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate_Individual,Yellow_dilate_Individual)));
             erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate_Individual,Yellow_dilate_Individual)));
         }
@@ -635,6 +650,8 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int
         }
         else if(Test_Individual_flag==1)
         {
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(3,3)));
             dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate_Individual,Indigo_dilate_Individual)));
             erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate_Individual,Indigo_dilate_Individual)));
         }
