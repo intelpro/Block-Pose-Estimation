@@ -42,7 +42,7 @@ public:
 
     SystemHandler(const string &strConfig)
     {
-        system_mode = 7;
+        system_mode = 10;
         cv::FileStorage fconfig(strConfig.c_str(), cv::FileStorage::READ);
         if(!fconfig.isOpened())
         {

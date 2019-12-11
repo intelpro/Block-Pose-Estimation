@@ -76,14 +76,22 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     Test_brown_flag = fconfig["Pose.TestBrown"];
     Test_orange_flag = fconfig["Pose.TestOrange"];
     Test_indigo_flag = fconfig["Pose.TestIndigo"];
-    // Dilated constant
-    Red_dilate = fconfig["Pose.RedDilate"];
-    Yellow_dilate = fconfig["Pose.YellowDilate"];
-    Green_dilate = fconfig["Pose.GreenDilate"];
-    Blue_dilate = fconfig["Pose.BlueDilate"];
-    Brown_dilate = fconfig["Pose.BrownDilate"];
-    Orange_dilate = fconfig["Pose.OrangeDilate"];
-    Indigo_dilate = fconfig["Pose.IndigoDilate"];
+    // Dilated constant(All)
+    Red_dilate_All = fconfig["Pose.RedDilate_All"];
+    Yellow_dilate_All = fconfig["Pose.YellowDilate_All"];
+    Green_dilate_All = fconfig["Pose.GreenDilate_All"];
+    Blue_dilate_All = fconfig["Pose.BlueDilate_All"];
+    Brown_dilate_All = fconfig["Pose.BrownDilate_All"];
+    Orange_dilate_All = fconfig["Pose.OrangeDilate_All"];
+    Indigo_dilate_All = fconfig["Pose.IndigoDilate_All"];
+    // Dilated constant(Individual)
+    Red_dilate_Individual = fconfig["Pose.RedDilate_Individual"];
+    Yellow_dilate_Individual = fconfig["Pose.YellowDilate_Individual"];
+    Green_dilate_Individual = fconfig["Pose.GreenDilate_Individual"];
+    Blue_dilate_Individual = fconfig["Pose.BlueDilate_Individual"];
+    Brown_dilate_Individual = fconfig["Pose.BrownDilate_Individual"];
+    Orange_dilate_Individual = fconfig["Pose.OrangeDilate_Individual"];
+    Indigo_dilate_Individual = fconfig["Pose.IndigoDilate_Individual"];
     // Debug Object
     Debug_Object_imshow = fconfig["Pose.DebugObjectImshow"];
     Debug_Object_verbose_flag = fconfig["Pose.DebugObjectVerbose"];
@@ -97,19 +105,27 @@ ObjectPose::ObjectPose(int _height, int _width, int _Accum_iter,float _fx, float
     cout << "Test Blue:" << Test_blue_flag << endl;
     cout << "Test Brown:" << Test_brown_flag << endl;
     cout << "Test Indigo:" << Test_indigo_flag << endl;
-    cout << "Red Dilate:" << Red_dilate << endl;
-    cout << "Yellow Dilate:" << Yellow_dilate << endl;
-    cout << "Green Dialte:" << Green_dilate << endl;
-    cout << "Orange Dilate:" << Orange_dilate << endl;
-    cout << "Blue Dilate:" << Blue_dilate << endl;
-    cout << "Brown Dilate:" << Brown_dilate << endl;
-    cout << "Indigo Dilate:" << Indigo_dilate << endl;
+    cout << "Red Dilate All:" << Red_dilate_All << endl;
+    cout << "Yellow Dilate All:" << Yellow_dilate_All << endl;
+    cout << "Green Dialte All:" << Green_dilate_All << endl;
+    cout << "Orange Dilate All:" << Orange_dilate_All << endl;
+    cout << "Blue Dilate All:" << Blue_dilate_All << endl;
+    cout << "Brown Dilate All:" << Brown_dilate_All << endl;
+    cout << "Indigo Dilate All:" << Indigo_dilate_All << endl;
+    cout << "Red Dilate Individual:" << Red_dilate_Individual << endl;
+    cout << "Yellow Dilate Individual:" << Yellow_dilate_Individual << endl;
+    cout << "Green Dialte Individual:" << Green_dilate_Individual << endl;
+    cout << "Orange Dilate Individual:" << Orange_dilate_Individual << endl;
+    cout << "Blue Dilate Individual:" << Blue_dilate_Individual << endl;
+    cout << "Brown Dilate Individual:" << Brown_dilate_Individual << endl;
+    cout << "Indigo Dilate Individual:" << Indigo_dilate_Individual << endl;
     cout << "DEBUG IMSHOW FLAG: " << Debug_Object_imshow << endl;
     cout << "DEBUG VERBOSE FLAG: " << Debug_Object_verbose_flag << endl;
 }
 
 void ObjectPose::SetIndividualMode(int color_info)
 {
+    Test_all_flag = 0;
     if(color_info==10)
         system_mode = 1; // all color_mode
     else  
@@ -534,45 +550,94 @@ void ObjectPose::fitRectangle(cv::Mat projected_image, std::vector<pair<int, int
     // filling small hole due to occlusion
     if(color_string=="red")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate,Red_dilate)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate,Red_dilate)));
+        if(Test_all_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate_All,Red_dilate_All)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate_All,Red_dilate_All)));
+        }
+        else if(Test_Individual_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate_Individual,Red_dilate_Individual)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Red_dilate_Individual,Red_dilate_Individual)));
+        }
     }
     else if(color_string=="blue")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate,Blue_dilate)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate,Blue_dilate)));
+        if(Test_all_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate_All,Blue_dilate_All)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate_All,Blue_dilate_All)));
+        }
+        else if(Test_Individual_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate_Individual,Blue_dilate_Individual)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Blue_dilate_Individual,Blue_dilate_Individual)));
+        }
     }
     else if(color_string=="green")
     {
-        // cv::imshow("green_projected_image", projected_image);
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate, Green_dilate)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate, Green_dilate)));
-        // PostProcessProjectedImage(projected_image, pixel_position);
-        // cv::imshow("green_projected_image_after", projected_image);
-
+        if(Test_all_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate_All, Green_dilate_All)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate_All, Green_dilate_All)));
+        }
+        else if(Test_Individual_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate_Individual, Green_dilate_Individual)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Green_dilate_Individual, Green_dilate_Individual)));
+        }
     }
     else if(color_string=="orange")
     {
-        // cv::imshow("orange_projected_image", projected_image);
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate,Orange_dilate)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate,Orange_dilate)));
+        if(Test_all_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate_All,Orange_dilate_All)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate_All,Orange_dilate_All)));
+        }
+        else if(Test_Individual_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate_Individual,Orange_dilate_Individual)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Orange_dilate_Individual,Orange_dilate_Individual)));
+        }
     }
     else if(color_string=="brown")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate,Brown_dilate)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate,Brown_dilate)));
+        if(Test_all_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate_All,Brown_dilate_All)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate_All,Brown_dilate_All)));
+        }
+        else if(Test_Individual_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate_Individual,Brown_dilate_Individual)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Brown_dilate_Individual,Brown_dilate_Individual)));
+        }
     }
     else if(color_string=="yellow")
     {
-        // cv::imshow("yellow_projected_image", projected_image);
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate,Yellow_dilate)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate,Yellow_dilate)));
-        // cv::imshow("yellow_projected_image_after", projected_image);
+        if(Test_all_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate_All,Yellow_dilate_All)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate_All,Yellow_dilate_All)));
+        }
+        else if(Test_Individual_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate_Individual,Yellow_dilate_Individual)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Yellow_dilate_Individual,Yellow_dilate_Individual)));
+        }
     }
     else if(color_string=="Indigo")
     {
-        dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate,Indigo_dilate)));
-        erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate,Indigo_dilate)));
+        if(Test_all_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate_All,Indigo_dilate_All)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate_All,Indigo_dilate_All)));
+        }
+        else if(Test_Individual_flag==1)
+        {
+            dilate(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate_Individual,Indigo_dilate_Individual)));
+            erode(projected_image, projected_image, getStructuringElement(MORPH_ELLIPSE, Size(Indigo_dilate_Individual,Indigo_dilate_Individual)));
+        }
     }
 
     Canny(projected_image, canny_output, thresh, thresh*10, 3);
@@ -953,12 +1018,40 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
         if(occ_grid[i]==1)
             occ_cnt++;
     }
+
     /*
-    ************* Pose procsseing of yellow block occ grid **************
-    0 1 2 3 4 5    0 1 2 3 4 5 
-    1 1 1 1 1 1 -> 0 1 1 1 0 1 
-    1 1 1 1 1 0 -> 1 1 1 0 1 0 
-    1 1 0 1 1 1 -> 0 1 0 1 1 1
+    ************* Post procsseing of red block occ grid **************
+       0 1 2 3     0 1 2 3 
+    1  1 1 1 1 ->  1 1 0 1
+    */
+    if(color_string=="red")
+    {
+        // case 1
+        if(Grid_tot_size==4 && occ_cnt==4)
+            occ_grid[2] = 0;
+    }
+
+    /*
+    ************* Post procsseing of orange block occ grid **************
+       0 1 2 3 4 5     0 1 2 3 4 5
+    1  1 1 1 1 1 1 ->  1 1 1 0 0 1
+    */
+    if(color_string=="orange")
+    {
+        // case 1
+        if(Grid_tot_size==6 && occ_cnt==6)
+        {
+            occ_grid[3] = 0;
+            occ_grid[4] = 0;
+        }
+    }
+
+    /*
+    ************* Post procsseing of yellow block occ grid **************
+       0 1 2 3 4 5    0 1 2 3 4 5 
+    1  1 1 1 1 1 1 -> 0 1 1 1 0 1 
+    2  1 1 1 1 1 0 -> 1 1 1 0 1 0 
+    3  1 1 0 1 1 1 -> 0 1 0 1 1 1
      */
     if(color_string=="yellow")
     {
@@ -983,9 +1076,9 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
 
     /*
     ************* Post procsseing of green block occ grid **************
-    0 1 2 3 4 5    0 1 2 3 4 5 
-    1 1 1 1 1 0 -> 0 1 1 1 1 0 
-    1 0 1 1 1 1 -> 1 0 1 1 0 1
+        0 1 2 3 4 5    0 1 2 3 4 5 
+    1   1 1 1 1 1 0 -> 0 1 1 1 1 0 
+    2   1 0 1 1 1 1 -> 1 0 1 1 0 1
      */
     if(color_string=="green")
     {
@@ -1002,15 +1095,15 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
 
     /* 
     ************* Post procsseing of blue block occ grid **************
-    0 1 2 3 4 5 6 7     0 1 2 3 4 5 6 7
-    0 0 1 1 1 0 1 1 ->  0 0 0 1 1 0 1 1
-    0 0 1 0 1 1 1 1 ->  0 0 1 0 0 1 1 1
-    1 0 0 0 1 1 1 1 ->  1 0 0 0 1 1 0 1 
-    1 0 1 1 0 0 1 1 ->  1 0 1 1 0 0 0 1
-    1 1 1 1 1 0 0 0 ->  1 1 0 1 1 0 0 0
-    1 1 1 0 1 1 0 0 ->  1 1 1 0 0 1 0 0 
-    1 1 1 1 0 0 1 0 ->  0 1 1 1 0 0 1 0
-    1 1 0 0 1 1 1 0 ->  0 1 0 0 1 1 1 0
+        0 1 2 3 4 5 6 7     0 1 2 3 4 5 6 7
+    1   0 0 1 1 1 0 1 1 ->  0 0 0 1 1 0 1 1
+    2   0 0 1 0 1 1 1 1 ->  0 0 1 0 0 1 1 1
+    3   1 0 0 0 1 1 1 1 ->  1 0 0 0 1 1 0 1 
+    4   1 0 1 1 0 0 1 1 ->  1 0 1 1 0 0 0 1
+    5   1 1 1 1 1 0 0 0 ->  1 1 0 1 1 0 0 0
+    6   1 1 1 0 1 1 0 0 ->  1 1 1 0 0 1 0 0 
+    7   1 1 1 1 0 0 1 0 ->  0 1 1 1 0 0 1 0
+    8   1 1 0 0 1 1 1 0 ->  0 1 0 0 1 1 1 0
     */
     if(color_string=="blue")
     {
@@ -1045,15 +1138,15 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
 
     /* 
     ************* Post procsseing of brown block occ grid **************
-         0 1 2 3 4 5 6 7    0 1 2 3 4 5 6 7
-    1    1 1 1 1 0 0 1 0 -> 0 1 1 1 0 0 1 0 
-    2    1 1 0 0 1 1 1 0 -> 0 1 0 0 1 1 1 0
-    3    1 1 1 1 1 0 0 0 -> 1 1 0 1 1 0 0 0
-    4    1 1 1 0 1 1 0 0 -> 1 1 1 0 0 1 0 0
-    5    1 0 0 0 1 1 1 1 -> 1 0 0 0 1 1 0 1
-    6    1 0 1 1 0 0 1 1 -> 1 0 1 1 0 0 0 1 
-    7    0 0 1 0 1 1 1 1 -> 0 0 1 0 0 1 1 1
-    8    0 0 1 1 1 0 1 1 -> 0 0 1 0 0 1 1 1 
+        0 1 2 3 4 5 6 7    0 1 2 3 4 5 6 7
+    1   1 1 1 1 0 0 1 0 -> 0 1 1 1 0 0 1 0 
+    2   1 1 0 0 1 1 1 0 -> 0 1 0 0 1 1 1 0
+    3   1 1 1 1 1 0 0 0 -> 1 1 0 1 1 0 0 0
+    4   1 1 1 0 1 1 0 0 -> 1 1 1 0 0 1 0 0
+    5   1 0 0 0 1 1 1 1 -> 1 0 0 0 1 1 0 1
+    6   1 0 1 1 0 0 1 1 -> 1 0 1 1 0 0 0 1 
+    7   0 0 1 0 1 1 1 1 -> 0 0 1 0 0 1 1 1
+    8   0 0 1 1 1 0 1 1 -> 0 0 1 0 0 1 1 1 
     */
     if(color_string=="brown")
     {
@@ -1088,11 +1181,11 @@ void ObjectPose::MeasureOccupany(std::vector<pair<pcl::PointXYZRGB, pcl::PointXY
 
     /* 
     ************* Post procsseing of Indigo block occ grid **************
-    0 1 2 3 4 5 6 7     0 1 2 3 4 5 6 7
-    0 0 1 1 1 1 1 1 ->  0 0 0 1 0 1 1 1
-    1 1 0 0 1 1 1 1 ->  0 1 0 0 1 1 0 1
-    1 1 1 1 0 0 1 1 ->  0 1 1 1 0 0 0 1
-    1 1 1 1 1 1 0 0 ->  1 1 0 1 0 1 0 0
+        0 1 2 3 4 5 6 7     0 1 2 3 4 5 6 7
+    1   0 0 1 1 1 1 1 1 ->  0 0 0 1 0 1 1 1
+    2   1 1 0 0 1 1 1 1 ->  0 1 0 0 1 1 0 1
+    3   1 1 1 1 0 0 1 1 ->  0 1 1 1 0 0 0 1
+    4   1 1 1 1 1 1 0 0 ->  1 1 0 1 0 1 0 0
     */
     if(color_string=="Indigo")
     {

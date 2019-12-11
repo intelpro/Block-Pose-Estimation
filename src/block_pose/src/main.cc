@@ -40,7 +40,6 @@ void SystemHandler::preprocess_image(cv::Mat& imRGB)
 }
 
 
-
 void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
 {
     std::vector<cv::Mat> Mask_vector(8);
@@ -77,14 +76,11 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         Identify_Object(imRGB_processed, Unknown_Objmask, Mask_vector);
         get_cleanMask(Mask_vector, Mask_vector_refined);
 
-        cv::Mat total_mask = Mask_vector_refined[0] + Mask_vector_refined[1] + Mask_vector_refined[2] +
-                            Mask_vector_refined[3] + Mask_vector_refined[4] + Mask_vector_refined[5]+ Mask_vector_refined[6];
-
-        PoseFinder->Test_all_flag = 1;
+        // PoseFinder->Test_all_flag = 1;
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }
 
-    else if(system_mode!=10 || system_mode!=7)
+    else if(system_mode!=10 && system_mode!=7)
     {
         cv::Mat object_mask = cv::Mat::zeros(height, width, CV_8UC1);
 
@@ -112,10 +108,9 @@ void SystemHandler::Run_pipeline(cv::Mat& image_RGB, cv::Mat& image_Depth)
         cv::Mat masked_image = imRGB_processed.clone();
         Show_Results(pCloud_outlier, imRGB_processed, masked_image, "seg_image");
         ExtractObjectMask2(masked_image, object_mask);
-        getOutputMask(Mask_vector_refined, object_mask, system_mode);
-        // get_cleanMask(Mask_vector, Mask_vector_refined);
+        getOutputMask(Mask_vector, object_mask, system_mode);
+        get_cleanMask(Mask_vector, Mask_vector_refined);
         PoseFinder->Test_Individual_flag = 1;
-        PoseFinder->Test_all_flag = 0;
         PoseFinder->SetIndividualMode(system_mode);
         PoseFinder->Accumulate_PointCloud(pCloud_outlier, Mask_vector_refined);
     }

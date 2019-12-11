@@ -26,7 +26,7 @@ DepthMapFactor: 1000
 #--------------------------------------------------------------------------------------------
 
 Crop.xmin: 120
-Crop.xmax: 550
+Crop.xmax: 580
 Crop.ymin: 00
 Crop.ymax: 480
 
@@ -52,13 +52,13 @@ Plane.DistanceThresh: 0.005
 Plane.Maxiter: 200
 
 # Object Pose Paramter
-Pose.CloudAccumIter: 10
+Pose.CloudAccumIter: 5
 Pose.GridUnitLength: 0.025
 Pose.ThresholdForOccGrid: 0.0125
 # Object Debug Test Paramter
 Pose.DebugObject3D: 0
-Pose.Test_AllBlock: 0
-Pose.Test_IndividualBlock: 1
+Pose.Test_AllBlock: 1
+Pose.Test_IndividualBlock: 0
 Pose.DebugObjectImshow: 1
 Pose.DebugObjectVerbose: 1
 Pose.TestRed: 1
@@ -69,14 +69,22 @@ Pose.TestBlue: 1
 Pose.TestBrown: 1
 Pose.TestIndigo: 1
 # Dominant plane space Image dilate parmeter 
-Pose.RedDilate: 30
-Pose.YellowDilate: 40
-Pose.GreenDilate: 30 
-Pose.OrangeDilate: 40
-Pose.BlueDilate: 20
-Pose.BrownDilate: 30
-Pose.IndigoDilate: 30
+Pose.RedDilate_All: 20
+Pose.YellowDilate_All: 20
+Pose.GreenDilate_All: 20
+Pose.OrangeDilate_All: 20
+Pose.BlueDilate_All: 20
+Pose.BrownDilate_All: 20
+Pose.IndigoDilate_All: 20
 
+# Dominant plane space Image dilate parmeter 
+Pose.RedDilate_Individual: 10
+Pose.YellowDilate_Individual: 10
+Pose.GreenDilate_Individual: 10
+Pose.OrangeDilate_Individual: 10
+Pose.BlueDilate_Individual: 10
+Pose.BrownDilate_Individual: 10
+Pose.IndigoDilate_Individual: 10
 
 #--------------------------------------------------------------------------------------------
 # Color space Paramter
@@ -84,24 +92,24 @@ Pose.IndigoDilate: 30
 # Red color(lower)
 Red_color.lower_value_0_0: 0
 Red_color.lower_value_0_1: 5
-Red_color.lower_value_1_0: 180
+Red_color.lower_value_1_0: 150
 Red_color.lower_value_1_1: 255
 Red_color.lower_value_2_0: 0
 Red_color.lower_value_2_1: 170
 # Red color(upper)
 Red_color.upper_value_0_0: 175
 Red_color.upper_value_0_1: 180
-Red_color.upper_value_1_0: 180
+Red_color.upper_value_1_0: 150
 Red_color.upper_value_1_1: 255
 Red_color.upper_value_2_0: 0
 Red_color.upper_value_2_1: 170
 # Orange color
 Orange_color.value_0_0: 0
 Orange_color.value_0_1: 10
-Orange_color.value_1_0: 180
+Orange_color.value_1_0: 150
 Orange_color.value_1_1: 255
 Orange_color.value_2_0: 0
-Orange_color.value_2_1: 200
+Orange_color.value_2_1: 255
 # Yellow color
 Yellow_color.value_0_0: 5
 Yellow_color.value_0_1: 80

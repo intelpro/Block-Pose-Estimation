@@ -108,14 +108,22 @@ class ObjectPose{
         int width; 
         int index; 
         int box_flag;
-        // dilate constant 
-        int Red_dilate;
-        int Yellow_dilate;
-        int Green_dilate;
-        int Blue_dilate;
-        int Brown_dilate;
-        int Orange_dilate;
-        int Indigo_dilate;
+        // dilate constant(All)
+        int Red_dilate_All;
+        int Yellow_dilate_All;
+        int Green_dilate_All;
+        int Blue_dilate_All;
+        int Brown_dilate_All;
+        int Orange_dilate_All;
+        int Indigo_dilate_All;
+        // dilat constant(Individual)
+        int Red_dilate_Individual;
+        int Yellow_dilate_Individual;
+        int Green_dilate_Individual;
+        int Blue_dilate_Individual;
+        int Brown_dilate_Individual;
+        int Orange_dilate_Individual;
+        int Indigo_dilate_Individual;
         // Debug flag
         int Debug_Object_imshow;
         int Debug_Object_verbose_flag;
